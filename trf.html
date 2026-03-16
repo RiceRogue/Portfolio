@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tokyo Rhythm Fighter — Eric Ni</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="page-fade-in">
+
+  <header class="site-header">
+    <div class="container">
+      <a href="index.html" class="site-logo">Eric Ni</a>
+      <nav class="site-nav">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="resume.html">Resume</a>
+        <a href="https://www.linkedin.com/in/ericni007/" target="_blank" rel="noopener" class="icon-link" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+        </a>
+        <a href="https://ricerogue.itch.io/" target="_blank" rel="noopener" class="icon-link" aria-label="Itch.io">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.13 1.338C2.08 1.96.02 4.328 0 4.95v1.03c0 1.303 1.22 2.45 2.325 2.45 1.33 0 2.436-1.102 2.436-2.41 0 1.308 1.07 2.41 2.4 2.41 1.328 0 2.362-1.102 2.362-2.41 0 1.308 1.137 2.41 2.466 2.41h.024c1.33 0 2.466-1.102 2.466-2.41 0 1.308 1.034 2.41 2.363 2.41 1.328 0 2.4-1.102 2.4-2.41 0 1.308 1.104 2.41 2.435 2.41C22.78 8.43 24 7.282 24 5.98V4.95c-.02-.622-2.08-2.99-3.13-3.612-4.573-.516-13.67-.516-17.74 0z"/></svg>
+        </a>
+      </nav>
+      <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </header>
+  <nav class="mobile-menu" id="mobile-menu">
+    <a href="index.html">Home</a><a href="about.html">About</a><a href="resume.html">Resume</a>
+    <a href="https://www.linkedin.com/in/ericni007/" target="_blank" rel="noopener">LinkedIn</a>
+    <a href="https://ricerogue.itch.io/" target="_blank" rel="noopener">Itch.io</a>
+  </nav>
+
+  <main class="page-main">
+    <div class="page-hero">
+      <a href="index.html" class="page-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        Back
+      </a>
+      <h1 class="page-title reveal">Tokyo Rhythm Fighter</h1>
+      <div class="page-meta reveal">
+        <span class="meta-pill">Platform <span>Unity</span></span>
+        <span class="meta-pill">Completed <span>May 2022</span></span>
+        <span class="meta-pill">Team <span>7 Developers</span></span>
+        <span class="meta-pill">Genre <span>Rhythm Fighting</span></span>
+      </div>
+      <p class="page-tagline reveal">A rhythm-based fighting game where music is the weapon. Battle Sforzanda, an ex-band member, by hitting notes, creating combos, holding chords, and harmonizing to deal damage — all in sync with the beat.</p>
+      <a href="https://computeruser.itch.io/tokyo-rhythm-fighter" target="_blank" rel="noopener" class="play-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        Play on Itch.io
+      </a>
+    </div>
+
+    <div class="project-content">
+
+      <section class="project-section">
+        <div class="two-col">
+          <div>
+            <h2 class="reveal">Overview</h2>
+            <p class="reveal">Tokyo Rhythm Fighter follows Sola's battle against her ex-band member Sforzanda. Music is the primary combat medium — players input attacks and defenses in rhythm with the backing track to create combos and deal damage.</p>
+            <p class="reveal">The space bar is the primary input, handling short attacks, sustained attacks, and defensive parries. Musical synchronization is critical — players must coordinate their chord selections with the track for maximum effectiveness.</p>
+          </div>
+          <div class="reveal">
+            <img src="https://images.squarespace-cdn.com/content/v1/64b6d793b73c582ca6e94e8e/8ba25ec3-dd07-45f6-ae32-a0a45d1e094f/TRFTitle_Icon.png"
+                 alt="Tokyo Rhythm Fighter" style="width:100%;object-fit:contain;background:#e8e6e1;padding:2rem" />
+          </div>
+        </div>
+      </section>
+
+      <section class="project-section">
+        <h2 class="reveal">My Contributions</h2>
+        <p class="reveal">I served as a bridge between the art, UI, and programming teams. My role spanned systems architecture, asset integration, and player feedback design.</p>
+        <div class="stat-grid reveal">
+          <div class="stat-item"><div class="stat-label">Animation</div><div class="stat-value">Sprite Iteration via Coroutines</div></div>
+          <div class="stat-item"><div class="stat-label">Assets</div><div class="stat-value">Character &amp; VFX Integration</div></div>
+          <div class="stat-item"><div class="stat-label">UI</div><div class="stat-value">Accuracy, Health, Combos, Damage</div></div>
+          <div class="stat-item"><div class="stat-label">Tutorial</div><div class="stat-value">Text Messaging System</div></div>
+        </div>
+      </section>
+
+      <section class="project-section">
+        <h2 class="reveal">Systems Detail</h2>
+        <div class="three-col">
+          <div class="reveal">
+            <h3>Animation Architecture</h3>
+            <p>Built the foundational animation system using sprite iteration through Unity coroutines, enabling frame-by-frame character animation for both Sola and Sforzanda.</p>
+          </div>
+          <div class="reveal">
+            <h3>Visual Feedback ("Juice")</h3>
+            <p>Sourced and implemented accuracy indicators, health bars, combo counters, and floating damage numbers. Hurt, harmonize, miss, and hit states each produce distinct visual effects tied to the beat.</p>
+          </div>
+          <div class="reveal">
+            <h3>Tutorial System</h3>
+            <p>Designed an interlinking text messaging interface that delivers gameplay instructions and character dialogue — blending narrative delivery with mechanical onboarding.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="project-section">
+        <h2 class="reveal">Gallery</h2>
+        <div class="gallery-grid cols-2 reveal">
+          <div class="gallery-img-wrap">
+            <img src="https://images.squarespace-cdn.com/content/v1/64b6d793b73c582ca6e94e8e/8ba25ec3-dd07-45f6-ae32-a0a45d1e094f/TRFTitle_Icon.png" alt="TRF title screen" />
+          </div>
+          <div class="gallery-img-wrap">
+            <img src="https://images.squarespace-cdn.com/content/v1/64b6d793b73c582ca6e94e8e/8ba25ec3-dd07-45f6-ae32-a0a45d1e094f/TRFTitle_Icon.png" alt="TRF combat" />
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-contact">
+        <a href="mailto:ericni007@gmail.com">ericni007@gmail.com</a>
+        <span class="footer-location">Diamond Bar, CA</span>
+      </div>
+      <div class="footer-social">
+        <a href="https://www.linkedin.com/in/ericni007/" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://ricerogue.itch.io/" target="_blank" rel="noopener">Itch.io</a>
+      </div>
+      <div class="footer-copy">© Eric Ni. All rights reserved.</div>
+    </div>
+  </footer>
+  <div class="lightbox-overlay" id="lightbox">
+    <button class="lightbox-close" aria-label="Close">×</button>
+    <img src="" alt="Full size preview" />
+  </div>
+  <script src="shader.js"></script>
+</body>
+</html>

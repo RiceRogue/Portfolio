@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Artifice — Eric Ni</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="page-fade-in">
+
+  <header class="site-header">
+    <div class="container">
+      <a href="index.html" class="site-logo">Eric Ni</a>
+      <nav class="site-nav">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="resume.html">Resume</a>
+        <a href="https://www.linkedin.com/in/ericni007/" target="_blank" rel="noopener" class="icon-link" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+        </a>
+        <a href="https://ricerogue.itch.io/" target="_blank" rel="noopener" class="icon-link" aria-label="Itch.io">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.13 1.338C2.08 1.96.02 4.328 0 4.95v1.03c0 1.303 1.22 2.45 2.325 2.45 1.33 0 2.436-1.102 2.436-2.41 0 1.308 1.07 2.41 2.4 2.41 1.328 0 2.362-1.102 2.362-2.41 0 1.308 1.137 2.41 2.466 2.41h.024c1.33 0 2.466-1.102 2.466-2.41 0 1.308 1.034 2.41 2.363 2.41 1.328 0 2.4-1.102 2.4-2.41 0 1.308 1.104 2.41 2.435 2.41C22.78 8.43 24 7.282 24 5.98V4.95c-.02-.622-2.08-2.99-3.13-3.612-4.573-.516-13.67-.516-17.74 0z"/></svg>
+        </a>
+      </nav>
+      <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </header>
+  <nav class="mobile-menu" id="mobile-menu">
+    <a href="index.html">Home</a><a href="about.html">About</a><a href="resume.html">Resume</a>
+    <a href="https://www.linkedin.com/in/ericni007/" target="_blank" rel="noopener">LinkedIn</a>
+    <a href="https://ricerogue.itch.io/" target="_blank" rel="noopener">Itch.io</a>
+  </nav>
+
+  <main class="page-main">
+    <div class="page-hero">
+      <a href="index.html" class="page-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        Back
+      </a>
+      <h1 class="page-title reveal">Artifice</h1>
+      <div class="page-meta reveal">
+        <span class="meta-pill">Platform <span>Unity</span></span>
+        <span class="meta-pill">Completed <span>October 2021</span></span>
+        <span class="meta-pill">Team <span>4 Developers</span></span>
+        <span class="meta-pill">Genre <span>3D Survival Horror</span></span>
+      </div>
+      <p class="page-tagline reveal">You play as a museum curator, surviving the night from living museum pieces. Looming monsters will aim to increase your heart rate until you die — use your tools and listen to their audio cues.</p>
+      <a href="https://ricerogue.itch.io/artifice" target="_blank" rel="noopener" class="play-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        Play on Itch.io
+      </a>
+    </div>
+
+    <div class="project-content">
+
+      <section class="project-section">
+        <div class="two-col">
+          <div>
+            <h2 class="reveal">Overview</h2>
+            <p class="reveal">Artifice is a 3D survival horror experience set in a museum after closing time. The museum's exhibits have come alive, and the curator must survive until morning using a multi-viewpoint camera system, audio awareness, and limited tools.</p>
+            <p class="reveal">The core tension mechanic: monsters don't deal damage through contact — they elevate your heart rate. Reach critical levels and you die. Managing stress, not health, is the key challenge.</p>
+          </div>
+          <div class="reveal">
+            <img src="https://images.squarespace-cdn.com/content/v1/64b6d793b73c582ca6e94e8e/1696878869670-75OHAU6AWWD4HTZQZPUQ/ArtificeTitle_Icon.jpg"
+                 alt="Artifice" style="width:100%;object-fit:contain;background:#e8e6e1;padding:2rem" />
+          </div>
+        </div>
+      </section>
+
+      <section class="project-section">
+        <h2 class="reveal">Team</h2>
+        <div class="stat-grid reveal">
+          <div class="stat-item"><div class="stat-label">3D Modeling</div><div class="stat-value">Iris Oh</div></div>
+          <div class="stat-item"><div class="stat-label">Programming, PM</div><div class="stat-value">May Li</div></div>
+          <div class="stat-item"><div class="stat-label">Narrative, 2D Art</div><div class="stat-value">Apple Li</div></div>
+          <div class="stat-item"><div class="stat-label">Lead Programming</div><div class="stat-value">Eric Ni</div></div>
+        </div>
+        <p class="reveal" style="margin-top:1rem">As Lead Programmer, I built the enemy systems, player interaction logic, and core survival loops — including the heart rate escalation mechanic and all three enemy behavior systems.</p>
+      </section>
+
+      <section class="project-section">
+        <h2 class="reveal">Enemies</h2>
+        <div class="three-col">
+          <div class="reveal">
+            <h3>Portrait Lady</h3>
+            <p>Randomized spawn timing with visible warning cues. A clock display shows the next encounter schedule — players must plan their camera rotations accordingly.</p>
+          </div>
+          <div class="reveal">
+            <h3>Screaming Sculpture</h3>
+            <p>Emits distorted audio at set intervals. Wearing headphones blocks the damage — but at the cost of hearing other threat audio cues, creating a risk-management dilemma.</p>
+          </div>
+          <div class="reveal">
+            <h3>Mannequin</h3>
+            <p>Slowly moves toward players when they're not looking. Requires sustained visual attention. Sound cues indicate proximity — the classic observer-state horror mechanic.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="project-section">
+        <h2 class="reveal">Systems</h2>
+        <ul class="bullet-list reveal">
+          <li>Multi-viewpoint switching system — camera management is core gameplay, not just convenience</li>
+          <li>Heart rate escalation on contact with threats; death occurs at critical levels</li>
+          <li>Audio-based threat detection for the Screaming Sculpture and Mannequin proximity alerts</li>
+          <li>Jump scare triggers when Mannequin or Portrait Lady breach proximity thresholds</li>
+          <li>Tool management — flashlights and headphones each counter specific threats with tradeoffs</li>
+        </ul>
+      </section>
+
+      <section class="project-section">
+        <h2 class="reveal">Gallery</h2>
+        <div class="gallery-grid cols-3 reveal">
+          <div class="gallery-img-wrap">
+            <img src="https://images.squarespace-cdn.com/content/v1/64b6d793b73c582ca6e94e8e/1696878869670-75OHAU6AWWD4HTZQZPUQ/ArtificeTitle_Icon.jpg" alt="Artifice title" />
+          </div>
+          <div class="gallery-img-wrap">
+            <img src="https://images.squarespace-cdn.com/content/v1/64b6d793b73c582ca6e94e8e/1696878869670-75OHAU6AWWD4HTZQZPUQ/ArtificeTitle_Icon.jpg" alt="Artifice enemies" />
+          </div>
+          <div class="gallery-img-wrap">
+            <img src="https://images.squarespace-cdn.com/content/v1/64b6d793b73c582ca6e94e8e/1696878869670-75OHAU6AWWD4HTZQZPUQ/ArtificeTitle_Icon.jpg" alt="Artifice environment" />
+          </div>
+        </div>
+        <p class="reveal" style="font-size:0.82rem;color:var(--fg-subtle);margin-top:0.75rem">9 images — game icon, environment views, creature models, UI elements, death screens</p>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-contact">
+        <a href="mailto:ericni007@gmail.com">ericni007@gmail.com</a>
+        <span class="footer-location">Diamond Bar, CA</span>
+      </div>
+      <div class="footer-social">
+        <a href="https://www.linkedin.com/in/ericni007/" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://ricerogue.itch.io/" target="_blank" rel="noopener">Itch.io</a>
+      </div>
+      <div class="footer-copy">© Eric Ni. All rights reserved.</div>
+    </div>
+  </footer>
+  <div class="lightbox-overlay" id="lightbox">
+    <button class="lightbox-close" aria-label="Close">×</button>
+    <img src="" alt="Full size preview" />
+  </div>
+  <script src="shader.js"></script>
+</body>
+</html>
