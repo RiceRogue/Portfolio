@@ -25,14 +25,10 @@
     uniform float u_time;
     uniform vec2  u_resolution;
 
-    /* ── Smooth hash ── */
     float hash(vec2 p) {
-      p = fract(p * vec2(127.1, 311.7));
-      p += dot(p, p + 19.19);
-      return fract(p.x * p.y);
+      return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
     }
 
-    /* ── Value noise ── */
     float noise(vec2 p) {
       vec2 i = floor(p);
       vec2 f = fract(p);
@@ -44,54 +40,29 @@
       return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
     }
 
-    /* ── Fbm / domain-warp ── */
     float fbm(vec2 p) {
       float v = 0.0;
       float a = 0.5;
-      vec2  shift = vec2(100.0);
-      mat2  rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));
-      for (int i = 0; i < 5; i++) {
-        v += a * noise(p);
-        p  = rot * p * 2.1 + shift;
-        a *= 0.5;
-      }
+      v += a * noise(p); p = p * 2.1 + vec2(1.7, 9.2); a *= 0.5;
+      v += a * noise(p); p = p * 2.1 + vec2(8.3, 2.8); a *= 0.5;
+      v += a * noise(p); p = p * 2.1 + vec2(3.1, 6.4); a *= 0.5;
+      v += a * noise(p);
       return v;
     }
 
     void main() {
       vec2 uv = gl_FragCoord.xy / u_resolution.xy;
-      float t = u_time * 0.18;
-
-      /* Domain warp — two passes */
-      vec2 q = vec2(fbm(uv + vec2(0.0, 0.0)),
-                    fbm(uv + vec2(5.2, 1.3)));
-
-      vec2 r = vec2(fbm(uv + 4.0 * q + vec2(1.7 + t * 0.15, 9.2)),
-                    fbm(uv + 4.0 * q + vec2(8.3 + t * 0.12, 2.8)));
-
-      float f = fbm(uv + 4.0 * r);
-
-      /* Colorful palette driven by noise position */
-      vec3 colA = mix(
-        vec3(0.82, 0.86, 0.97),   /* blue-lavender */
-        vec3(0.97, 0.85, 0.80),   /* warm peach    */
-        clamp(r.x * 2.0, 0.0, 1.0)
+      float t = u_time * 0.15;
+      float f = fbm(uv * 1.8 + t * 0.2);
+      float g = fbm(uv * 1.8 + vec2(5.2, 1.3) - t * 0.15);
+      float h = fbm(uv * 2.4 + vec2(f, g) * 2.0);
+      vec3 col = mix(
+        mix(vec3(0.60, 0.78, 0.98), vec3(0.98, 0.60, 0.72), f),
+        mix(vec3(0.60, 0.95, 0.80), vec3(0.90, 0.70, 0.98), g),
+        h
       );
-      vec3 colB = mix(
-        vec3(0.80, 0.95, 0.90),   /* pale mint  */
-        vec3(0.93, 0.82, 0.96),   /* soft lilac */
-        clamp(r.y * 2.0, 0.0, 1.0)
-      );
-      vec3 col = mix(colA, colB, clamp(f * f * 4.0, 0.0, 1.0));
-
-      /* Scale to visible range that works on both light & dark */
-      col = col * 0.68 + 0.08;
-
-      /* Edge vignette */
-      float vign = 1.0 - 0.15 * length(uv * 2.0 - 1.0);
-      col *= vign;
-
-      gl_FragColor = vec4(col, 1.0);
+      float vign = 1.0 - 0.2 * length(uv * 2.0 - 1.0);
+      gl_FragColor = vec4(col * vign, 1.0);
     }
   `;
 
@@ -179,6 +150,24 @@
 })();
 
 /* ── Shared utilities ───────────────────────────────────────── */
+
+/* Infinite marquee — JS pixel scroll, no CSS animation reset */
+(function () {
+  const track = document.querySelector('.marquee-track');
+  if (!track) return;
+  /* Clone children so wrap point is invisible */
+  Array.from(track.children).forEach(el => track.appendChild(el.cloneNode(true)));
+  let x = 0;
+  const speed = 0.9;
+  function step() {
+    x -= speed;
+    const half = track.scrollWidth / 2;
+    if (Math.abs(x) >= half) x = 0;
+    track.style.transform = 'translateX(' + x + 'px)';
+    requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+})();
 
 /* Scroll reveal */
 (function () {
