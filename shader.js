@@ -71,20 +71,28 @@
 
       float f = fbm(uv + 4.0 * r);
 
-      /* Subtle palette — warm off-white / sand tones */
-      /* color1 = near-white, color2 = warm tan, color3 = pale grey */
+      /* Extra warp pass for more randomness */
+      vec2 s = vec2(fbm(uv + 6.0 * r + vec2(t * 0.08, 3.1)),
+                    fbm(uv + 6.0 * r + vec2(2.4, t * 0.11)));
+      float g = fbm(uv + 3.0 * s);
+
+      /* Colorful palette — soft lavender, peach, sky, mint */
+      vec3 colA = vec3(0.82, 0.86, 0.97); /* soft blue-lavender */
+      vec3 colB = vec3(0.97, 0.85, 0.80); /* warm peach */
+      vec3 colC = vec3(0.80, 0.95, 0.90); /* pale mint */
+      vec3 colD = vec3(0.92, 0.82, 0.96); /* light purple */
+
       vec3 col = mix(
-        vec3(0.97, 0.95, 0.91),          /* near-white / paper */
-        mix(
-          vec3(0.92, 0.88, 0.82),        /* warm tan */
-          vec3(0.82, 0.80, 0.78),        /* muted stone */
-          clamp(f * f * 4.0, 0.0, 1.0)
-        ),
-        clamp(f * 2.0 - 0.5, 0.0, 1.0)
+        mix(colA, colB, clamp(f * 2.0, 0.0, 1.0)),
+        mix(colC, colD, clamp(g * 2.0, 0.0, 1.0)),
+        clamp(f * g * 3.5, 0.0, 1.0)
       );
 
-      /* Edge vignette — darken corners slightly */
-      float vign = 1.0 - 0.18 * length(uv * 2.0 - 1.0);
+      /* Lighten overall so it stays background-like */
+      col = mix(vec3(0.97), col, 0.55);
+
+      /* Edge vignette */
+      float vign = 1.0 - 0.15 * length(uv * 2.0 - 1.0);
       col *= vign;
 
       gl_FragColor = vec4(col, 1.0);
