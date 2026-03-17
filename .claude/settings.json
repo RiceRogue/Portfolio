@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:ericni.squarespace.com)",
+      "WebFetch(domain:static1.squarespace.com)",
+      "Bash(python3 -c \":*)"
+    ]
+  }
+}

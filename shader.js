@@ -226,6 +226,19 @@
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLb(); });
 })();
 
+/* Dark mode toggle */
+(function () {
+  const stored = localStorage.getItem('theme');
+  if (stored) document.documentElement.setAttribute('data-theme', stored);
+  const btn = document.getElementById('dark-toggle');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+  });
+})();
+
 /* Mobile hamburger */
 (function () {
   const btn  = document.getElementById('hamburger');

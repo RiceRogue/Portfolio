@@ -26,6 +26,17 @@
   --transition: 0.22s ease;
 }
 
+[data-theme="dark"] {
+  --bg: #111111;
+  --fg: #f0efec;
+  --fg-muted: #999999;
+  --fg-subtle: #555555;
+  --accent: #f0efec;
+  --border: #2c2c2c;
+  --card-bg: #1a1a1a;
+  --nav-bg: rgba(17, 17, 17, 0.92);
+}
+
 html { scroll-behavior: smooth; }
 
 body {
@@ -106,11 +117,35 @@ a {
 .site-nav .icon-link {
   display: flex;
   align-items: center;
-  opacity: 0.65;
-  transition: opacity var(--transition);
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: #fff;
+  transition: transform var(--transition), box-shadow var(--transition);
 }
-.site-nav .icon-link:hover { opacity: 1; }
-.site-nav .icon-link svg { width: 18px; height: 18px; }
+.site-nav .icon-link:hover { transform: scale(1.12); box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
+.site-nav .icon-link[aria-label="LinkedIn"] { background: #0A66C2; }
+.site-nav .icon-link[aria-label="Itch.io"]  { background: #FA5C5C; }
+.site-nav .icon-link svg { width: 15px; height: 15px; }
+
+/* Dark mode toggle */
+.dark-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--fg-muted);
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  transition: color var(--transition);
+}
+.dark-toggle:hover { color: var(--fg); }
+.dark-toggle svg { width: 18px; height: 18px; }
+.dark-toggle .icon-sun { display: none; }
+.dark-toggle .icon-moon { display: block; }
+[data-theme="dark"] .dark-toggle .icon-sun { display: block; }
+[data-theme="dark"] .dark-toggle .icon-moon { display: none; }
 
 /* ── HERO / MARQUEE ────────────────────────────────────────── */
 .hero {

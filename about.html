@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+<script>var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t);</script>
 </head>
 <body class="page-fade-in">
 
@@ -26,6 +27,10 @@
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.13 1.338C2.08 1.96.02 4.328 0 4.95v1.03c0 1.303 1.22 2.45 2.325 2.45 1.33 0 2.436-1.102 2.436-2.41 0 1.308 1.07 2.41 2.4 2.41 1.328 0 2.362-1.102 2.362-2.41 0 1.308 1.137 2.41 2.466 2.41h.024c1.33 0 2.466-1.102 2.466-2.41 0 1.308 1.034 2.41 2.363 2.41 1.328 0 2.4-1.102 2.4-2.41 0 1.308 1.104 2.41 2.435 2.41C22.78 8.43 24 7.282 24 5.98V4.95c-.02-.622-2.08-2.99-3.13-3.612-4.573-.516-13.67-.516-17.74 0z"/></svg>
         </a>
       </nav>
+      <button class="dark-toggle" id="dark-toggle" aria-label="Toggle dark mode">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
       <button class="hamburger" id="hamburger" aria-label="Menu">
         <span></span><span></span><span></span>
       </button>
@@ -44,11 +49,6 @@
       <div class="about-layout">
         <div class="about-body">
           <h1 class="page-title reveal" style="margin-bottom:2rem">About</h1>
-
-          <div class="reveal" style="margin-bottom:2rem">
-            <img src="https://images.squarespace-cdn.com/content/v1/64b6d793b73c582ca6e94e8e/98667334-dd14-494b-a9c6-35902e5038c0/Eric%27s+Presentation+%281%29.png"
-                 alt="Eric Ni" style="width:100%;max-width:480px;display:block;object-fit:cover;" />
-          </div>
 
           <p class="reveal">
             I'm <strong>Eric Ni</strong> — a technical game designer, brand partnerships producer, and educator with interests spanning gaming, anime, film, and fandom culture.
