@@ -71,25 +71,21 @@
 
       float f = fbm(uv + 4.0 * r);
 
-      /* Extra warp pass for more randomness */
-      vec2 s = vec2(fbm(uv + 6.0 * r + vec2(t * 0.08, 3.1)),
-                    fbm(uv + 6.0 * r + vec2(2.4, t * 0.11)));
-      float g = fbm(uv + 3.0 * s);
-
-      /* Colorful palette — soft lavender, peach, sky, mint */
-      vec3 colA = vec3(0.82, 0.86, 0.97); /* soft blue-lavender */
-      vec3 colB = vec3(0.97, 0.85, 0.80); /* warm peach */
-      vec3 colC = vec3(0.80, 0.95, 0.90); /* pale mint */
-      vec3 colD = vec3(0.92, 0.82, 0.96); /* light purple */
-
-      vec3 col = mix(
-        mix(colA, colB, clamp(f * 2.0, 0.0, 1.0)),
-        mix(colC, colD, clamp(g * 2.0, 0.0, 1.0)),
-        clamp(f * g * 3.5, 0.0, 1.0)
+      /* Colorful palette driven by noise position */
+      vec3 colA = mix(
+        vec3(0.82, 0.86, 0.97),   /* blue-lavender */
+        vec3(0.97, 0.85, 0.80),   /* warm peach    */
+        clamp(r.x * 2.0, 0.0, 1.0)
       );
+      vec3 colB = mix(
+        vec3(0.80, 0.95, 0.90),   /* pale mint  */
+        vec3(0.93, 0.82, 0.96),   /* soft lilac */
+        clamp(r.y * 2.0, 0.0, 1.0)
+      );
+      vec3 col = mix(colA, colB, clamp(f * f * 4.0, 0.0, 1.0));
 
-      /* Lighten overall so it stays background-like */
-      col = mix(vec3(0.97), col, 0.55);
+      /* Lighten so it stays subtle behind content */
+      col = mix(vec3(0.97), col, 0.52);
 
       /* Edge vignette */
       float vign = 1.0 - 0.15 * length(uv * 2.0 - 1.0);
