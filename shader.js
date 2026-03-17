@@ -84,8 +84,8 @@
       );
       vec3 col = mix(colA, colB, clamp(f * f * 4.0, 0.0, 1.0));
 
-      /* Lighten so it stays subtle behind content */
-      col = mix(vec3(0.97), col, 0.52);
+      /* Scale to visible range that works on both light & dark */
+      col = col * 0.68 + 0.08;
 
       /* Edge vignette */
       float vign = 1.0 - 0.15 * length(uv * 2.0 - 1.0);
