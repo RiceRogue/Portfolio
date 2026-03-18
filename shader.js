@@ -7,12 +7,16 @@
   const PER_COL = 4; // smileys per column at staggered phases
   const SIZES   = [40, 50, 58, 66, 74];
 
-  /* SVG face parts — eyes shared, mouth differs */
-  const EYES = `
+  /* SVG face parts */
+  const EYES_OPEN = `
     <circle cx="34" cy="40" r="6" fill="currentColor"/>
     <circle cx="66" cy="40" r="6" fill="currentColor"/>`;
-  const MOUTH_SAD   = `<path d="M28 66 Q50 54 72 66" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>`;
-  const MOUTH_SMILE = `<path d="M28 60 Q50 76 72 60" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>`;
+  const EYES_SQUINT = `
+    <path d="M26 42 Q34 31 42 42" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+    <path d="M58 42 Q66 31 74 42" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>`;
+  const MOUTH_SMILE   = `<path d="M28 60 Q50 76 72 60" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>`;
+  const MOUTH_BIGSMILE = `<path d="M14 57 Q50 90 86 57" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+    <path d="M14 57 Q50 90 86 57 Q50 66 14 57Z" fill="currentColor" opacity="0.25"/>`;
 
   for (let col = 0; col < COLS; col++) {
     const xPct = 4 + (col / (COLS - 1)) * 92; // 4% – 96%
@@ -36,8 +40,8 @@
       circle.className = 'smiley-circle';
       circle.innerHTML = `
         <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <g class="face-sad">${EYES}${MOUTH_SAD}</g>
-          <g class="face-smile">${EYES}${MOUTH_SMILE}</g>
+          <g class="face-smile">${EYES_OPEN}${MOUTH_SMILE}</g>
+          <g class="face-bigsmile">${EYES_SQUINT}${MOUTH_BIGSMILE}</g>
         </svg>`;
 
       wrapper.appendChild(circle);
