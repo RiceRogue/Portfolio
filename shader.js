@@ -18,75 +18,86 @@
     }
   `;
 
-  /* ── Fragment shader — melting smiley faces ────────────── */
+  /* ── Fragment shader — wave field with melting smileys ─── */
   const FS = `
     precision mediump float;
 
     uniform float u_time;
     uniform vec2  u_resolution;
+    uniform vec2  u_mouse;
 
     float hash(vec2 p) {
       return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
     }
 
-    /* SDF: filled circle */
-    float circ(vec2 p, float r) {
-      return length(p) - r;
+    float noise(vec2 p) {
+      vec2 i = floor(p);
+      vec2 f = fract(p);
+      f = f * f * (3.0 - 2.0 * f);
+      float a = hash(i);
+      float b = hash(i + vec2(1.0, 0.0));
+      float c = hash(i + vec2(0.0, 1.0));
+      float d = hash(i + vec2(1.0, 1.0));
+      return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
     }
 
-    /* SDF: smiley — face with eye holes and smile arc */
+    /* SDF smiley: face disk with punched eyes + smile arc */
     float smiley(vec2 p) {
-      float d, eyeL, eyeR, s;
-      d    = circ(p, 0.40);
-      eyeL = circ(p - vec2(-0.13, 0.11), 0.075);
-      eyeR = circ(p - vec2( 0.13, 0.11), 0.075);
-      d    = max(d, -eyeL);
-      d    = max(d, -eyeR);
-      s    = abs(circ(p - vec2(0.0, -0.04), 0.21)) - 0.048;
-      s    = max(s,  p.y + 0.01);
-      s    = max(s,  abs(p.x) - 0.185);
+      float d, s;
+      d = length(p) - 0.42;
+      d = max(d, -(length(p - vec2(-0.14, 0.12)) - 0.085));
+      d = max(d, -(length(p - vec2( 0.14, 0.12)) - 0.085));
+      s = abs(length(p - vec2(0.0, -0.05)) - 0.22) - 0.052;
+      s = max(s,  p.y + 0.02);
+      s = max(s,  abs(p.x) - 0.19);
       return min(d, s);
     }
 
     void main() {
-      vec2  uv, cell, p;
-      float t, aspect, scale, h1, h2, drip, d, fill, outline;
-      vec3  faceCol, eyeCol, bgCol, col;
+      float aspect, t, w1, w2, ripple, mdist, scale, hc, melt, d, fill;
+      vec2  uv, mouse, warped, cell, p;
+      vec3  warm, cool, faceCol, bgCol, col;
 
       aspect = u_resolution.x / u_resolution.y;
       uv     = gl_FragCoord.xy / u_resolution.xy;
       uv.x  *= aspect;
-      t      = u_time * 0.7;
-      scale  = 3.0;
+      mouse  = vec2(u_mouse.x * aspect, u_mouse.y);
+      t      = u_time * 0.45;
 
-      cell = floor(uv * scale);
-      p    = fract(uv * scale) * 2.0 - 1.0;
+      /* Wave domain warp */
+      w1 = noise(uv * 1.6 + t * 0.35);
+      w2 = noise(uv * 1.6 + vec2(4.3, 2.1) - t * 0.30);
 
-      h1 = hash(cell);
-      h2 = hash(cell + vec2(7.3, 3.1));
+      /* Mouse ripple — radiates outward from cursor */
+      mdist  = length(uv - mouse);
+      ripple = sin(mdist * 14.0 - u_time * 4.0) * 0.18 * exp(-mdist * 3.5);
 
-      /* Melt: push p.y down based on a sine wave, stronger near bottom */
-      drip  = sin(p.x * 2.8 + t * (0.6 + h1 * 0.5) + h2 * 6.28) * 0.45;
-      drip *= smoothstep(0.0, 0.7, -p.y);
-      p.y  += drip;
+      warped = uv + vec2(w1 - 0.5, w2 - 0.5) * 0.65 + ripple;
+
+      /* Tile smileys on the warped field */
+      scale = 3.2;
+      cell  = floor(warped * scale);
+      p     = fract(warped * scale) * 2.0 - 1.0;
+
+      /* Per-cell drip melt */
+      hc   = hash(cell);
+      melt = sin(p.x * 2.6 + t * (0.9 + hc * 0.4)) * 0.38;
+      melt *= smoothstep(0.0, 0.75, -p.y);
+      p.y += melt;
 
       d = smiley(p);
 
-      /* Per-cell colour: cycle through warm yellows, oranges, greens */
-      faceCol = vec3(
-        0.85 + 0.15 * sin(h1 * 6.28 + 0.0),
-        0.75 + 0.20 * sin(h1 * 6.28 + 2.1),
-        0.10 + 0.20 * sin(h1 * 6.28 + 4.2)
-      );
-      bgCol   = vec3(0.07, 0.05, 0.10);
-      eyeCol  = vec3(0.05, 0.03, 0.05);
+      /* Colour: warm yellows blending to cool pinks via wave */
+      warm    = vec3(0.98, 0.88 + 0.10 * w1, 0.18 + 0.20 * w2);
+      cool    = vec3(0.98, 0.50 + 0.20 * w2, 0.70 + 0.20 * w1);
+      faceCol = mix(warm, cool, smoothstep(0.3, 0.7, w2));
+      bgCol   = vec3(0.06, 0.04, 0.10);
 
-      fill    = 1.0 - smoothstep(-0.01, 0.018, d);
-      outline = 1.0 - smoothstep(-0.01, 0.018, abs(d) - 0.03);
+      fill = 1.0 - smoothstep(-0.015, 0.022, d);
+      col  = mix(bgCol, faceCol, fill);
 
-      col = bgCol;
-      col = mix(col, faceCol,  fill);
-      col = mix(col, eyeCol,   outline * (1.0 - fill));
+      /* Subtle glow halo around each face */
+      col += faceCol * 0.12 * (1.0 - smoothstep(0.0, 0.25, abs(d)));
 
       gl_FragColor = vec4(col, 1.0);
     }
@@ -126,9 +137,10 @@
     -1,  1,  1, -1,  1,  1,
   ]), gl.STATIC_DRAW);
 
-  const posLoc  = gl.getAttribLocation(prog, 'a_position');
-  const timeLoc = gl.getUniformLocation(prog, 'u_time');
-  const resLoc  = gl.getUniformLocation(prog, 'u_resolution');
+  const posLoc   = gl.getAttribLocation(prog, 'a_position');
+  const timeLoc  = gl.getUniformLocation(prog, 'u_time');
+  const resLoc   = gl.getUniformLocation(prog, 'u_resolution');
+  const mouseLoc = gl.getUniformLocation(prog, 'u_mouse');
 
   /* ── Resize handling ───────────────────────────────────── */
   const hero = canvas.closest('.hero') || canvas.parentElement;
@@ -141,6 +153,14 @@
   }
   resize();
   window.addEventListener('resize', resize);
+
+  /* ── Mouse tracking ────────────────────────────────────── */
+  let mouseX = 0.5, mouseY = 0.5;
+  window.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    mouseX = (e.clientX - rect.left) / rect.width;
+    mouseY = 1.0 - (e.clientY - rect.top) / rect.height;
+  });
 
   /* ── Render loop ───────────────────────────────────────── */
   let start = null;
@@ -156,6 +176,7 @@
     gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
     gl.uniform1f(timeLoc, t);
     gl.uniform2f(resLoc, canvas.width, canvas.height);
+    gl.uniform2f(mouseLoc, mouseX, mouseY);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 
     raf = requestAnimationFrame(frame);
