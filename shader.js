@@ -3,75 +3,80 @@
   const bg = document.getElementById('smiley-bg');
   if (!bg) return;
 
-  const COLS    = 9;
-  const PER_COL = 4; // smileys per column at staggered phases
-  const SIZES   = [40, 50, 58, 66, 74];
+  const COUNT = 40;
+  const SIZES = [36, 44, 52, 60, 68, 76];
 
-  /* SVG face parts */
   const EYES_OPEN = `
     <circle cx="34" cy="40" r="6" fill="currentColor"/>
     <circle cx="66" cy="40" r="6" fill="currentColor"/>`;
   const EYES_SQUINT = `
     <path d="M26 42 Q34 31 42 42" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>
     <path d="M58 42 Q66 31 74 42" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>`;
-  const MOUTH_SMILE   = `<path d="M28 60 Q50 76 72 60" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>`;
+  const MOUTH_SMILE    = `<path d="M28 60 Q50 76 72 60" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>`;
   const MOUTH_BIGSMILE = `<path d="M14 57 Q50 90 86 57" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>
     <path d="M14 57 Q50 90 86 57 Q50 66 14 57Z" fill="currentColor" opacity="0.25"/>`;
 
-  for (let col = 0; col < COLS; col++) {
-    const xPct = 4 + (col / (COLS - 1)) * 92; // 4% – 96%
+  const circles = [];
 
-    for (let i = 0; i < PER_COL; i++) {
-      const size = SIZES[Math.floor(Math.random() * SIZES.length)];
-      const dur  = 7 + Math.random() * 7;           // 7–14 s
-      const delay = -((i / PER_COL) * dur);          // stagger phases
+  for (let i = 0; i < COUNT; i++) {
+    const size  = SIZES[Math.floor(Math.random() * SIZES.length)];
+    const dur   = 7 + Math.random() * 8;           // 7–15 s
+    const xPct  = 3 + Math.random() * 94;          // fully random 3%–97%
+    const delay = -(Math.random() * dur);           // random phase
 
-      const wrapper = document.createElement('div');
-      wrapper.className = 'smiley-wrapper';
-      wrapper.style.cssText = `
-        left:${xPct}%;
-        width:${size}px;
-        height:${size}px;
-        --dur:${dur.toFixed(2)}s;
-        --delay:${delay.toFixed(2)}s;
-      `;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'smiley-wrapper';
+    wrapper.style.cssText = `left:${xPct.toFixed(1)}%;width:${size}px;height:${size}px;--dur:${dur.toFixed(2)}s;--delay:${delay.toFixed(2)}s;`;
 
-      const circle = document.createElement('div');
-      circle.className = 'smiley-circle';
-      circle.innerHTML = `
-        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <g class="face-smile">${EYES_OPEN}${MOUTH_SMILE}</g>
-          <g class="face-bigsmile">${EYES_SQUINT}${MOUTH_BIGSMILE}</g>
-        </svg>`;
+    const circle = document.createElement('div');
+    circle.className = 'smiley-circle';
+    circle.innerHTML = `
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <g class="face-smile">${EYES_OPEN}${MOUTH_SMILE}</g>
+        <g class="face-bigsmile">${EYES_SQUINT}${MOUTH_BIGSMILE}</g>
+      </svg>`;
 
-      wrapper.appendChild(circle);
-      bg.appendChild(wrapper);
+    wrapper.appendChild(circle);
+    bg.appendChild(wrapper);
+    circles.push(circle);
+  }
 
-      /* GSAP 3D tilt */
-      if (typeof gsap !== 'undefined') {
-        circle.addEventListener('pointerenter', () => {
-          circle.classList.add('hovered');
-        });
-        circle.addEventListener('pointermove', e => {
-          const r  = circle.getBoundingClientRect();
-          const rx =  ((e.clientY - (r.top  + r.height / 2)) / r.height) * 38;
-          const ry = -((e.clientX - (r.left + r.width  / 2)) / r.width ) * 38;
-          gsap.to(circle, { rotateX: rx, rotateY: ry, scale: 1.2, overwrite: true, duration: 0.15 });
-        });
-        circle.addEventListener('pointerleave', () => {
-          circle.classList.remove('hovered');
-          gsap.to(circle, {
-            rotateX: 0, rotateY: 0, scale: 1,
-            duration: 1.0, ease: 'elastic.out(1, 0.38)', overwrite: true
-          });
-        });
-      } else {
-        /* Fallback without GSAP — CSS-only hover */
-        circle.addEventListener('pointerenter', () => circle.classList.add('hovered'));
-        circle.addEventListener('pointerleave', () => circle.classList.remove('hovered'));
-      }
+  /* Global hit-test — bypasses pointer-events CSS issues on animated elements */
+  let lastHovered = null;
+
+  function unhover(c) {
+    if (!c) return;
+    c.classList.remove('hovered');
+    if (typeof gsap !== 'undefined') {
+      gsap.to(c, { rotateX: 0, rotateY: 0, scale: 1, duration: 1.0, ease: 'elastic.out(1, 0.38)', overwrite: true });
     }
   }
+
+  document.addEventListener('pointermove', e => {
+    let found = null;
+    for (const c of circles) {
+      const r  = c.getBoundingClientRect();
+      if (r.width === 0) continue;
+      const dx = e.clientX - (r.left + r.width  / 2);
+      const dy = e.clientY - (r.top  + r.height / 2);
+      if (dx * dx + dy * dy <= (r.width / 2) * (r.width / 2)) { found = c; break; }
+    }
+
+    if (found !== lastHovered) {
+      unhover(lastHovered);
+      lastHovered = found;
+      if (found) found.classList.add('hovered');
+    }
+
+    if (found && typeof gsap !== 'undefined') {
+      const r  = found.getBoundingClientRect();
+      const rx =  ((e.clientY - (r.top  + r.height / 2)) / r.height) * 38;
+      const ry = -((e.clientX - (r.left + r.width  / 2)) / r.width)  * 38;
+      gsap.to(found, { rotateX: rx, rotateY: ry, scale: 1.2, overwrite: true, duration: 0.15 });
+    }
+  });
+
+  document.addEventListener('pointerleave', () => { unhover(lastHovered); lastHovered = null; });
 })();
 
 /* ── Shared utilities ───────────────────────────────────────── */

@@ -168,16 +168,15 @@ a {
 .smiley-wrapper {
   position: absolute;
   top: -80px;
-  transform: translateX(-50%);
   pointer-events: none;
   animation: smiley-fall var(--dur, 9s) linear var(--delay, 0s) infinite;
 }
 
 @keyframes smiley-fall {
-  0%   { top: -80px; opacity: 0; }
-  6%   { opacity: 1; }
-  78%  { opacity: 1; }
-  100% { top: 110%; opacity: 0; }
+  0%   { transform: translate(-50%, 0);      opacity: 0; }
+  7%   { opacity: 1; }
+  58%  { opacity: 1; }
+  100% { transform: translate(-50%, 130vh);  opacity: 0; }
 }
 
 .smiley-circle {
