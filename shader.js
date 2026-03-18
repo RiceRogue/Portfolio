@@ -235,28 +235,23 @@
   const close = overlay && overlay.querySelector('.lightbox-close');
   if (!overlay || !img) return;
 
-  let savedScroll = 0;
-
   document.querySelectorAll('.gallery-img-wrap img, .lightbox-trigger').forEach(el => {
     el.addEventListener('click', () => {
-      savedScroll = window.scrollY;
       img.src = el.src;
+      /* Pin overlay to current viewport position so it opens right here */
+      overlay.style.top    = window.scrollY + 'px';
+      overlay.style.height = window.innerHeight + 'px';
       overlay.classList.add('open');
-      document.body.style.overflow = 'hidden';
-      document.body.style.top = '-' + savedScroll + 'px';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
+      document.documentElement.style.overflow = 'hidden';
     });
   });
 
   function closeLb() {
     overlay.classList.remove('open');
     img.src = '';
-    document.body.style.overflow = '';
-    document.body.style.position = '';
-    document.body.style.width = '';
-    document.body.style.top = '';
-    window.scrollTo(0, savedScroll);
+    overlay.style.top    = '';
+    overlay.style.height = '';
+    document.documentElement.style.overflow = '';
   }
   if (close) close.addEventListener('click', closeLb);
   overlay.addEventListener('click', e => { if (e.target === overlay) closeLb(); });
