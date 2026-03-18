@@ -18,7 +18,7 @@
     }
   `;
 
-  /* ── Fragment shader — wave field with melting smileys ─── */
+  /* ── Fragment shader — falling streaks (FallingPattern port) */
   const FS = `
     precision mediump float;
 
@@ -30,76 +30,73 @@
       return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
     }
 
-    float noise(vec2 p) {
-      vec2 i = floor(p);
-      vec2 f = fract(p);
-      f = f * f * (3.0 - 2.0 * f);
-      float a = hash(i);
-      float b = hash(i + vec2(1.0, 0.0));
-      float c = hash(i + vec2(0.0, 1.0));
-      float d = hash(i + vec2(1.0, 1.0));
-      return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-    }
-
-    /* SDF smiley: face disk with punched eyes + smile arc */
-    float smiley(vec2 p) {
-      float d, s;
-      d = length(p) - 0.42;
-      d = max(d, -(length(p - vec2(-0.14, 0.12)) - 0.085));
-      d = max(d, -(length(p - vec2( 0.14, 0.12)) - 0.085));
-      s = abs(length(p - vec2(0.0, -0.05)) - 0.22) - 0.052;
-      s = max(s,  p.y + 0.02);
-      s = max(s,  abs(p.x) - 0.19);
-      return min(d, s);
-    }
-
     void main() {
-      float aspect, t, w1, w2, ripple, mdist, scale, hc, melt, d, fill;
-      vec2  uv, mouse, warped, cell, p;
-      vec3  warm, cool, faceCol, bgCol, col;
+      float t, numCols, colIdx, colFrac;
+      float h1, h2, speed, phase, fallY, xOff;
+      float streakW, tailLen, inStreak, headBright;
+      float dotFallY, dotX, dotDist, inDot, brightness;
+      float mdist, ripple, mouseGlow;
+      vec2  uv, mouse;
+      vec3  bgCol, streakCol, headCol, glowCol, colOut;
 
-      aspect = u_resolution.x / u_resolution.y;
-      uv     = gl_FragCoord.xy / u_resolution.xy;
-      uv.x  *= aspect;
-      mouse  = vec2(u_mouse.x * aspect, u_mouse.y);
-      t      = u_time * 0.45;
+      uv    = gl_FragCoord.xy / u_resolution.xy;
+      mouse = u_mouse;
+      t     = u_time;
 
-      /* Wave domain warp */
-      w1 = noise(uv * 1.6 + t * 0.35);
-      w2 = noise(uv * 1.6 + vec2(4.3, 2.1) - t * 0.30);
+      /* Mouse ripple — distorts UV before streak calc */
+      mdist  = length((uv - mouse) * vec2(u_resolution.x / u_resolution.y, 1.0));
+      ripple = sin(mdist * 16.0 - t * 5.0) * 0.018 * exp(-mdist * 5.0);
+      uv.y  += ripple;
+      uv.x  += ripple * 0.4;
 
-      /* Mouse ripple — radiates outward from cursor */
-      mdist  = length(uv - mouse);
-      ripple = sin(mdist * 14.0 - u_time * 4.0) * 0.18 * exp(-mdist * 3.5);
+      /* Falling streak columns */
+      numCols = 22.0;
+      colIdx  = floor(uv.x * numCols);
+      colFrac = fract(uv.x * numCols);
 
-      warped = uv + vec2(w1 - 0.5, w2 - 0.5) * 0.65 + ripple;
+      h1    = hash(vec2(colIdx, 0.0));
+      h2    = hash(vec2(colIdx, 1.0));
+      speed = 0.15 + h1 * 0.25;
+      phase = h2;
 
-      /* Tile smileys on the warped field */
-      scale = 3.2;
-      cell  = floor(warped * scale);
-      p     = fract(warped * scale) * 2.0 - 1.0;
+      /* Y position: head falls downward, wraps around */
+      fallY = fract(uv.y + t * speed + phase);
 
-      /* Per-cell drip melt */
-      hc   = hash(cell);
-      melt = sin(p.x * 2.6 + t * (0.9 + hc * 0.4)) * 0.38;
-      melt *= smoothstep(0.0, 0.75, -p.y);
-      p.y += melt;
+      /* Streak horizontal profile — thin soft strip */
+      streakW  = 0.07 + h1 * 0.05;
+      xOff     = abs(colFrac - 0.5);
+      inStreak = smoothstep(streakW, streakW * 0.2, xOff);
 
-      d = smiley(p);
+      /* Comet tail: bright head, long fade upward */
+      tailLen    = 0.18 + h2 * 0.22;
+      headBright = inStreak
+                 * smoothstep(0.0,  0.05, fallY)
+                 * (1.0 - smoothstep(0.05, 0.05 + tailLen, fallY));
+      headBright = headBright * headBright; /* sharpen */
 
-      /* Colour: warm yellows blending to cool pinks via wave */
-      warm    = vec3(0.98, 0.88 + 0.10 * w1, 0.18 + 0.20 * w2);
-      cool    = vec3(0.98, 0.50 + 0.20 * w2, 0.70 + 0.20 * w1);
-      faceCol = mix(warm, cool, smoothstep(0.3, 0.7, w2));
-      bgCol   = vec3(0.06, 0.04, 0.10);
+      /* Dot accent at comet head */
+      dotFallY = fract(uv.y + t * speed + phase + 0.005);
+      dotX     = (colFrac - 0.5) * 4.0;
+      dotDist  = length(vec2(dotX, dotFallY * 10.0 - 0.12));
+      inDot    = smoothstep(0.35, 0.0, dotDist);
 
-      fill = 1.0 - smoothstep(-0.015, 0.022, d);
-      col  = mix(bgCol, faceCol, fill);
+      brightness = headBright + inDot * 0.85;
 
-      /* Subtle glow halo around each face */
-      col += faceCol * 0.12 * (1.0 - smoothstep(0.0, 0.25, abs(d)));
+      /* Dark bg + cool blue-white streaks — readable under white text */
+      bgCol    = vec3(0.05, 0.04, 0.10);
+      streakCol= vec3(0.75, 0.88, 1.00);
+      headCol  = vec3(1.00, 1.00, 1.00);
+      glowCol  = vec3(0.35, 0.55, 1.00);
 
-      gl_FragColor = vec4(col, 1.0);
+      colOut  = bgCol;
+      colOut  = mix(colOut, streakCol, clamp(headBright * 1.5, 0.0, 1.0));
+      colOut  = mix(colOut, headCol,   clamp(inDot * 1.2,      0.0, 1.0));
+
+      /* Soft radial glow that pulses around the mouse */
+      mouseGlow = exp(-mdist * 4.5) * (0.18 + 0.08 * sin(t * 2.0));
+      colOut   += glowCol * mouseGlow;
+
+      gl_FragColor = vec4(colOut, 1.0);
     }
   `;
 
