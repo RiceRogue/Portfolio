@@ -18,7 +18,7 @@
     }
   `;
 
-  /* ── Fragment shader ───────────────────────────────────── */
+  /* ── Fragment shader — melting smiley faces ────────────── */
   const FS = `
     precision mediump float;
 
@@ -29,40 +29,66 @@
       return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
     }
 
-    float noise(vec2 p) {
-      vec2 i = floor(p);
-      vec2 f = fract(p);
-      f = f * f * (3.0 - 2.0 * f);
-      float a = hash(i);
-      float b = hash(i + vec2(1.0, 0.0));
-      float c = hash(i + vec2(0.0, 1.0));
-      float d = hash(i + vec2(1.0, 1.0));
-      return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+    /* SDF: filled circle */
+    float circ(vec2 p, float r) {
+      return length(p) - r;
     }
 
-    float fbm(vec2 p) {
-      float v = 0.0;
-      float a = 0.5;
-      v += a * noise(p); p = p * 2.1 + vec2(1.7, 9.2); a *= 0.5;
-      v += a * noise(p); p = p * 2.1 + vec2(8.3, 2.8); a *= 0.5;
-      v += a * noise(p); p = p * 2.1 + vec2(3.1, 6.4); a *= 0.5;
-      v += a * noise(p);
-      return v;
+    /* SDF: smiley — face with eye holes and smile arc */
+    float smiley(vec2 p) {
+      float d, eyeL, eyeR, s;
+      d    = circ(p, 0.40);
+      eyeL = circ(p - vec2(-0.13, 0.11), 0.075);
+      eyeR = circ(p - vec2( 0.13, 0.11), 0.075);
+      d    = max(d, -eyeL);
+      d    = max(d, -eyeR);
+      s    = abs(circ(p - vec2(0.0, -0.04), 0.21)) - 0.048;
+      s    = max(s,  p.y + 0.01);
+      s    = max(s,  abs(p.x) - 0.185);
+      return min(d, s);
     }
 
     void main() {
-      vec2 uv = gl_FragCoord.xy / u_resolution.xy;
-      float t = u_time * 0.15;
-      float f = fbm(uv * 1.8 + t * 0.2);
-      float g = fbm(uv * 1.8 + vec2(5.2, 1.3) - t * 0.15);
-      float h = fbm(uv * 2.4 + vec2(f, g) * 2.0);
-      vec3 col = mix(
-        mix(vec3(0.60, 0.78, 0.98), vec3(0.98, 0.60, 0.72), f),
-        mix(vec3(0.60, 0.95, 0.80), vec3(0.90, 0.70, 0.98), g),
-        h
+      vec2  uv, cell, p;
+      float t, aspect, scale, h1, h2, drip, d, fill, outline;
+      vec3  faceCol, eyeCol, bgCol, col;
+
+      aspect = u_resolution.x / u_resolution.y;
+      uv     = gl_FragCoord.xy / u_resolution.xy;
+      uv.x  *= aspect;
+      t      = u_time * 0.7;
+      scale  = 3.0;
+
+      cell = floor(uv * scale);
+      p    = fract(uv * scale) * 2.0 - 1.0;
+
+      h1 = hash(cell);
+      h2 = hash(cell + vec2(7.3, 3.1));
+
+      /* Melt: push p.y down based on a sine wave, stronger near bottom */
+      drip  = sin(p.x * 2.8 + t * (0.6 + h1 * 0.5) + h2 * 6.28) * 0.45;
+      drip *= smoothstep(0.0, 0.7, -p.y);
+      p.y  += drip;
+
+      d = smiley(p);
+
+      /* Per-cell colour: cycle through warm yellows, oranges, greens */
+      faceCol = vec3(
+        0.85 + 0.15 * sin(h1 * 6.28 + 0.0),
+        0.75 + 0.20 * sin(h1 * 6.28 + 2.1),
+        0.10 + 0.20 * sin(h1 * 6.28 + 4.2)
       );
-      float vign = 1.0 - 0.2 * length(uv * 2.0 - 1.0);
-      gl_FragColor = vec4(col * vign, 1.0);
+      bgCol   = vec3(0.07, 0.05, 0.10);
+      eyeCol  = vec3(0.05, 0.03, 0.05);
+
+      fill    = 1.0 - smoothstep(-0.01, 0.018, d);
+      outline = 1.0 - smoothstep(-0.01, 0.018, abs(d) - 0.03);
+
+      col = bgCol;
+      col = mix(col, faceCol,  fill);
+      col = mix(col, eyeCol,   outline * (1.0 - fill));
+
+      gl_FragColor = vec4(col, 1.0);
     }
   `;
 
