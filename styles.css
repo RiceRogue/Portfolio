@@ -163,6 +163,8 @@ a {
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 82%);
+  mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 82%);
 }
 
 .smiley-wrapper {
@@ -173,10 +175,9 @@ a {
 }
 
 @keyframes smiley-fall {
-  0%   { transform: translate(-50%, 0);      opacity: 0; }
-  7%   { opacity: 1; }
-  58%  { opacity: 1; }
-  100% { transform: translate(-50%, 130vh);  opacity: 0; }
+  0%   { transform: translate(-50%, 0);     opacity: 0; }
+  8%   { transform: translate(-50%, 0);     opacity: 1; }
+  100% { transform: translate(-50%, 130vh); opacity: 1; }
 }
 
 .smiley-circle {

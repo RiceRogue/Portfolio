@@ -13,8 +13,8 @@
     <path d="M26 42 Q34 31 42 42" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>
     <path d="M58 42 Q66 31 74 42" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>`;
   const MOUTH_SMILE    = `<path d="M28 60 Q50 76 72 60" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>`;
-  const MOUTH_BIGSMILE = `<path d="M14 57 Q50 90 86 57" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>
-    <path d="M14 57 Q50 90 86 57 Q50 66 14 57Z" fill="currentColor" opacity="0.25"/>`;
+  /* Open D-mouth: deep arc bottom + flatter top edge forming a solid open mouth */
+  const MOUTH_BIGSMILE = `<path d="M12 56 Q50 98 88 56 Q50 46 12 56 Z" fill="currentColor"/>`;
 
   const circles = [];
 
