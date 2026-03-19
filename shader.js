@@ -6,51 +6,9 @@
   const COUNT = 40;
   const SIZES = [36, 44, 52, 60, 68, 76];
 
-  /* ── Default face: upright :) ─── */
-  const EN = `<circle cx="34" cy="34" r="6" fill="currentColor"/><circle cx="66" cy="34" r="6" fill="currentColor"/>`;
-  const DEFAULT_FACE = EN + `<path d="M28 60 Q50 76 72 60" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>`;
-
-  /* ── Hover expressions ─── */
-  const EXPRESSIONS = [
-    /* :D  — open wide mouth, taller D */
-    EN + `<path d="M14 58 Q50 98 86 58 Q50 40 14 58 Z" fill="currentColor"/>`,
-
-    /* >< — X eyes + grin */
-    `<path d="M22 24 L42 44 M42 24 L22 44" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
-     <path d="M56 24 L76 44 M76 24 L56 44" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
-     <path d="M28 62 Q50 78 72 62" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>`,
-
-    /* ^_^ — arch eyes + big smile */
-    `<path d="M22 38 Q31 24 40 38" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>
-     <path d="M58 38 Q67 24 76 38" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>
-     <path d="M14 58 Q50 98 86 58 Q50 40 14 58 Z" fill="currentColor"/>`,
-
-    /* O_O — wide eyes + o mouth (surprised) */
-    `<circle cx="34" cy="34" r="12" fill="currentColor"/>
-     <circle cx="66" cy="34" r="12" fill="currentColor"/>
-     <ellipse cx="50" cy="70" rx="10" ry="9" fill="currentColor"/>`,
-
-    /* >:) — angry brows + smirk */
-    `<path d="M20 24 L42 32" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/>
-     <path d="M56 32 L78 24" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/>
-     ${EN}
-     <path d="M30 62 Q55 76 72 60" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>`,
-
-    /* :P — tongue out */
-    EN +
-    `<path d="M28 60 Q50 74 72 60" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>
-     <path d="M40 68 Q50 90 60 68 Q56 82 44 82 Z" fill="currentColor"/>`,
-
-    /* uwu — U eyes + w mouth */
-    `<path d="M22 36 Q31 50 40 36" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>
-     <path d="M58 36 Q67 50 76 36" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>
-     <path d="M30 64 Q38 76 46 64 Q54 76 62 64 Q70 76 78 64" stroke="currentColor" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
-
-    /* -_- — deadpan line eyes + flat mouth */
-    `<path d="M20 36 L44 36" stroke="currentColor" stroke-width="5.5" stroke-linecap="round"/>
-     <path d="M54 36 L78 36" stroke="currentColor" stroke-width="5.5" stroke-linecap="round"/>
-     <path d="M28 66 L72 66" stroke="currentColor" stroke-width="5.5" stroke-linecap="round"/>`,
-  ];
+  /* ── Text emoticon faces (from the reference image) ─── */
+  const DEFAULT_FACE = ':)';
+  const EXPRESSIONS  = [':D', 'XD', ":^)", ':))', ':P', ":'", ':(', ":'(", ';)', ':/'];
 
   /* ── Full-spectrum HSL palette (12 hues) ─── */
   const PALETTES = Array.from({ length: 12 }, (_, i) => {
@@ -72,18 +30,19 @@
     const palette = PALETTES[Math.floor(Math.random() * PALETTES.length)];
     const expr    = EXPRESSIONS[Math.floor(Math.random() * EXPRESSIONS.length)];
 
+    /* font-size: fit the longest of the two strings within the circle */
+    const maxLen  = Math.max(DEFAULT_FACE.length, expr.length);
+    const fontSize = Math.floor(size / (maxLen + 0.4));
+
     const wrapper = document.createElement('div');
     wrapper.className = 'smiley-wrapper';
     wrapper.style.cssText = `left:${xPct.toFixed(1)}%;width:${size}px;height:${size}px;--dur:${dur.toFixed(2)}s;--delay:${delay.toFixed(2)}s;`;
 
     const circle = document.createElement('div');
     circle.className = 'smiley-circle';
+    circle.style.fontSize = fontSize + 'px';
     circle._palette = palette;
-    circle.innerHTML = `
-      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <g class="face-default">${DEFAULT_FACE}</g>
-        <g class="face-hover">${expr}</g>
-      </svg>`;
+    circle.innerHTML = `<span class="face-default">${DEFAULT_FACE}</span><span class="face-hover">${expr}</span>`;
 
     wrapper.appendChild(circle);
     bg.appendChild(wrapper);
