@@ -341,17 +341,17 @@ a {
 }
 
 /* Per-card object-position + zoom */
-a[href="stellarune.html"]  .project-card-img img { object-position: 35% center; transform: scale(1.20); }
-a[href="still.html"]       .project-card-img img { object-position: center 30%; }
-a[href="trf.html"]         .project-card-img img { object-position: 68% center; }
-a[href="paperchase.html"]  .project-card-img img { transform: scale(1.12); }
-a[href="stairs.html"]      .project-card-img img { object-position: center 38%; transform: scale(1.10); }
+a[href="/stellarune"] .project-card-img img { object-position: 20% center; transform: scale(1.20); }
+a[href="/still"]      .project-card-img img { object-position: center 30%; }
+a[href="/trf"]        .project-card-img img { object-position: 52% center; }
+a[href="/paperchase"] .project-card-img img { transform: scale(1.12); }
+a[href="/stairs"]     .project-card-img img { object-position: center 38%; transform: scale(1.10); }
 
 /* Hover: compound base zoom + 1.04 scale */
-.project-card:hover .project-card-img img                         { transform: scale(1.04); }
-a[href="stellarune.html"] .project-card:hover .project-card-img img { transform: scale(1.25); }
-a[href="paperchase.html"] .project-card:hover .project-card-img img { transform: scale(1.16); }
-a[href="stairs.html"]     .project-card:hover .project-card-img img { transform: scale(1.14); }
+.project-card:hover .project-card-img img                    { transform: scale(1.04); }
+a[href="/stellarune"] .project-card:hover .project-card-img img { transform: scale(1.25); }
+a[href="/paperchase"] .project-card:hover .project-card-img img { transform: scale(1.16); }
+a[href="/stairs"]     .project-card:hover .project-card-img img { transform: scale(1.14); }
 
 .project-card-info {
   padding: 1rem 1rem 1.2rem;

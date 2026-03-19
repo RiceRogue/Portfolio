@@ -3,7 +3,8 @@
     "allow": [
       "WebFetch(domain:ericni.squarespace.com)",
       "WebFetch(domain:static1.squarespace.com)",
-      "Bash(python3 -c \":*)"
+      "Bash(python3 -c \":*)",
+      "Bash(grep -h 'src=\"\"\"\"[^h]' *.html)"
     ]
   }
 }
