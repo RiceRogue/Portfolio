@@ -206,12 +206,12 @@ a {
   overflow: visible;
 }
 
-.face-smile,
-.face-bigsmile { transition: opacity 0.2s ease; }
+.face-default,
+.face-hover { transition: opacity 0.2s ease; }
 
-.face-bigsmile { opacity: 0; }
-.smiley-circle.hovered .face-smile    { opacity: 0; }
-.smiley-circle.hovered .face-bigsmile { opacity: 1; }
+.face-hover { opacity: 0; }
+.smiley-circle.hovered .face-default { opacity: 0; }
+.smiley-circle.hovered .face-hover   { opacity: 1; }
 
 /* Ensure hero text stays visible over the dark shader */
 .marquee-block,
