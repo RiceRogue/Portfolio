@@ -8,8 +8,14 @@
 
   /* ── Text emoticon faces — positive/whimsy only, no nose, no frowns ─── */
   const DEFAULT_FACE = ':)';
-  const EXPRESSIONS  = [':D', ':P', ';)', ':O', ':/', ':]', ':3', ':9', ':>', ':S',
-                         ':X', '(:', ':B', '8)', 'B)', ':&', '=^.^='];
+  const EXPRESSIONS  = [
+    ':D', ':D', ':D',        // weighted — big grins
+    ':P', ':P', ':P',        // weighted — tongue out
+    ';)', ';)', ';)',         // weighted — wink
+    ':]', ':]',              // weighted — friendly
+    ':3', ':3',              // weighted — cute
+    ':O', ':/', ':>', ':S', ':X', '(:', ':B', '8)', 'B)', ':&',
+  ];
 
   /* ── Full-spectrum HSL palette (12 hues) ─── */
   const PALETTES = Array.from({ length: 12 }, (_, i) => {
