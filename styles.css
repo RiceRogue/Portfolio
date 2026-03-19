@@ -195,10 +195,9 @@ a {
   transition: background 0.25s, color 0.25s, box-shadow 0.25s;
   will-change: transform;
 }
+/* hover colours applied via JS (randomised per circle) */
 .smiley-circle.hovered {
-  background: radial-gradient(circle at 35% 30%, #ffe566, #ff8800);
-  color: #7a4000;
-  box-shadow: 0 0 30px rgba(255,160,0,0.55), 0 0 10px rgba(255,220,0,0.35);
+  transition: background 0.25s, color 0.25s, box-shadow 0.25s;
 }
 
 .smiley-circle svg {

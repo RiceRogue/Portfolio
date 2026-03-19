@@ -6,23 +6,33 @@
   const COUNT = 40;
   const SIZES = [36, 44, 52, 60, 68, 76];
 
-  const EYES_OPEN = `
-    <circle cx="34" cy="40" r="6" fill="currentColor"/>
-    <circle cx="66" cy="40" r="6" fill="currentColor"/>`;
-  const EYES_SQUINT = `
-    <path d="M26 42 Q34 31 42 42" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>
-    <path d="M58 42 Q66 31 74 42" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>`;
-  const MOUTH_SMILE    = `<path d="M28 60 Q50 76 72 60" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>`;
-  /* Open D-mouth: deep arc bottom + flatter top edge forming a solid open mouth */
-  const MOUTH_BIGSMILE = `<path d="M12 56 Q50 98 88 56 Q50 46 12 56 Z" fill="currentColor"/>`;
+  /* Faces rotated 90° — eyes stacked left like ":" in ":)" / ":D" */
+  const EYES = `
+    <circle cx="30" cy="30" r="6" fill="currentColor"/>
+    <circle cx="30" cy="70" r="6" fill="currentColor"/>`;
+  /* ")" — stroke arc on the right */
+  const MOUTH_SMILE    = `<path d="M56 28 Q84 50 56 72" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/>`;
+  /* "D" — filled half-circle on the right, closed with straight spine */
+  const MOUTH_BIGSMILE = `<path d="M56 22 Q95 50 56 78 Z" fill="currentColor"/>`;
+
+  /* Hover colour palettes — one randomly assigned per smiley */
+  const PALETTES = [
+    { bg: 'radial-gradient(circle at 35% 30%, #ffe566, #ff8800)', color: '#7a4000', glow: 'rgba(255,160,0,0.55)' },
+    { bg: 'radial-gradient(circle at 35% 30%, #ff88bb, #d01858)', color: '#5a001a', glow: 'rgba(255,40,120,0.5)'  },
+    { bg: 'radial-gradient(circle at 35% 30%, #c090ff, #5520e0)', color: '#250070', glow: 'rgba(130,60,255,0.5)'  },
+    { bg: 'radial-gradient(circle at 35% 30%, #70ffaa, #10b048)', color: '#054020', glow: 'rgba(20,190,80,0.45)'  },
+    { bg: 'radial-gradient(circle at 35% 30%, #60d8ff, #0858d8)', color: '#032460', glow: 'rgba(20,120,255,0.5)'  },
+    { bg: 'radial-gradient(circle at 35% 30%, #ffaa66, #e04010)', color: '#5a1200', glow: 'rgba(255,100,30,0.5)'  },
+  ];
 
   const circles = [];
 
   for (let i = 0; i < COUNT; i++) {
-    const size  = SIZES[Math.floor(Math.random() * SIZES.length)];
-    const dur   = 7 + Math.random() * 8;           // 7–15 s
-    const xPct  = 3 + Math.random() * 94;          // fully random 3%–97%
-    const delay = -(Math.random() * dur);           // random phase
+    const size    = SIZES[Math.floor(Math.random() * SIZES.length)];
+    const dur     = 7 + Math.random() * 8;
+    const xPct    = 3 + Math.random() * 94;
+    const delay   = -(Math.random() * dur);
+    const palette = PALETTES[Math.floor(Math.random() * PALETTES.length)];
 
     const wrapper = document.createElement('div');
     wrapper.className = 'smiley-wrapper';
@@ -30,10 +40,11 @@
 
     const circle = document.createElement('div');
     circle.className = 'smiley-circle';
+    circle._palette = palette;
     circle.innerHTML = `
       <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <g class="face-smile">${EYES_OPEN}${MOUTH_SMILE}</g>
-        <g class="face-bigsmile">${EYES_SQUINT}${MOUTH_BIGSMILE}</g>
+        <g class="face-smile">${EYES}${MOUTH_SMILE}</g>
+        <g class="face-bigsmile">${EYES}${MOUTH_BIGSMILE}</g>
       </svg>`;
 
     wrapper.appendChild(circle);
@@ -41,12 +52,23 @@
     circles.push(circle);
   }
 
-  /* Global hit-test — bypasses pointer-events CSS issues on animated elements */
+  /* Global hit-test — bypasses pointer-events CSS on animated elements */
   let lastHovered = null;
+
+  function applyHover(c) {
+    const p = c._palette;
+    c.classList.add('hovered');
+    c.style.background = p.bg;
+    c.style.color      = p.color;
+    c.style.boxShadow  = `0 0 30px ${p.glow}, 0 0 10px ${p.glow}`;
+  }
 
   function unhover(c) {
     if (!c) return;
     c.classList.remove('hovered');
+    c.style.background = '';
+    c.style.color      = '';
+    c.style.boxShadow  = '';
     if (typeof gsap !== 'undefined') {
       gsap.to(c, { rotateX: 0, rotateY: 0, scale: 1, duration: 1.0, ease: 'elastic.out(1, 0.38)', overwrite: true });
     }
@@ -65,7 +87,7 @@
     if (found !== lastHovered) {
       unhover(lastHovered);
       lastHovered = found;
-      if (found) found.classList.add('hovered');
+      if (found) applyHover(found);
     }
 
     if (found && typeof gsap !== 'undefined') {
@@ -88,7 +110,7 @@
   /* Clone children so wrap point is invisible */
   Array.from(track.children).forEach(el => track.appendChild(el.cloneNode(true)));
   let x = 0;
-  const speed = 0.9;
+  const speed = 1.035;
   function step() {
     x -= speed;
     const half = track.scrollWidth / 2;
