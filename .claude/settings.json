@@ -8,7 +8,10 @@
       "Bash(python3 update_roles.py)",
       "Bash(python3 move_roles.py)",
       "Bash(python3 move_roles2.py)",
-      "Bash(rm move_roles2.py)"
+      "Bash(rm move_roles2.py)",
+      "Bash(grep -rn \"video\\\\|iframe\\\\|youtube\\\\|vimeo\\\\|mp4\" */index.html --include=\"*.html\")",
+      "Bash(python3 bake_roles.py)",
+      "Bash(rm bake_roles.py)"
     ]
   }
 }
