@@ -6,9 +6,10 @@
   const COUNT = 40;
   const SIZES = [36, 44, 52, 60, 68, 76];
 
-  /* ── Text emoticon faces (from the reference image) ─── */
+  /* ── Text emoticon faces — positive/whimsy only, no nose, no frowns ─── */
   const DEFAULT_FACE = ':)';
-  const EXPRESSIONS  = [':D', 'XD', ":^)", ':))', ':P', ":'", ':(', ":'(", ';)', ':/'];
+  const EXPRESSIONS  = [':D', ':P', ';)', ':O', ':/', ':]', ':3', ':9', ':>', ':S',
+                         ':X', '(:', ':B', '8)', 'B)', ':&', '=^.^='];
 
   /* ── Full-spectrum HSL palette (12 hues) ─── */
   const PALETTES = Array.from({ length: 12 }, (_, i) => {
@@ -30,9 +31,13 @@
     const palette = PALETTES[Math.floor(Math.random() * PALETTES.length)];
     const expr    = EXPRESSIONS[Math.floor(Math.random() * EXPRESSIONS.length)];
 
-    /* font-size: fit the longest of the two strings within the circle */
-    const maxLen  = Math.max(DEFAULT_FACE.length, expr.length);
-    const fontSize = Math.floor(size / (maxLen + 0.4));
+    /* font-size: each face span sized independently to fill the circle */
+    function fsize(txt) {
+      return Math.min(Math.floor(size * 0.42),
+                      Math.floor(size * 0.9 / (txt.length * 0.58 + 0.3)));
+    }
+    const defaultFs = fsize(DEFAULT_FACE);
+    const hoverFs   = fsize(expr);
 
     const wrapper = document.createElement('div');
     wrapper.className = 'smiley-wrapper';
@@ -40,9 +45,8 @@
 
     const circle = document.createElement('div');
     circle.className = 'smiley-circle';
-    circle.style.fontSize = fontSize + 'px';
     circle._palette = palette;
-    circle.innerHTML = `<span class="face-default">${DEFAULT_FACE}</span><span class="face-hover">${expr}</span>`;
+    circle.innerHTML = `<span class="face-default" style="font-size:${defaultFs}px">${DEFAULT_FACE}</span><span class="face-hover" style="font-size:${hoverFs}px">${expr}</span>`;
 
     wrapper.appendChild(circle);
     bg.appendChild(wrapper);

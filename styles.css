@@ -195,7 +195,7 @@ a {
   transform-style: preserve-3d;
   transition: background 0.25s, color 0.25s, box-shadow 0.25s;
   will-change: transform;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: var(--font);
   font-weight: 700;
   letter-spacing: -0.04em;
   user-select: none;
@@ -341,11 +341,11 @@ a {
 }
 
 /* Per-card object-position + zoom */
-a[href="stellarune.html"]  .project-card-img img { object-position: 25% center; transform: scale(1.20); }
+a[href="stellarune.html"]  .project-card-img img { object-position: 55% center; transform: scale(1.20); }
 a[href="still.html"]       .project-card-img img { object-position: center 30%; }
-a[href="trf.html"]         .project-card-img img { object-position: 75% center; }
+a[href="trf.html"]         .project-card-img img { object-position: 88% center; }
 a[href="paperchase.html"]  .project-card-img img { transform: scale(1.12); }
-a[href="stairs.html"]      .project-card-img img { object-position: center 65%; transform: scale(1.10); }
+a[href="stairs.html"]      .project-card-img img { object-position: center 38%; transform: scale(1.10); }
 
 /* Hover: compound base zoom + 1.04 scale */
 .project-card:hover .project-card-img img                         { transform: scale(1.04); }
