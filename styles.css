@@ -82,7 +82,7 @@ a {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
-  height: 56px;
+  height: 70px;
 }
 
 .site-header .container {
@@ -94,7 +94,7 @@ a {
 
 .site-logo {
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: 1.31rem;
   letter-spacing: -0.01em;
   transition: opacity var(--transition);
 }
@@ -103,11 +103,11 @@ a {
 .site-nav {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 2.5rem;
 }
 
 .site-nav a {
-  font-size: 0.88rem;
+  font-size: 1.1rem;
   font-weight: 500;
   color: var(--fg-muted);
   transition: color var(--transition);
@@ -118,8 +118,8 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 37px;
+  height: 37px;
   border-radius: 50%;
   color: #fff;
   transition: transform var(--transition), box-shadow var(--transition);
@@ -127,7 +127,7 @@ a {
 .site-nav .icon-link:hover { transform: scale(1.12); box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
 .site-nav .icon-link[aria-label="LinkedIn"] { background: #0A66C2; }
 .site-nav .icon-link[aria-label="Itch.io"]  { background: #FA5C5C; }
-.site-nav .icon-link svg { width: 15px; height: 15px; }
+.site-nav .icon-link svg { width: 19px; height: 19px; }
 
 /* Dark mode toggle */
 .dark-toggle {
@@ -141,7 +141,7 @@ a {
   transition: color var(--transition);
 }
 .dark-toggle:hover { color: var(--fg); }
-.dark-toggle svg { width: 18px; height: 18px; }
+.dark-toggle svg { width: 22px; height: 22px; }
 .dark-toggle .icon-sun { display: none; }
 .dark-toggle .icon-moon { display: block; }
 [data-theme="dark"] .dark-toggle .icon-sun { display: block; }
@@ -151,7 +151,7 @@ a {
 .hero {
   position: relative;
   overflow: hidden;
-  padding-top: 56px;
+  padding-top: 70px;
   background: var(--bg);
 }
 
@@ -244,7 +244,6 @@ a {
   z-index: 1;
   padding: 4vw 0 3vw;
   overflow: hidden;
-  border-bottom: 1px solid var(--border);
 }
 
 .marquee-track {
@@ -341,9 +340,9 @@ a {
 }
 
 /* Per-card object-position + zoom */
-a[href="/stellarune"] .project-card-img img { object-position: 20% center; transform: scale(1.20); }
+a[href="/stellarune"] .project-card-img img { object-position: 8% center; transform: scale(1.20); }
 a[href="/still"]      .project-card-img img { object-position: center 30%; }
-a[href="/trf"]        .project-card-img img { object-position: 52% center; }
+a[href="/trf"]        .project-card-img img { object-position: 38% center; }
 a[href="/paperchase"] .project-card-img img { transform: scale(1.12); }
 a[href="/stairs"]     .project-card-img img { object-position: center 38%; transform: scale(1.10); }
 
@@ -436,9 +435,25 @@ a[href="/stairs"]     .project-card:hover .project-card-img img { transform: sca
   padding-top: 1rem;
 }
 
+/* ── ROLE TAG ───────────────────────────────────────────────── */
+.role-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  padding: 0.35rem 0.9rem;
+  border: 1.5px solid var(--border);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+}
+.role-tag strong { color: var(--fg); font-weight: 700; }
+
 /* ── PROJECT / GAME PAGE LAYOUT ────────────────────────────── */
 .page-main {
-  padding-top: 56px;
+  padding-top: 70px;
 }
 
 .page-hero {
@@ -747,7 +762,7 @@ ul.bullet-list li::before {
 .mobile-menu {
   display: none;
   position: fixed;
-  top: 56px; left: 0; right: 0;
+  top: 70px; left: 0; right: 0;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
   padding: 1.5rem var(--gutter);
