@@ -5,7 +5,8 @@
       "WebFetch(domain:static1.squarespace.com)",
       "Bash(python3 -c \":*)",
       "Bash(grep -h 'src=\"\"\"\"[^h]' *.html)",
-      "Bash(python3 update_roles.py)"
+      "Bash(python3 update_roles.py)",
+      "Bash(python3 move_roles.py)"
     ]
   }
 }

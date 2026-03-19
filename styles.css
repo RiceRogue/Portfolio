@@ -336,21 +336,24 @@ a {
   object-fit: cover;
   object-position: center center;
   display: block;
+  transform: scale(var(--card-zoom, 1));
   transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Per-card object-position + zoom */
-a[href="/stellarune"] .project-card-img img { object-position: 8% center; transform: scale(1.20); }
+/* Per-card object-position + base zoom via CSS variable */
+a[href="/stellarune"] .project-card { --card-zoom: 1.20; }
+a[href="/paperchase"] .project-card { --card-zoom: 1.12; }
+a[href="/stairs"]     .project-card { --card-zoom: 1.10; }
+
+a[href="/stellarune"] .project-card-img img { object-position: 8% center; }
 a[href="/still"]      .project-card-img img { object-position: center 30%; }
 a[href="/trf"]        .project-card-img img { object-position: 38% center; }
-a[href="/paperchase"] .project-card-img img { transform: scale(1.12); }
-a[href="/stairs"]     .project-card-img img { object-position: center 38%; transform: scale(1.10); }
+a[href="/stairs"]     .project-card-img img { object-position: center 38%; }
 
-/* Hover: compound base zoom + 1.04 scale */
-.project-card:hover .project-card-img img                    { transform: scale(1.04); }
-a[href="/stellarune"] .project-card:hover .project-card-img img { transform: scale(1.25); }
-a[href="/paperchase"] .project-card:hover .project-card-img img { transform: scale(1.16); }
-a[href="/stairs"]     .project-card:hover .project-card-img img { transform: scale(1.14); }
+/* Uniform hover zoom (+8%) compounded on top of base */
+.project-card:hover .project-card-img img {
+  transform: scale(calc(var(--card-zoom, 1) * 1.08));
+}
 
 .project-card-info {
   padding: 1rem 1rem 1.2rem;
@@ -440,7 +443,7 @@ a[href="/stairs"]     .project-card:hover .project-card-img img { transform: sca
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 1.5rem;
+  margin: 1rem 0 0;
   padding: 0.35rem 0.9rem;
   border: 1.5px solid var(--border);
   font-size: 0.72rem;
