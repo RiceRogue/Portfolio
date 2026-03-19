@@ -6,7 +6,9 @@
       "Bash(python3 -c \":*)",
       "Bash(grep -h 'src=\"\"\"\"[^h]' *.html)",
       "Bash(python3 update_roles.py)",
-      "Bash(python3 move_roles.py)"
+      "Bash(python3 move_roles.py)",
+      "Bash(python3 move_roles2.py)",
+      "Bash(rm move_roles2.py)"
     ]
   }
 }
