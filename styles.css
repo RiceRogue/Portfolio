@@ -227,9 +227,9 @@ a {
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
-  /* fade top edge so spawn is invisible, bottom edge handled by keyframe */
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 16%, black 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, black 16%, black 100%);
+  /* fade top edge (spawn invisible) + bottom edge (hides gap below landed balls) */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 16%, black 80%, transparent 99%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 16%, black 80%, transparent 99%);
 }
 
 .smiley-wrapper-bottom {
@@ -242,10 +242,10 @@ a {
 @keyframes smiley-fall-bottom {
   0%    { transform: translate(-50%, 0);     opacity: 0; }
   8%    { transform: translate(-50%, 0);     opacity: 1; }
-  80%   { transform: translate(-50%, 46vh);  opacity: 1; } /* reach bottom */
-  84%   { transform: translate(-50%, 46vh);  opacity: 1; } /* brief pause ~0.3s */
-  91%   { transform: translate(-50%, 46vh);  opacity: 0; } /* fade out */
-  100%  { transform: translate(-50%, 46vh);  opacity: 0; } /* wait to loop */
+  78%   { transform: translate(-50%, 30vh);  opacity: 1; } /* land ~one ball-height above footer */
+  82%   { transform: translate(-50%, 30vh);  opacity: 1; } /* brief pause ~0.3s */
+  90%   { transform: translate(-50%, 30vh);  opacity: 0; } /* fade out */
+  100%  { transform: translate(-50%, 30vh);  opacity: 0; } /* wait to loop */
 }
 
 /* Ensure hero text stays visible over the dark shader */
