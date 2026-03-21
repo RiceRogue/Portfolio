@@ -1,12 +1,7 @@
-/* ── Falling interactive smiley field ───────────────────────── */
+/* ── Falling interactive smiley fields ──────────────────────── */
 (function () {
-  const bg = document.getElementById('smiley-bg');
-  if (!bg) return;
-
-  const COUNT = 40;
   const SIZES = [36, 44, 52, 60, 68, 76];
 
-  /* ── Text emoticon faces — positive/whimsy only, no nose, no frowns ─── */
   const DEFAULT_FACE = ':)';
   const EXPRESSIONS  = [
     ':D', ':D', ':D',        // weighted — big grins
@@ -21,45 +16,59 @@
   const PALETTES = Array.from({ length: 12 }, (_, i) => {
     const h = i * 30, h2 = (h + 25) % 360;
     return {
-      bg:   `radial-gradient(circle at 35% 30%, hsl(${h},95%,72%), hsl(${h2},100%,40%))`,
+      bg:    `radial-gradient(circle at 35% 30%, hsl(${h},95%,72%), hsl(${h2},100%,40%))`,
       color: `hsl(${h},80%,15%)`,
       glow:  `hsla(${h},100%,62%,0.6)`,
     };
   });
 
-  const circles = [];
+  /* All circles across both fields — appended in DOM order.
+     Reverse iteration gives topmost (last-rendered) highest hover priority. */
+  const allCircles = [];
 
-  for (let i = 0; i < COUNT; i++) {
-    const size    = SIZES[Math.floor(Math.random() * SIZES.length)];
-    const dur     = 7 + Math.random() * 8;
-    const xPct    = 3 + Math.random() * 94;
-    const delay   = -(Math.random() * dur);
-    const palette = PALETTES[Math.floor(Math.random() * PALETTES.length)];
-    const expr    = EXPRESSIONS[Math.floor(Math.random() * EXPRESSIONS.length)];
+  function buildField(containerId, wrapperClass, count, durMin, durRange) {
+    const bg = document.getElementById(containerId);
+    if (!bg) return;
 
-    /* font-size: each face span sized independently to fill the circle */
-    function fsize(txt) {
-      return Math.min(Math.floor(size * 0.42),
-                      Math.floor(size * 0.9 / (txt.length * 0.58 + 0.3)));
+    for (let i = 0; i < count; i++) {
+      const size    = SIZES[Math.floor(Math.random() * SIZES.length)];
+      const dur     = durMin + Math.random() * durRange;
+      const xPct    = 3 + Math.random() * 94;
+      const delay   = -(Math.random() * dur);
+      const palette = PALETTES[Math.floor(Math.random() * PALETTES.length)];
+      const expr    = EXPRESSIONS[Math.floor(Math.random() * EXPRESSIONS.length)];
+
+      function fsize(txt) {
+        return Math.min(Math.floor(size * 0.42),
+                        Math.floor(size * 0.9 / (txt.length * 0.58 + 0.3)));
+      }
+      const defaultFs = fsize(DEFAULT_FACE);
+      const hoverFs   = fsize(expr);
+
+      const wrapper = document.createElement('div');
+      wrapper.className = wrapperClass;
+      wrapper.style.cssText = `left:${xPct.toFixed(1)}%;width:${size}px;height:${size}px;--dur:${dur.toFixed(2)}s;--delay:${delay.toFixed(2)}s;`;
+
+      const circle = document.createElement('div');
+      circle.className = 'smiley-circle';
+      circle._palette = palette;
+      circle.innerHTML = `<span class="face-default" style="font-size:${defaultFs}px">${DEFAULT_FACE}</span><span class="face-hover" style="font-size:${hoverFs}px">${expr}</span>`;
+
+      wrapper.appendChild(circle);
+      bg.appendChild(wrapper);
+      allCircles.push(circle);
     }
-    const defaultFs = fsize(DEFAULT_FACE);
-    const hoverFs   = fsize(expr);
-
-    const wrapper = document.createElement('div');
-    wrapper.className = 'smiley-wrapper';
-    wrapper.style.cssText = `left:${xPct.toFixed(1)}%;width:${size}px;height:${size}px;--dur:${dur.toFixed(2)}s;--delay:${delay.toFixed(2)}s;`;
-
-    const circle = document.createElement('div');
-    circle.className = 'smiley-circle';
-    circle._palette = palette;
-    circle.innerHTML = `<span class="face-default" style="font-size:${defaultFs}px">${DEFAULT_FACE}</span><span class="face-hover" style="font-size:${hoverFs}px">${expr}</span>`;
-
-    wrapper.appendChild(circle);
-    bg.appendChild(wrapper);
-    circles.push(circle);
   }
 
-  /* ── Global hit-test hover ─── */
+  /* Top field: hero section, falls across ~130vh */
+  buildField('smiley-bg', 'smiley-wrapper', 40, 7, 8);
+
+  /* Bottom field: above footer, shorter fall, fades on landing */
+  buildField('smiley-bg-bottom', 'smiley-wrapper-bottom', 22, 5, 7);
+
+  /* ── Global hit-test hover ───────────────────────────────────
+     Iterates allCircles in REVERSE so the topmost rendered circle
+     (last in DOM) wins when circles overlap. No z-index math needed. */
   let lastHovered = null;
 
   function applyHover(c) {
@@ -83,8 +92,9 @@
 
   document.addEventListener('pointermove', e => {
     let found = null;
-    for (const c of circles) {
-      const r  = c.getBoundingClientRect();
+    for (let i = allCircles.length - 1; i >= 0; i--) {
+      const c = allCircles[i];
+      const r = c.getBoundingClientRect();
       if (r.width === 0) continue;
       const dx = e.clientX - (r.left + r.width  / 2);
       const dy = e.clientY - (r.top  + r.height / 2);

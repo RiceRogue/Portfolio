@@ -219,6 +219,35 @@ a {
 .smiley-circle.hovered .face-default { opacity: 0; }
 .smiley-circle.hovered .face-hover   { opacity: 1; }
 
+/* ── SMILEY BOTTOM FIELD ─────────────────────────────────────── */
+#smiley-bg-bottom {
+  position: relative;
+  width: 100%;
+  height: 38vh;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  /* fade top edge so spawn is invisible, bottom edge handled by keyframe */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 16%, black 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 16%, black 100%);
+}
+
+.smiley-wrapper-bottom {
+  position: absolute;
+  top: -80px;
+  pointer-events: none;
+  animation: smiley-fall-bottom var(--dur, 8s) linear var(--delay, 0s) infinite;
+}
+
+@keyframes smiley-fall-bottom {
+  0%    { transform: translate(-50%, 0);     opacity: 0; }
+  8%    { transform: translate(-50%, 0);     opacity: 1; }
+  80%   { transform: translate(-50%, 46vh);  opacity: 1; } /* reach bottom */
+  84%   { transform: translate(-50%, 46vh);  opacity: 1; } /* brief pause ~0.3s */
+  91%   { transform: translate(-50%, 46vh);  opacity: 0; } /* fade out */
+  100%  { transform: translate(-50%, 46vh);  opacity: 0; } /* wait to loop */
+}
+
 /* Ensure hero text stays visible over the dark shader */
 .marquee-block,
 .intro-section { position: relative; z-index: 1; }
@@ -333,7 +362,7 @@ a {
 .project-card-img img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   display: block;
   transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
