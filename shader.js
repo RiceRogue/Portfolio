@@ -1,18 +1,17 @@
-/* ── Falling interactive smiley fields ──────────────────────── */
+/* ── Smiley fields: top hero, physics bottom, margin columns ──── */
 (function () {
   const SIZES = [36, 44, 52, 60, 68, 76];
 
   const DEFAULT_FACE = ':)';
   const EXPRESSIONS  = [
-    ':D', ':D', ':D',        // weighted — big grins
-    ':P', ':P', ':P',        // weighted — tongue out
-    ';)', ';)', ';)',         // weighted — wink
-    ':]', ':]',              // weighted — friendly
-    ':3', ':3',              // weighted — cute
+    ':D', ':D', ':D',
+    ':P', ':P', ':P',
+    ';)', ';)', ';)',
+    ':]', ':]',
+    ':3', ':3',
     ':O', ':/', ':>', ':S', ':X', '(:', ':B', '8)', 'B)', ':&',
   ];
 
-  /* ── Full-spectrum HSL palette (12 hues) ─── */
   const PALETTES = Array.from({ length: 12 }, (_, i) => {
     const h = i * 30, h2 = (h + 25) % 360;
     return {
@@ -22,53 +21,169 @@
     };
   });
 
-  /* All circles across both fields — appended in DOM order.
-     Reverse iteration gives topmost (last-rendered) highest hover priority. */
+  /* All interactive circles — reverse iteration = topmost layer gets hover first */
   const allCircles = [];
 
-  function buildField(containerId, wrapperClass, count, durMin, durRange) {
+  /* ── Circle factory ── */
+  function makeCircle(size, expr) {
+    function fsize(txt) {
+      return Math.min(Math.floor(size * 0.42),
+                      Math.floor(size * 0.9 / (txt.length * 0.58 + 0.3)));
+    }
+    const palette = PALETTES[Math.floor(Math.random() * PALETTES.length)];
+    const circle  = document.createElement('div');
+    circle.className = 'smiley-circle';
+    circle._palette  = palette;
+    circle._size     = size;
+    circle.innerHTML =
+      `<span class="face-default" style="font-size:${fsize(DEFAULT_FACE)}px">${DEFAULT_FACE}</span>` +
+      `<span class="face-hover"   style="font-size:${fsize(expr)}px">${expr}</span>`;
+    return circle;
+  }
+
+  /* ── CSS-animated field (hero + margin columns) ── */
+  function buildCSSField(containerId, wrapperClass, count, durMin, durRange) {
     const bg = document.getElementById(containerId);
     if (!bg) return;
-
     for (let i = 0; i < count; i++) {
-      const size    = SIZES[Math.floor(Math.random() * SIZES.length)];
-      const dur     = durMin + Math.random() * durRange;
-      const xPct    = 3 + Math.random() * 94;
-      const delay   = -(Math.random() * dur);
-      const palette = PALETTES[Math.floor(Math.random() * PALETTES.length)];
-      const expr    = EXPRESSIONS[Math.floor(Math.random() * EXPRESSIONS.length)];
-
-      function fsize(txt) {
-        return Math.min(Math.floor(size * 0.42),
-                        Math.floor(size * 0.9 / (txt.length * 0.58 + 0.3)));
-      }
-      const defaultFs = fsize(DEFAULT_FACE);
-      const hoverFs   = fsize(expr);
+      const size  = SIZES[Math.floor(Math.random() * SIZES.length)];
+      const dur   = durMin + Math.random() * durRange;
+      const xPct  = 3 + Math.random() * 94;
+      const delay = -(Math.random() * dur);
+      const expr  = EXPRESSIONS[Math.floor(Math.random() * EXPRESSIONS.length)];
 
       const wrapper = document.createElement('div');
       wrapper.className = wrapperClass;
-      wrapper.style.cssText = `left:${xPct.toFixed(1)}%;width:${size}px;height:${size}px;--dur:${dur.toFixed(2)}s;--delay:${delay.toFixed(2)}s;`;
+      wrapper.style.cssText =
+        `left:${xPct.toFixed(1)}%;width:${size}px;height:${size}px;` +
+        `--dur:${dur.toFixed(2)}s;--delay:${delay.toFixed(2)}s;`;
 
-      const circle = document.createElement('div');
-      circle.className = 'smiley-circle';
-      circle._palette = palette;
-      circle.innerHTML = `<span class="face-default" style="font-size:${defaultFs}px">${DEFAULT_FACE}</span><span class="face-hover" style="font-size:${hoverFs}px">${expr}</span>`;
-
+      const circle = makeCircle(size, expr);
       wrapper.appendChild(circle);
       bg.appendChild(wrapper);
       allCircles.push(circle);
     }
   }
 
-  /* Top field: hero section, falls across ~130vh */
-  buildField('smiley-bg', 'smiley-wrapper', 40, 7, 8);
+  buildCSSField('smiley-bg',      'smiley-wrapper', 40, 7, 8);
+  buildCSSField('smiley-margins', 'smiley-wrapper', 28, 9, 10);
 
-  /* Bottom field: above footer, shorter fall, fades on landing */
-  buildField('smiley-bg-bottom', 'smiley-wrapper-bottom', 22, 5, 7);
+  /* ── Physics bottom field ── */
+  (function buildPhysicsField() {
+    const container = document.getElementById('smiley-bg-bottom');
+    if (!container) return;
 
-  /* ── Global hit-test hover ───────────────────────────────────
-     Iterates allCircles in REVERSE so the topmost rendered circle
-     (last in DOM) wins when circles overlap. No z-index math needed. */
+    const COUNT       = 18;
+    const GRAVITY     = 0.28;
+    const RESTITUTION = 0.36;   /* bounciness */
+    const FRICTION    = 0.86;   /* horizontal damping on floor hit */
+    const DAMPING     = 0.9992; /* air resistance per frame */
+
+    const balls = [];
+
+    for (let i = 0; i < COUNT; i++) {
+      const size    = SIZES[Math.floor(Math.random() * SIZES.length)];
+      const expr    = EXPRESSIONS[Math.floor(Math.random() * EXPRESSIONS.length)];
+      const radius  = size / 2;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'smiley-wrapper-bottom';
+      wrapper.style.width  = size + 'px';
+      wrapper.style.height = size + 'px';
+
+      const circle = makeCircle(size, expr);
+      wrapper.appendChild(circle);
+      container.appendChild(wrapper);
+      allCircles.push(circle);
+
+      balls.push({
+        x: 0, y: 0,          /* set on first activation */
+        vx: (Math.random() - 0.5) * 3,
+        vy: 0,
+        radius,
+        wrapper,
+        circle,
+        active:      false,
+        spawnAt:     i * 280, /* ms delay between spawns */
+      });
+    }
+
+    let startTime = null;
+
+    function loop(ts) {
+      if (!startTime) startTime = ts;
+      const elapsed = ts - startTime;
+      const cW = container.clientWidth  || window.innerWidth;
+      const cH = container.clientHeight || window.innerHeight * 0.44;
+      const active = [];
+
+      for (const b of balls) {
+        /* Spawn */
+        if (!b.active && elapsed >= b.spawnAt) {
+          b.active = true;
+          b.x  = b.radius + Math.random() * (cW - b.radius * 2);
+          b.y  = -b.radius - Math.random() * 40;
+          b.wrapper.style.opacity = '1';
+        }
+        if (b.active) active.push(b);
+      }
+
+      /* Physics update */
+      for (const b of active) {
+        b.vy += GRAVITY;
+        b.vx *= DAMPING;
+        b.vy *= DAMPING;
+        b.x  += b.vx;
+        b.y  += b.vy;
+
+        /* Floor */
+        const floor = cH - b.radius;
+        if (b.y >= floor) {
+          b.y   = floor;
+          b.vy *= -RESTITUTION;
+          b.vx *= FRICTION;
+          if (Math.abs(b.vy) < 0.8) b.vy = 0;
+        }
+
+        /* Walls */
+        if (b.x - b.radius < 0)  { b.x = b.radius;       b.vx *= -0.5; }
+        if (b.x + b.radius > cW) { b.x = cW - b.radius;  b.vx *= -0.5; }
+
+        /* DOM */
+        b.wrapper.style.left = (b.x - b.radius) + 'px';
+        b.wrapper.style.top  = (b.y - b.radius) + 'px';
+      }
+
+      /* Ball–ball collisions */
+      for (let i = 0; i < active.length; i++) {
+        for (let j = i + 1; j < active.length; j++) {
+          const a = active[i], b = active[j];
+          const dx = b.x - a.x, dy = b.y - a.y;
+          const dSq = dx * dx + dy * dy;
+          const minD = a.radius + b.radius;
+          if (dSq < minD * minD && dSq > 0.001) {
+            const d  = Math.sqrt(dSq);
+            const nx = dx / d, ny = dy / d;
+            const ov = (minD - d) * 0.5;
+            a.x -= nx * ov; a.y -= ny * ov;
+            b.x += nx * ov; b.y += ny * ov;
+            const dvn = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
+            if (dvn > 0) {
+              const imp = dvn * 0.55;
+              a.vx -= imp * nx; a.vy -= imp * ny;
+              b.vx += imp * nx; b.vy += imp * ny;
+            }
+          }
+        }
+      }
+
+      requestAnimationFrame(loop);
+    }
+
+    requestAnimationFrame(loop);
+  })();
+
+  /* ── Hover helpers ── */
   let lastHovered = null;
 
   function applyHover(c) {
@@ -86,20 +201,95 @@
     c.style.color      = '';
     c.style.boxShadow  = '';
     if (typeof gsap !== 'undefined') {
-      gsap.to(c, { rotateX: 0, rotateY: 0, scale: 1, duration: 1.0, ease: 'elastic.out(1, 0.38)', overwrite: true });
+      gsap.to(c, { rotateX: 0, rotateY: 0, scale: 1, duration: 1.0,
+                   ease: 'elastic.out(1, 0.38)', overwrite: true });
     }
   }
 
-  document.addEventListener('pointermove', e => {
-    let found = null;
+  /* ── Drag state ── */
+  let grabbed     = null;
+  let dragOffsetX = 0;
+  let dragOffsetY = 0;
+
+  function hitTest(cx, cy) {
+    /* Reverse order — last in DOM = visually on top = highest priority */
     for (let i = allCircles.length - 1; i >= 0; i--) {
       const c = allCircles[i];
       const r = c.getBoundingClientRect();
       if (r.width === 0) continue;
-      const dx = e.clientX - (r.left + r.width  / 2);
-      const dy = e.clientY - (r.top  + r.height / 2);
-      if (dx * dx + dy * dy <= (r.width / 2) * (r.width / 2)) { found = c; break; }
+      const dx = cx - (r.left + r.width  / 2);
+      const dy = cy - (r.top  + r.height / 2);
+      if (dx * dx + dy * dy <= (r.width / 2) * (r.width / 2)) return c;
     }
+    return null;
+  }
+
+  function grabBall(circle, cx, cy) {
+    const r = circle.getBoundingClientRect();
+    const p = circle._palette;
+
+    const ghost = document.createElement('div');
+    ghost.className = 'smiley-circle smiley-drag-ghost';
+    ghost.style.width      = r.width  + 'px';
+    ghost.style.height     = r.height + 'px';
+    ghost.style.left       = r.left   + 'px';
+    ghost.style.top        = r.top    + 'px';
+    ghost.style.background = p.bg;
+    ghost.style.color      = p.color;
+    ghost.style.boxShadow  = `0 0 32px ${p.glow}, 0 0 10px ${p.glow}`;
+    ghost.innerHTML = circle.innerHTML;
+    ghost.querySelector('.face-default').style.opacity = '0';
+    ghost.querySelector('.face-hover').style.opacity   = '1';
+    document.body.appendChild(ghost);
+
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo(ghost, { scale: 1 }, { scale: 1.18, duration: 0.2, ease: 'back.out(2)' });
+    }
+
+    circle.parentElement.style.opacity = '0';
+    dragOffsetX    = cx - r.left;
+    dragOffsetY    = cy - r.top;
+    circle._ghost  = ghost;
+    grabbed        = circle;
+  }
+
+  function releaseBall() {
+    if (!grabbed) return;
+    const c     = grabbed;
+    const ghost = c._ghost;
+    c.parentElement.style.opacity = '';
+    if (ghost) {
+      if (typeof gsap !== 'undefined') {
+        gsap.to(ghost, { scale: 0, opacity: 0, duration: 0.35,
+                         ease: 'back.in(1.7)', onComplete: () => ghost.remove() });
+      } else { ghost.remove(); }
+    }
+    c._ghost = null;
+    grabbed  = null;
+  }
+
+  /* ── Global pointer events ── */
+  document.addEventListener('pointerdown', e => {
+    const target = hitTest(e.clientX, e.clientY);
+    if (!target) return;
+    e.preventDefault();
+    grabBall(target, e.clientX, e.clientY);
+  });
+
+  document.addEventListener('pointermove', e => {
+    if (grabbed && grabbed._ghost) {
+      grabbed._ghost.style.left = (e.clientX - dragOffsetX) + 'px';
+      grabbed._ghost.style.top  = (e.clientY - dragOffsetY) + 'px';
+      if (typeof gsap !== 'undefined') {
+        const gr = grabbed._ghost.getBoundingClientRect();
+        const rx =  ((e.clientY - (gr.top  + gr.height / 2)) / gr.height) * 38;
+        const ry = -((e.clientX - (gr.left + gr.width  / 2)) / gr.width)  * 38;
+        gsap.to(grabbed._ghost, { rotateX: rx, rotateY: ry, overwrite: true, duration: 0.15 });
+      }
+      return;
+    }
+
+    const found = hitTest(e.clientX, e.clientY);
     if (found !== lastHovered) {
       unhover(lastHovered);
       lastHovered = found;
@@ -113,16 +303,85 @@
     }
   });
 
-  document.addEventListener('pointerleave', () => { unhover(lastHovered); lastHovered = null; });
+  document.addEventListener('pointerup',     () => releaseBall());
+  document.addEventListener('pointercancel', () => releaseBall());
+  document.addEventListener('pointerleave',  () => { releaseBall(); unhover(lastHovered); lastHovered = null; });
+})();
+
+/* ── Animated favicon ────────────────────────────────────────── */
+(function () {
+  const cvs = document.createElement('canvas');
+  cvs.width = cvs.height = 64;
+  const ctx = cvs.getContext('2d');
+
+  /* Reuse the existing <link rel="icon"> so we don't duplicate it */
+  const link = document.getElementById('favicon-link') ||
+               document.querySelector("link[rel*='icon']");
+  if (!link) return;
+
+  let frame = 0;
+
+  function draw() {
+    const hue  = (frame * 1.2) % 360;
+    const hue2 = (hue + 25) % 360;
+    /* Wink for 8 frames every 90-frame cycle (~11s at 8fps) */
+    const wink = (frame % 90) < 8;
+
+    ctx.clearRect(0, 0, 64, 64);
+
+    /* Body gradient */
+    const g = ctx.createRadialGradient(22, 18, 2, 32, 32, 32);
+    g.addColorStop(0, `hsl(${hue},  95%, 72%)`);
+    g.addColorStop(1, `hsl(${hue2}, 100%, 40%)`);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(32, 32, 31, 0, Math.PI * 2);
+    ctx.fill();
+
+    const faceColor = `hsl(${hue}, 80%, 12%)`;
+
+    /* Left eye */
+    ctx.fillStyle = faceColor;
+    ctx.beginPath();
+    ctx.arc(22, 26, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    /* Right eye or wink line */
+    if (wink) {
+      ctx.strokeStyle = faceColor;
+      ctx.lineWidth   = 3;
+      ctx.lineCap     = 'round';
+      ctx.beginPath();
+      ctx.moveTo(37, 25); ctx.lineTo(47, 27);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = faceColor;
+      ctx.beginPath();
+      ctx.arc(42, 26, 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    /* Smile arc */
+    ctx.strokeStyle = faceColor;
+    ctx.lineWidth   = 3.5;
+    ctx.lineCap     = 'round';
+    ctx.beginPath();
+    ctx.arc(32, 30, 13, 0.35, Math.PI - 0.35);
+    ctx.stroke();
+
+    link.href = cvs.toDataURL();
+    frame++;
+  }
+
+  draw();
+  setInterval(draw, 125); /* ~8 fps — efficient for favicon */
 })();
 
 /* ── Shared utilities ───────────────────────────────────────── */
 
-/* Infinite marquee — JS pixel scroll, no CSS animation reset */
 (function () {
   const track = document.querySelector('.marquee-track');
   if (!track) return;
-  /* Clone children so wrap point is invisible */
   Array.from(track.children).forEach(el => track.appendChild(el.cloneNode(true)));
   let x = 0;
   const speed = 1.035;
@@ -136,44 +395,35 @@
   requestAnimationFrame(step);
 })();
 
-/* Scroll reveal */
 (function () {
   const els = document.querySelectorAll('.reveal');
   if (!els.length) return;
   const obs = new IntersectionObserver(entries => {
     entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add('visible');
-        obs.unobserve(e.target);
-      }
+      if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
     });
   }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
   els.forEach(el => obs.observe(el));
 })();
 
-/* Lightbox */
 (function () {
   const overlay = document.getElementById('lightbox');
-  const img = overlay && overlay.querySelector('img');
-  const close = overlay && overlay.querySelector('.lightbox-close');
+  const img     = overlay && overlay.querySelector('img');
+  const close   = overlay && overlay.querySelector('.lightbox-close');
   if (!overlay || !img) return;
-
   document.querySelectorAll('.gallery-img-wrap img, .lightbox-trigger').forEach(el => {
     el.addEventListener('click', () => {
       img.src = el.src;
-      /* Pin overlay to current viewport position so it opens right here */
       overlay.style.top    = window.scrollY + 'px';
       overlay.style.height = window.innerHeight + 'px';
       overlay.classList.add('open');
       document.documentElement.style.overflow = 'hidden';
     });
   });
-
   function closeLb() {
     overlay.classList.remove('open');
     img.src = '';
-    overlay.style.top    = '';
-    overlay.style.height = '';
+    overlay.style.top = overlay.style.height = '';
     document.documentElement.style.overflow = '';
   }
   if (close) close.addEventListener('click', closeLb);
@@ -181,7 +431,6 @@
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLb(); });
 })();
 
-/* Dark mode toggle */
 (function () {
   const stored = localStorage.getItem('theme');
   if (stored) document.documentElement.setAttribute('data-theme', stored);
@@ -194,7 +443,6 @@
   });
 })();
 
-/* Mobile hamburger */
 (function () {
   const btn  = document.getElementById('hamburger');
   const menu = document.getElementById('mobile-menu');

@@ -190,7 +190,7 @@ a {
   align-items: center;
   justify-content: center;
   position: relative;
-  cursor: pointer;
+  cursor: grab;
   pointer-events: auto;
   transform-style: preserve-3d;
   transition: background 0.25s, color 0.25s, box-shadow 0.25s;
@@ -219,33 +219,56 @@ a {
 .smiley-circle.hovered .face-default { opacity: 0; }
 .smiley-circle.hovered .face-hover   { opacity: 1; }
 
-/* ── SMILEY BOTTOM FIELD ─────────────────────────────────────── */
+/* drag ghost — floats freely above everything */
+.smiley-drag-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 10000;
+  cursor: grabbing;
+}
+
+/* ── SMILEY BOTTOM FIELD — physics-driven ─────────────────────── */
 #smiley-bg-bottom {
   position: relative;
   width: 100%;
-  height: 38vh;
+  height: 44vh;
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
-  /* fade top edge (spawn invisible) + bottom edge (hides gap below landed balls) */
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 16%, black 80%, transparent 99%);
-  mask-image: linear-gradient(to bottom, transparent 0%, black 16%, black 80%, transparent 99%);
 }
 
+/* Physics wrappers — position set entirely by JS */
 .smiley-wrapper-bottom {
   position: absolute;
-  top: -80px;
   pointer-events: none;
-  animation: smiley-fall-bottom var(--dur, 8s) linear var(--delay, 0s) infinite;
+  opacity: 0;
+  transition: opacity 0.4s ease;
 }
 
-@keyframes smiley-fall-bottom {
-  0%    { transform: translate(-50%, 0);     opacity: 0; }
-  8%    { transform: translate(-50%, 0);     opacity: 1; }
-  78%   { transform: translate(-50%, 30vh);  opacity: 1; } /* land ~one ball-height above footer */
-  82%   { transform: translate(-50%, 30vh);  opacity: 1; } /* brief pause ~0.3s */
-  90%   { transform: translate(-50%, 30vh);  opacity: 0; } /* fade out */
-  100%  { transform: translate(-50%, 30vh);  opacity: 0; } /* wait to loop */
+/* ── SMILEY MARGIN FIELD — full viewport, margins only ─────────── */
+#smiley-margins {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+  /* Visible only in left/right gutters; fades at content-column edges */
+  -webkit-mask-image: linear-gradient(to right,
+    black 0%,
+    black calc(50% - 580px),
+    transparent calc(50% - 440px),
+    transparent calc(50% + 440px),
+    black calc(50% + 580px),
+    black 100%
+  );
+  mask-image: linear-gradient(to right,
+    black 0%,
+    black calc(50% - 580px),
+    transparent calc(50% - 440px),
+    transparent calc(50% + 440px),
+    black calc(50% + 580px),
+    black 100%
+  );
 }
 
 /* Ensure hero text stays visible over the dark shader */
