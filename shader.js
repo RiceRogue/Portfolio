@@ -65,7 +65,7 @@
     }
   }
 
-  buildCSSField('smiley-bg',      'smiley-wrapper', 40, 7, 8);
+  buildCSSField('smiley-bg',      'smiley-wrapper', 40, 4, 4);
   buildCSSField('smiley-margins', 'smiley-wrapper', 28, 9, 10);
 
   /* ── Physics bottom field ── */
