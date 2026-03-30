@@ -65,35 +65,57 @@
     }
   }
 
-  buildCSSField('smiley-bg',      'smiley-wrapper', 40, 4, 4);
-  buildCSSField('smiley-margins', 'smiley-wrapper', 28, 9, 10);
+  buildCSSField('smiley-bg', 'smiley-wrapper', 40, 12, 8);
 
-  /* ── Dynamic hero mask — dims behind intro text, fades at bottom ── */
-  (function applyHeroMask() {
-    const hero  = document.querySelector('.hero');
-    const intro = document.querySelector('.intro-section');
-    const bg    = document.getElementById('smiley-bg');
-    if (!hero || !intro || !bg) return;
+  /* ── Full-page mask — hides balls at title + gallery zones ── */
+  (function applyFullPageMask() {
+    const bg       = document.getElementById('smiley-bg');
+    const intro    = document.querySelector('.intro-section');
+    const projects = document.querySelector('.projects-section');
+    if (!bg) return;
+
+    function docTop(el)    { return el.getBoundingClientRect().top    + window.pageYOffset; }
+    function docBottom(el) { return el.getBoundingClientRect().bottom + window.pageYOffset; }
 
     function update() {
-      const hH = hero.offsetHeight;
-      const iT = intro.offsetTop;
-      const iB = iT + intro.offsetHeight;
-      const p  = v => (Math.max(0, Math.min(100, v / hH * 100)).toFixed(1) + '%');
-      const mask =
-        'linear-gradient(to bottom,' +
-        'black 0%,' +
-        `black ${p(iT - 50)},` +
-        `rgba(0,0,0,0.07) ${p(iT + 40)},` +
-        `rgba(0,0,0,0.07) ${p(iB - 20)},` +
-        `black ${p(iB + 50)},` +
-        'black 83%,' +
-        'transparent 100%)';
+      const totalH = document.body.scrollHeight;
+      /* Set CSS variable so keyframe can fall the full page height */
+      document.body.style.setProperty('--fall-dist', (totalH + 120) + 'px');
+
+      if (!intro && !projects) {
+        bg.style.maskImage = bg.style.webkitMaskImage = '';
+        return;
+      }
+
+      const p = v => (Math.max(0, Math.min(100, v / totalH * 100)).toFixed(2) + '%');
+      let stops = ['black 0%'];
+
+      if (intro) {
+        const iT = docTop(intro);
+        const iB = docBottom(intro);
+        stops.push(`black ${p(iT - 30)}`);
+        stops.push(`transparent ${p(iT + 50)}`);
+        stops.push(`transparent ${p(iB - 20)}`);
+        stops.push(`black ${p(iB + 40)}`);
+      }
+
+      if (projects) {
+        const pT = docTop(projects);
+        const pB = docBottom(projects);
+        stops.push(`black ${p(pT - 30)}`);
+        stops.push(`transparent ${p(pT + 50)}`);
+        stops.push(`transparent ${p(pB - 20)}`);
+        stops.push(`black ${p(pB + 40)}`);
+      }
+
+      stops.push('black 100%');
+      const mask = 'linear-gradient(to bottom,' + stops.join(',') + ')';
       bg.style.maskImage = bg.style.webkitMaskImage = mask;
     }
 
     update();
     window.addEventListener('resize', update);
+    window.addEventListener('load',   update);
   })();
 
   /* ── Physics bottom field ── */
@@ -337,12 +359,6 @@
     if (grabbed && grabbed._ghost) {
       grabbed._ghost.style.left = (e.clientX - dragOffsetX) + 'px';
       grabbed._ghost.style.top  = (e.clientY - dragOffsetY) + 'px';
-      if (typeof gsap !== 'undefined') {
-        const gr = grabbed._ghost.getBoundingClientRect();
-        const rx =  ((e.clientY - (gr.top  + gr.height / 2)) / gr.height) * 38;
-        const ry = -((e.clientX - (gr.left + gr.width  / 2)) / gr.width)  * 38;
-        gsap.to(grabbed._ghost, { rotateX: rx, rotateY: ry, overwrite: true, duration: 0.15 });
-      }
       return;
     }
 
@@ -375,16 +391,27 @@
                document.querySelector("link[rel*='icon']");
   if (!link) return;
 
-  let frame = 0;
+  /* Same expression set as the site balls */
+  const EXPRS = [
+    ':)', ':D', ':P', ';)', ':]', ':3', ':O', ':/', ':>', ':S', ':X', '(:', ':B', '8)', 'B)',
+  ];
+
+  function fsize(txt) {
+    const s = 64;
+    return Math.min(Math.floor(s * 0.462), Math.floor(s * 0.99 / (txt.length * 0.58 + 0.3)));
+  }
+
+  let frame   = 0;
+  let exprIdx = 0;
 
   function draw() {
     const hue  = (frame * 1.2) % 360;
     const hue2 = (hue + 25) % 360;
-    const wink = (frame % 90) < 8;
 
     ctx.clearRect(0, 0, 64, 64);
 
-    const g = ctx.createRadialGradient(22, 18, 2, 32, 32, 32);
+    /* Circle gradient — matches site ball palette formula */
+    const g = ctx.createRadialGradient(22, 19, 2, 32, 32, 32);
     g.addColorStop(0, `hsl(${hue},  95%, 72%)`);
     g.addColorStop(1, `hsl(${hue2}, 100%, 40%)`);
     ctx.fillStyle = g;
@@ -392,36 +419,24 @@
     ctx.arc(32, 32, 31, 0, Math.PI * 2);
     ctx.fill();
 
+    /* Text emoticon rotated 90° CW — matches site CSS rotate(90deg) */
+    const expr      = EXPRS[exprIdx];
+    const fs        = fsize(expr);
     const faceColor = `hsl(${hue}, 80%, 12%)`;
-
-    ctx.fillStyle = faceColor;
-    ctx.beginPath();
-    ctx.arc(22, 26, 5, 0, Math.PI * 2);
-    ctx.fill();
-
-    if (wink) {
-      ctx.strokeStyle = faceColor;
-      ctx.lineWidth   = 3;
-      ctx.lineCap     = 'round';
-      ctx.beginPath();
-      ctx.moveTo(37, 25); ctx.lineTo(47, 27);
-      ctx.stroke();
-    } else {
-      ctx.fillStyle = faceColor;
-      ctx.beginPath();
-      ctx.arc(42, 26, 5, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    ctx.strokeStyle = faceColor;
-    ctx.lineWidth   = 3.5;
-    ctx.lineCap     = 'round';
-    ctx.beginPath();
-    ctx.arc(32, 30, 13, 0.35, Math.PI - 0.35);
-    ctx.stroke();
+    ctx.save();
+    ctx.translate(32, 32);
+    ctx.rotate(Math.PI / 2);
+    ctx.font         = `bold ${fs}px "Inter", Arial, sans-serif`;
+    ctx.fillStyle    = faceColor;
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(expr, 0, 0);
+    ctx.restore();
 
     link.href = cvs.toDataURL();
     frame++;
+    /* Cycle expression every 60 frames (~7.5 s at 125 ms interval) */
+    if (frame % 60 === 0) exprIdx = (exprIdx + 1) % EXPRS.length;
   }
 
   draw();

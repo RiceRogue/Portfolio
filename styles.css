@@ -46,6 +46,7 @@ body {
   font-size: 16px;
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
+  position: relative;
 }
 
 /* ── TYPOGRAPHY ────────────────────────────────────────────── */
@@ -152,18 +153,21 @@ a {
   position: relative;
   overflow: hidden;
   padding-top: 70px;
-  background: var(--bg);
+  background: transparent;
 }
 
 /* ── SMILEY BACKGROUND ─────────────────────────────────────── */
 #smiley-bg {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background: transparent;
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
-  /* mask set dynamically by JS to dim behind intro text and fade at hero bottom */
+  /* mask set dynamically by JS to hide behind title text and gallery */
 }
 
 .smiley-wrapper {
@@ -174,9 +178,9 @@ a {
 }
 
 @keyframes smiley-fall {
-  0%   { transform: translate(-50%, 0);     opacity: 0; }
-  8%   { transform: translate(-50%, 0);     opacity: 1; }
-  100% { transform: translate(-50%, 130vh); opacity: 1; }
+  0%   { transform: translate(-50%, 0);                       opacity: 0; }
+  8%   { transform: translate(-50%, 0);                       opacity: 1; }
+  100% { transform: translate(-50%, var(--fall-dist, 130vh)); opacity: 1; }
 }
 
 .smiley-circle {
@@ -208,11 +212,11 @@ a {
 .face-hover {
   position: absolute;
   top: 50%; left: 50%;
-  transform: translate(-35%, -50%) rotate(90deg);
+  transform: translate(-50%, -50%) rotate(90deg);
   white-space: nowrap;
   transition: opacity 0.18s ease;
   line-height: 1;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.05em;
 }
 
 .face-hover { opacity: 0; }
@@ -225,6 +229,7 @@ a {
   pointer-events: none;
   z-index: 10000;
   cursor: grabbing;
+  transform-style: flat;
 }
 
 /* ── SMILEY BOTTOM FIELD — physics-driven ─────────────────────── */
@@ -245,31 +250,6 @@ a {
   transition: opacity 0.4s ease;
 }
 
-/* ── SMILEY MARGIN FIELD — full viewport, margins only ─────────── */
-#smiley-margins {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  overflow: hidden;
-  /* Visible only in left/right gutters; fades at content-column edges */
-  -webkit-mask-image: linear-gradient(to right,
-    black 0%,
-    black calc(50% - 580px),
-    transparent calc(50% - 440px),
-    transparent calc(50% + 440px),
-    black calc(50% + 580px),
-    black 100%
-  );
-  mask-image: linear-gradient(to right,
-    black 0%,
-    black calc(50% - 580px),
-    transparent calc(50% - 440px),
-    transparent calc(50% + 440px),
-    black calc(50% + 580px),
-    black 100%
-  );
-}
 
 /* Ensure hero text stays visible over the dark shader */
 .marquee-block,
@@ -336,6 +316,12 @@ a {
   padding: 5vw var(--gutter);
   max-width: var(--max-w);
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── MAIN CONTENT — sits above falling smiley-bg ────────────── */
+main {
   position: relative;
   z-index: 1;
 }
@@ -428,6 +414,8 @@ a {
   border-top: 1px solid var(--border);
   padding: 3rem var(--gutter) 2.5rem;
   background: var(--bg);
+  position: relative;
+  z-index: 1;
 }
 
 .footer-inner {
