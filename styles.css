@@ -128,7 +128,7 @@ a {
 .site-nav .icon-link:hover { transform: scale(1.12); box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
 .site-nav .icon-link[aria-label="LinkedIn"] { background: #0A66C2; }
 .site-nav .icon-link[aria-label="Itch.io"]  { background: #FA5C5C; }
-.site-nav .icon-link svg { width: 19px; height: 19px; }
+.site-nav .icon-link svg { width: 20px; height: 20px; }
 
 /* Dark mode toggle */
 .dark-toggle {
@@ -172,15 +172,7 @@ a {
 
 .smiley-wrapper {
   position: absolute;
-  top: -80px;
   pointer-events: none;
-  animation: smiley-fall var(--dur, 9s) linear var(--delay, 0s) infinite;
-}
-
-@keyframes smiley-fall {
-  0%   { transform: translate(-50%, 0);                       opacity: 0; }
-  8%   { transform: translate(-50%, 0);                       opacity: 1; }
-  100% { transform: translate(-50%, var(--fall-dist, 130vh)); opacity: 1; }
 }
 
 .smiley-circle {
@@ -210,13 +202,20 @@ a {
 
 .face-default,
 .face-hover {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.06em;
   position: absolute;
   top: 50%; left: 50%;
   transform: translate(-50%, -50%) rotate(90deg);
-  white-space: nowrap;
   transition: opacity 0.18s ease;
   line-height: 1;
-  letter-spacing: 0.05em;
+}
+
+.face-eyes,
+.face-mouth {
+  display: block;
+  line-height: 1;
 }
 
 .face-hover { opacity: 0; }
@@ -232,22 +231,12 @@ a {
   transform-style: flat;
 }
 
-/* ── SMILEY BOTTOM FIELD — physics-driven ─────────────────────── */
+/* ── SMILEY BOTTOM SPACER — visual room for bouncing balls ──────── */
 #smiley-bg-bottom {
   position: relative;
   width: 100%;
   height: 44vh;
-  overflow: hidden;
   pointer-events: none;
-  z-index: 0;
-}
-
-/* Physics wrappers — position set entirely by JS */
-.smiley-wrapper-bottom {
-  position: absolute;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.4s ease;
 }
 
 

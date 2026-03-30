@@ -30,14 +30,21 @@
       return Math.min(Math.floor(size * 0.462),
                       Math.floor(size * 0.99 / (txt.length * 0.58 + 0.3)));
     }
+    function makeFace(txt, cls) {
+      const fs    = fsize(txt);
+      const eyes  = txt.slice(0, -1);
+      const mouth = txt.slice(-1);
+      return `<span class="${cls}">` +
+             `<span class="face-eyes"  style="font-size:${fs}px">${eyes}</span>` +
+             `<span class="face-mouth" style="font-size:${fs}px">${mouth}</span>` +
+             `</span>`;
+    }
     const palette = PALETTES[Math.floor(Math.random() * PALETTES.length)];
     const circle  = document.createElement('div');
     circle.className = 'smiley-circle';
     circle._palette  = palette;
     circle._size     = size;
-    circle.innerHTML =
-      `<span class="face-default" style="font-size:${fsize(DEFAULT_FACE)}px">${DEFAULT_FACE}</span>` +
-      `<span class="face-hover"   style="font-size:${fsize(expr)}px">${expr}</span>`;
+    circle.innerHTML = makeFace(DEFAULT_FACE, 'face-default') + makeFace(expr, 'face-hover');
     return circle;
   }
 
@@ -65,130 +72,108 @@
     }
   }
 
-  buildCSSField('smiley-bg', 'smiley-wrapper', 40, 12, 8);
-
-  /* ── Full-page mask — hides balls at title + gallery zones ── */
-  (function applyFullPageMask() {
-    const bg       = document.getElementById('smiley-bg');
-    const intro    = document.querySelector('.intro-section');
-    const projects = document.querySelector('.projects-section');
-    if (!bg) return;
-
-    function docTop(el)    { return el.getBoundingClientRect().top    + window.pageYOffset; }
-    function docBottom(el) { return el.getBoundingClientRect().bottom + window.pageYOffset; }
-
-    function update() {
-      const totalH = document.body.scrollHeight;
-      /* Set CSS variable so keyframe can fall the full page height */
-      document.body.style.setProperty('--fall-dist', (totalH + 120) + 'px');
-
-      if (!intro && !projects) {
-        bg.style.maskImage = bg.style.webkitMaskImage = '';
-        return;
-      }
-
-      const p = v => (Math.max(0, Math.min(100, v / totalH * 100)).toFixed(2) + '%');
-      let stops = ['black 0%'];
-
-      if (intro) {
-        const iT = docTop(intro);
-        const iB = docBottom(intro);
-        stops.push(`black ${p(iT - 30)}`);
-        stops.push(`transparent ${p(iT + 50)}`);
-        stops.push(`transparent ${p(iB - 20)}`);
-        stops.push(`black ${p(iB + 40)}`);
-      }
-
-      if (projects) {
-        const pT = docTop(projects);
-        const pB = docBottom(projects);
-        stops.push(`black ${p(pT - 30)}`);
-        stops.push(`transparent ${p(pT + 50)}`);
-        stops.push(`transparent ${p(pB - 20)}`);
-        stops.push(`black ${p(pB + 40)}`);
-      }
-
-      stops.push('black 100%');
-      const mask = 'linear-gradient(to bottom,' + stops.join(',') + ')';
-      bg.style.maskImage = bg.style.webkitMaskImage = mask;
-    }
-
-    update();
-    window.addEventListener('resize', update);
-    window.addEventListener('load',   update);
-  })();
-
-  /* ── Physics bottom field ── */
-  (function buildPhysicsField() {
-    const container = document.getElementById('smiley-bg-bottom');
+  /* ── Unified full-page physics field ────────────────────────────
+     All balls fall from above the page, hit the floor just above
+     the footer, bounce with physics, settle, fade, and respawn.
+     "Margin balls" (near page edges) bypass content fade zones.
+  ─────────────────────────────────────────────────────────────── */
+  (function buildUnifiedField() {
+    const container = document.getElementById('smiley-bg');
     if (!container) return;
 
-    const COUNT       = 18;
+    const COUNT       = 44;
     const GRAVITY     = 0.28;
     const RESTITUTION = 0.36;
     const FRICTION    = 0.86;
     const DAMPING     = 0.9992;
+    const LERP        = 0.10; /* opacity lerp speed */
 
+    /* Layout zones — updated on resize */
+    let introTop = 0, introBottom = 0;
+    let projTop  = 0, projBottom  = 0;
+    let contentLeft = 0, contentRight = 0;
+    let floorY = 0;
+
+    function updateLayout() {
+      const footer   = document.querySelector('.site-footer');
+      const intro    = document.querySelector('.intro-section');
+      const projects = document.querySelector('.projects-section');
+      const pageYOff = window.pageYOffset;
+
+      floorY = footer
+        ? footer.getBoundingClientRect().top + pageYOff
+        : document.body.scrollHeight - 10;
+
+      if (intro) {
+        introTop    = intro.getBoundingClientRect().top    + pageYOff - 20;
+        introBottom = intro.getBoundingClientRect().bottom + pageYOff + 30;
+      }
+      if (projects) {
+        projTop    = projects.getBoundingClientRect().top    + pageYOff - 20;
+        projBottom = projects.getBoundingClientRect().bottom + pageYOff + 30;
+      }
+
+      /* Margin zone: outermost strip of the page (~5% each side min) */
+      const gutter     = Math.max(window.innerWidth * 0.04, 20);
+      const maxW       = 1500;
+      const sidePad    = Math.max(gutter, (window.innerWidth - maxW) / 2);
+      contentLeft  = sidePad + 40;
+      contentRight = window.innerWidth - sidePad - 40;
+    }
+
+    /* Create balls */
     const balls = [];
-
     for (let i = 0; i < COUNT; i++) {
       const size   = SIZES[Math.floor(Math.random() * SIZES.length)];
       const expr   = EXPRESSIONS[Math.floor(Math.random() * EXPRESSIONS.length)];
       const radius = size / 2;
 
       const wrapper = document.createElement('div');
-      wrapper.className = 'smiley-wrapper-bottom';
-      wrapper.style.width  = size + 'px';
-      wrapper.style.height = size + 'px';
+      wrapper.className = 'smiley-wrapper';
+      wrapper.style.cssText = `width:${size}px;height:${size}px;opacity:0;`;
 
       const circle = makeCircle(size, expr);
       wrapper.appendChild(circle);
       container.appendChild(wrapper);
       allCircles.push(circle);
 
-      balls.push({
-        x: 0, y: 0,
-        vx: (Math.random() - 0.5) * 3,
-        vy: 0,
+      const xPct = 3 + Math.random() * 94;
+      const ball = {
+        x:              xPct / 100 * (window.innerWidth || 1200),
+        y:             -radius - Math.random() * 900, /* stagger above page */
+        vx:             (Math.random() - 0.5) * 2.5,
+        vy:             0,
         radius,
         wrapper,
         circle,
-        active:    false,
-        spawnAt:   i * 280,
-        settledAt: null,
-      });
+        settledAt:      null,
+        displayOpacity: 0,
+        isMargin:       false,
+      };
+      circle._ball = ball; /* back-ref for grab/release */
+      balls.push(ball);
     }
 
-    let startTime = null;
+    updateLayout();
+    window.addEventListener('resize', updateLayout);
+    window.addEventListener('load',   updateLayout);
 
     function loop(ts) {
-      if (!startTime) startTime = ts;
-      const elapsed = ts - startTime;
-      const cW = container.clientWidth  || window.innerWidth;
-      const cH = container.clientHeight || window.innerHeight * 0.44;
-      const active = [];
+      const cW = container.clientWidth || window.innerWidth;
 
       for (const b of balls) {
-        if (!b.active && elapsed >= b.spawnAt) {
-          b.active = true;
-          b.x  = b.radius + Math.random() * (cW - b.radius * 2);
-          b.y  = -b.radius - Math.random() * 40;
-          b.wrapper.style.opacity = '1';
-        }
-        if (b.active) active.push(b);
-      }
+        /* Skip grabbed ball — ghost follows cursor instead */
+        if (b.circle === grabbed) continue;
 
-      /* Physics update */
-      for (const b of active) {
+        /* ── Physics ── */
         b.vy += GRAVITY;
         b.vx *= DAMPING;
         b.vy *= DAMPING;
         b.x  += b.vx;
         b.y  += b.vy;
 
-        const floor = cH - b.radius;
+        const floor = floorY - b.radius;
 
-        /* Floor */
         if (b.y >= floor) {
           b.y   = floor;
           b.vy *= -RESTITUTION;
@@ -196,50 +181,70 @@
           if (Math.abs(b.vy) < 0.8) b.vy = 0;
         }
 
-        /* Walls */
         if (b.x - b.radius < 0)  { b.x = b.radius;       b.vx *= -0.5; }
         if (b.x + b.radius > cW) { b.x = cW - b.radius;  b.vx *= -0.5; }
 
-        /* Settle detection */
-        const isSettled = b.y >= floor - 0.5 &&
-                          Math.abs(b.vy) < 0.1 &&
-                          Math.abs(b.vx) < 0.4;
+        /* ── Margin classification ── */
+        b.isMargin = b.x < contentLeft || b.x > contentRight;
+
+        /* ── Settle detection ── */
+        const atFloor   = b.y >= floor - 0.5;
+        const isSettled = atFloor && Math.abs(b.vy) < 0.1 && Math.abs(b.vx) < 0.4;
         if (isSettled) {
           if (!b.settledAt) b.settledAt = ts;
         } else if (b.settledAt && (Math.abs(b.vy) > 0.8 || Math.abs(b.vx) > 1)) {
           b.settledAt = null;
         }
 
-        /* Fade after 1.5s settled, then respawn */
-        if (b.settledAt) {
-          const elapsed2 = ts - b.settledAt;
-          if (elapsed2 > 1500) {
-            const fade = Math.min(1, (elapsed2 - 1500) / 2000);
-            b.wrapper.style.opacity = (1 - fade).toFixed(3);
-            if (fade >= 1) {
-              /* Respawn from top */
-              b.x = b.radius + Math.random() * (cW - b.radius * 2);
-              b.y = -b.radius - Math.random() * 60;
-              b.vx = (Math.random() - 0.5) * 3;
-              b.vy = 0;
-              b.settledAt = null;
-              b.wrapper.style.opacity = '0';
-              /* Brief delay before becoming visible again */
-              const wRef = b.wrapper;
-              setTimeout(() => { wRef.style.opacity = '1'; }, 400 + Math.random() * 400);
+        /* ── Target opacity ── */
+        let targetOpacity = 1;
+
+        if (b.y < 0) {
+          targetOpacity = 0; /* above page top */
+        } else if (b.settledAt) {
+          const elapsed = ts - b.settledAt;
+          if (elapsed > 1500) {
+            targetOpacity = Math.max(0, 1 - (elapsed - 1500) / 2000);
+            if (targetOpacity <= 0) {
+              /* Respawn */
+              b.x              = b.radius + Math.random() * (cW - b.radius * 2);
+              b.y              = -b.radius - Math.random() * 80;
+              b.vx             = (Math.random() - 0.5) * 2.5;
+              b.vy             = 0;
+              b.settledAt      = null;
+              b.displayOpacity = 0;
+              targetOpacity    = 0;
             }
+          }
+        } else if (!b.isMargin) {
+          /* Content ball — transparent in title and gallery zones */
+          if ((introTop && b.y > introTop && b.y < introBottom) ||
+              (projTop  && b.y > projTop  && b.y < projBottom)) {
+            targetOpacity = 0;
           }
         }
 
-        /* DOM */
-        b.wrapper.style.left = (b.x - b.radius) + 'px';
-        b.wrapper.style.top  = (b.y - b.radius) + 'px';
+        /* ── Opacity lerp (direct for settle timing, smooth lerp otherwise) ── */
+        if (b.settledAt && ts - b.settledAt > 1500) {
+          b.displayOpacity = targetOpacity; /* linear fade matches elapsed time */
+        } else {
+          const speed = targetOpacity > b.displayOpacity ? LERP * 1.5 : LERP;
+          b.displayOpacity += (targetOpacity - b.displayOpacity) * speed;
+        }
+        if (b.displayOpacity < 0.005) b.displayOpacity = 0;
+        if (b.displayOpacity > 0.995) b.displayOpacity = 1;
+
+        /* ── DOM ── */
+        b.wrapper.style.opacity = b.displayOpacity.toFixed(3);
+        b.wrapper.style.left    = (b.x - b.radius) + 'px';
+        b.wrapper.style.top     = (b.y - b.radius) + 'px';
       }
 
-      /* Ball–ball collisions */
-      for (let i = 0; i < active.length; i++) {
-        for (let j = i + 1; j < active.length; j++) {
-          const a = active[i], b = active[j];
+      /* ── Ball–ball collisions ── */
+      for (let i = 0; i < balls.length; i++) {
+        for (let j = i + 1; j < balls.length; j++) {
+          const a = balls[i], b = balls[j];
+          if (a.y < -50 && b.y < -50) continue; /* both off-screen */
           const dx = b.x - a.x, dy = b.y - a.y;
           const dSq = dx * dx + dy * dy;
           const minD = a.radius + b.radius;
@@ -296,6 +301,7 @@
   function hitTest(cx, cy) {
     for (let i = allCircles.length - 1; i >= 0; i--) {
       const c = allCircles[i];
+      if (c === grabbed) continue; /* skip already-grabbed ball */
       const r = c.getBoundingClientRect();
       if (r.width === 0) continue;
       const dx = cx - (r.left + r.width  / 2);
@@ -337,9 +343,20 @@
     if (!grabbed) return;
     const c     = grabbed;
     const ghost = c._ghost;
+
+    /* Sync physics ball to ghost position so ball continues from where released */
+    if (c._ball && ghost) {
+      const gr     = ghost.getBoundingClientRect();
+      c._ball.x    = gr.left + gr.width  / 2;
+      c._ball.y    = gr.top  + gr.height / 2 + window.pageYOffset;
+      c._ball.vx   = 0;
+      c._ball.vy   = 0;
+      c._ball.settledAt      = null;
+      c._ball.displayOpacity = 1;
+    }
+
     c.parentElement.style.opacity = '';
     if (ghost) {
-      /* Fade face back to default before removing */
       ghost.classList.remove('hovered');
       setTimeout(() => ghost.remove(), 200);
     }
@@ -391,9 +408,14 @@
                document.querySelector("link[rel*='icon']");
   if (!link) return;
 
-  /* Same expression set as the site balls */
+  /* Happy/neutral faces weighted more heavily for the favicon */
   const EXPRS = [
-    ':)', ':D', ':P', ';)', ':]', ':3', ':O', ':/', ':>', ':S', ':X', '(:', ':B', '8)', 'B)',
+    ':)', ':)', ':)', ':)', ':)', /* most common — classic happy */
+    ':D', ':D', ':D',            /* big smile */
+    ';)', ';)',                   /* wink */
+    ':]', ':]',                  /* content */
+    ':3',                        /* cat smile */
+    ':P', ':O', ':/', '8)', 'B)', /* occasional variety */
   ];
 
   function fsize(txt) {
