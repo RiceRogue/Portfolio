@@ -296,14 +296,13 @@
     ghost.style.background = p.bg;
     ghost.style.color      = p.color;
     ghost.style.boxShadow  = `0 0 32px ${p.glow}, 0 0 10px ${p.glow}`;
+    /* Copy inner HTML and let CSS transitions handle the face swap naturally */
     ghost.innerHTML = circle.innerHTML;
-    ghost.querySelector('.face-default').style.opacity = '0';
-    ghost.querySelector('.face-hover').style.opacity   = '1';
     document.body.appendChild(ghost);
-
-    if (typeof gsap !== 'undefined') {
-      gsap.fromTo(ghost, { scale: 1 }, { scale: 1.18, duration: 0.2, ease: 'back.out(2)' });
-    }
+    /* Trigger face swap on next frame so CSS transition fires */
+    requestAnimationFrame(() => {
+      ghost.classList.add('hovered');
+    });
 
     circle.parentElement.style.opacity = '0';
     dragOffsetX    = cx - r.left;
@@ -318,10 +317,9 @@
     const ghost = c._ghost;
     c.parentElement.style.opacity = '';
     if (ghost) {
-      if (typeof gsap !== 'undefined') {
-        gsap.to(ghost, { scale: 0, opacity: 0, duration: 0.35,
-                         ease: 'back.in(1.7)', onComplete: () => ghost.remove() });
-      } else { ghost.remove(); }
+      /* Fade face back to default before removing */
+      ghost.classList.remove('hovered');
+      setTimeout(() => ghost.remove(), 200);
     }
     c._ghost = null;
     grabbed  = null;
