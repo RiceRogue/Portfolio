@@ -27,8 +27,8 @@
   /* ── Circle factory ── */
   function makeCircle(size, expr) {
     function fsize(txt) {
-      return Math.min(Math.floor(size * 0.42),
-                      Math.floor(size * 0.9 / (txt.length * 0.58 + 0.3)));
+      return Math.min(Math.floor(size * 0.462),
+                      Math.floor(size * 0.99 / (txt.length * 0.58 + 0.3)));
     }
     const palette = PALETTES[Math.floor(Math.random() * PALETTES.length)];
     const circle  = document.createElement('div');
