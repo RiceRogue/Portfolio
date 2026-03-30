@@ -297,6 +297,10 @@
   let grabbed     = null;
   let dragOffsetX = 0;
   let dragOffsetY = 0;
+  let dragPrevX   = 0;
+  let dragPrevY   = 0;
+  let dragVelX    = 0;
+  let dragVelY    = 0;
 
   function hitTest(cx, cy) {
     for (let i = allCircles.length - 1; i >= 0; i--) {
@@ -333,10 +337,14 @@
     });
 
     circle.parentElement.style.opacity = '0';
-    dragOffsetX    = cx - r.left;
-    dragOffsetY    = cy - r.top;
-    circle._ghost  = ghost;
-    grabbed        = circle;
+    dragOffsetX = cx - r.left;
+    dragOffsetY = cy - r.top;
+    dragPrevX   = cx - dragOffsetX;
+    dragPrevY   = cy - dragOffsetY;
+    dragVelX    = 0;
+    dragVelY    = 0;
+    circle._ghost = ghost;
+    grabbed       = circle;
   }
 
   function releaseBall() {
@@ -349,8 +357,8 @@
       const gr     = ghost.getBoundingClientRect();
       c._ball.x    = gr.left + gr.width  / 2;
       c._ball.y    = gr.top  + gr.height / 2 + window.pageYOffset;
-      c._ball.vx   = 0;
-      c._ball.vy   = 0;
+      c._ball.vx   = dragVelX * 0.55; /* carry cursor momentum into physics */
+      c._ball.vy   = dragVelY * 0.55;
       c._ball.settledAt      = null;
       c._ball.displayOpacity = 1;
     }
@@ -374,8 +382,15 @@
 
   document.addEventListener('pointermove', e => {
     if (grabbed && grabbed._ghost) {
-      grabbed._ghost.style.left = (e.clientX - dragOffsetX) + 'px';
-      grabbed._ghost.style.top  = (e.clientY - dragOffsetY) + 'px';
+      const newLeft = e.clientX - dragOffsetX;
+      const newTop  = e.clientY - dragOffsetY;
+      /* Smooth velocity tracking for throw-on-release */
+      dragVelX = dragVelX * 0.6 + (newLeft - dragPrevX) * 0.4;
+      dragVelY = dragVelY * 0.6 + (newTop  - dragPrevY) * 0.4;
+      dragPrevX = newLeft;
+      dragPrevY = newTop;
+      grabbed._ghost.style.left = newLeft + 'px';
+      grabbed._ghost.style.top  = newTop  + 'px';
       return;
     }
 
