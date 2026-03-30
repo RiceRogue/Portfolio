@@ -163,8 +163,7 @@ a {
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 82%, transparent 100%);
-  mask-image: linear-gradient(to bottom, black 0%, black 82%, transparent 100%);
+  /* mask set dynamically by JS to dim behind intro text and fade at hero bottom */
 }
 
 .smiley-wrapper {
@@ -213,6 +212,7 @@ a {
   white-space: nowrap;
   transition: opacity 0.18s ease;
   line-height: 1;
+  letter-spacing: 0.14em;
 }
 
 .face-hover { opacity: 0; }

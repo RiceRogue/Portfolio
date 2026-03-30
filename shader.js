@@ -68,6 +68,34 @@
   buildCSSField('smiley-bg',      'smiley-wrapper', 40, 4, 4);
   buildCSSField('smiley-margins', 'smiley-wrapper', 28, 9, 10);
 
+  /* ── Dynamic hero mask — dims behind intro text, fades at bottom ── */
+  (function applyHeroMask() {
+    const hero  = document.querySelector('.hero');
+    const intro = document.querySelector('.intro-section');
+    const bg    = document.getElementById('smiley-bg');
+    if (!hero || !intro || !bg) return;
+
+    function update() {
+      const hH = hero.offsetHeight;
+      const iT = intro.offsetTop;
+      const iB = iT + intro.offsetHeight;
+      const p  = v => (Math.max(0, Math.min(100, v / hH * 100)).toFixed(1) + '%');
+      const mask =
+        'linear-gradient(to bottom,' +
+        'black 0%,' +
+        `black ${p(iT - 50)},` +
+        `rgba(0,0,0,0.07) ${p(iT + 40)},` +
+        `rgba(0,0,0,0.07) ${p(iB - 20)},` +
+        `black ${p(iB + 50)},` +
+        'black 83%,' +
+        'transparent 100%)';
+      bg.style.maskImage = bg.style.webkitMaskImage = mask;
+    }
+
+    update();
+    window.addEventListener('resize', update);
+  })();
+
   /* ── Physics bottom field ── */
   (function buildPhysicsField() {
     const container = document.getElementById('smiley-bg-bottom');
@@ -75,16 +103,16 @@
 
     const COUNT       = 18;
     const GRAVITY     = 0.28;
-    const RESTITUTION = 0.36;   /* bounciness */
-    const FRICTION    = 0.86;   /* horizontal damping on floor hit */
-    const DAMPING     = 0.9992; /* air resistance per frame */
+    const RESTITUTION = 0.36;
+    const FRICTION    = 0.86;
+    const DAMPING     = 0.9992;
 
     const balls = [];
 
     for (let i = 0; i < COUNT; i++) {
-      const size    = SIZES[Math.floor(Math.random() * SIZES.length)];
-      const expr    = EXPRESSIONS[Math.floor(Math.random() * EXPRESSIONS.length)];
-      const radius  = size / 2;
+      const size   = SIZES[Math.floor(Math.random() * SIZES.length)];
+      const expr   = EXPRESSIONS[Math.floor(Math.random() * EXPRESSIONS.length)];
+      const radius = size / 2;
 
       const wrapper = document.createElement('div');
       wrapper.className = 'smiley-wrapper-bottom';
@@ -97,14 +125,15 @@
       allCircles.push(circle);
 
       balls.push({
-        x: 0, y: 0,          /* set on first activation */
+        x: 0, y: 0,
         vx: (Math.random() - 0.5) * 3,
         vy: 0,
         radius,
         wrapper,
         circle,
-        active:      false,
-        spawnAt:     i * 280, /* ms delay between spawns */
+        active:    false,
+        spawnAt:   i * 280,
+        settledAt: null,
       });
     }
 
@@ -118,7 +147,6 @@
       const active = [];
 
       for (const b of balls) {
-        /* Spawn */
         if (!b.active && elapsed >= b.spawnAt) {
           b.active = true;
           b.x  = b.radius + Math.random() * (cW - b.radius * 2);
@@ -136,8 +164,9 @@
         b.x  += b.vx;
         b.y  += b.vy;
 
-        /* Floor */
         const floor = cH - b.radius;
+
+        /* Floor */
         if (b.y >= floor) {
           b.y   = floor;
           b.vy *= -RESTITUTION;
@@ -148,6 +177,37 @@
         /* Walls */
         if (b.x - b.radius < 0)  { b.x = b.radius;       b.vx *= -0.5; }
         if (b.x + b.radius > cW) { b.x = cW - b.radius;  b.vx *= -0.5; }
+
+        /* Settle detection */
+        const isSettled = b.y >= floor - 0.5 &&
+                          Math.abs(b.vy) < 0.1 &&
+                          Math.abs(b.vx) < 0.4;
+        if (isSettled) {
+          if (!b.settledAt) b.settledAt = ts;
+        } else if (b.settledAt && (Math.abs(b.vy) > 0.8 || Math.abs(b.vx) > 1)) {
+          b.settledAt = null;
+        }
+
+        /* Fade after 1.5s settled, then respawn */
+        if (b.settledAt) {
+          const elapsed2 = ts - b.settledAt;
+          if (elapsed2 > 1500) {
+            const fade = Math.min(1, (elapsed2 - 1500) / 2000);
+            b.wrapper.style.opacity = (1 - fade).toFixed(3);
+            if (fade >= 1) {
+              /* Respawn from top */
+              b.x = b.radius + Math.random() * (cW - b.radius * 2);
+              b.y = -b.radius - Math.random() * 60;
+              b.vx = (Math.random() - 0.5) * 3;
+              b.vy = 0;
+              b.settledAt = null;
+              b.wrapper.style.opacity = '0';
+              /* Brief delay before becoming visible again */
+              const wRef = b.wrapper;
+              setTimeout(() => { wRef.style.opacity = '1'; }, 400 + Math.random() * 400);
+            }
+          }
+        }
 
         /* DOM */
         b.wrapper.style.left = (b.x - b.radius) + 'px';
@@ -212,7 +272,6 @@
   let dragOffsetY = 0;
 
   function hitTest(cx, cy) {
-    /* Reverse order — last in DOM = visually on top = highest priority */
     for (let i = allCircles.length - 1; i >= 0; i--) {
       const c = allCircles[i];
       const r = c.getBoundingClientRect();
@@ -314,7 +373,6 @@
   cvs.width = cvs.height = 64;
   const ctx = cvs.getContext('2d');
 
-  /* Reuse the existing <link rel="icon"> so we don't duplicate it */
   const link = document.getElementById('favicon-link') ||
                document.querySelector("link[rel*='icon']");
   if (!link) return;
@@ -324,12 +382,10 @@
   function draw() {
     const hue  = (frame * 1.2) % 360;
     const hue2 = (hue + 25) % 360;
-    /* Wink for 8 frames every 90-frame cycle (~11s at 8fps) */
     const wink = (frame % 90) < 8;
 
     ctx.clearRect(0, 0, 64, 64);
 
-    /* Body gradient */
     const g = ctx.createRadialGradient(22, 18, 2, 32, 32, 32);
     g.addColorStop(0, `hsl(${hue},  95%, 72%)`);
     g.addColorStop(1, `hsl(${hue2}, 100%, 40%)`);
@@ -340,13 +396,11 @@
 
     const faceColor = `hsl(${hue}, 80%, 12%)`;
 
-    /* Left eye */
     ctx.fillStyle = faceColor;
     ctx.beginPath();
     ctx.arc(22, 26, 5, 0, Math.PI * 2);
     ctx.fill();
 
-    /* Right eye or wink line */
     if (wink) {
       ctx.strokeStyle = faceColor;
       ctx.lineWidth   = 3;
@@ -361,7 +415,6 @@
       ctx.fill();
     }
 
-    /* Smile arc */
     ctx.strokeStyle = faceColor;
     ctx.lineWidth   = 3.5;
     ctx.lineCap     = 'round';
@@ -374,7 +427,7 @@
   }
 
   draw();
-  setInterval(draw, 125); /* ~8 fps — efficient for favicon */
+  setInterval(draw, 125);
 })();
 
 /* ── Shared utilities ───────────────────────────────────────── */
