@@ -82,10 +82,10 @@
     if (!container) return;
 
     const COUNT       = 44;
-    const GRAVITY     = 0.06;
-    const RESTITUTION = 0.72;
-    const FRICTION    = 0.94;
-    const DAMPING     = 0.9998;
+    const GRAVITY     = 0.008;
+    const RESTITUTION = 0.88;
+    const FRICTION    = 0.995;
+    const DAMPING     = 0.9999;
     const LERP        = 0.10; /* opacity lerp speed */
 
     /* Layout zones — updated on resize */
@@ -141,7 +141,7 @@
       const ball = {
         x:              xPct / 100 * (window.innerWidth || 1200),
         y:             -radius - Math.random() * 900, /* stagger above page */
-        vx:             (Math.random() - 0.5) * 2.5,
+        vx:             (Math.random() - 0.5) * 0.6,
         vy:             0,
         radius,
         wrapper,
@@ -178,7 +178,7 @@
           b.y   = floor;
           b.vy *= -RESTITUTION;
           b.vx *= FRICTION;
-          if (Math.abs(b.vy) < 0.3) b.vy = 0;
+          if (Math.abs(b.vy) < 0.04) b.vy = 0;
         }
 
         if (b.x - b.radius < 0)  { b.x = b.radius;       b.vx *= -0.5; }
@@ -189,10 +189,10 @@
 
         /* ── Settle detection ── */
         const atFloor   = b.y >= floor - 0.5;
-        const isSettled = atFloor && Math.abs(b.vy) < 0.05 && Math.abs(b.vx) < 0.15;
+        const isSettled = atFloor && Math.abs(b.vy) < 0.01 && Math.abs(b.vx) < 0.03;
         if (isSettled) {
           if (!b.settledAt) b.settledAt = ts;
-        } else if (b.settledAt && (Math.abs(b.vy) > 0.3 || Math.abs(b.vx) > 0.4)) {
+        } else if (b.settledAt && (Math.abs(b.vy) > 0.04 || Math.abs(b.vx) > 0.06)) {
           b.settledAt = null;
         }
 
@@ -209,7 +209,7 @@
               /* Respawn */
               b.x              = b.radius + Math.random() * (cW - b.radius * 2);
               b.y              = -b.radius - Math.random() * 80;
-              b.vx             = (Math.random() - 0.5) * 2.5;
+              b.vx             = (Math.random() - 0.5) * 0.6;
               b.vy             = 0;
               b.settledAt      = null;
               b.displayOpacity = 0;
