@@ -82,10 +82,10 @@
     if (!container) return;
 
     const COUNT       = 44;
-    const GRAVITY     = 0.28;
-    const RESTITUTION = 0.36;
-    const FRICTION    = 0.86;
-    const DAMPING     = 0.9992;
+    const GRAVITY     = 0.06;
+    const RESTITUTION = 0.72;
+    const FRICTION    = 0.94;
+    const DAMPING     = 0.9998;
     const LERP        = 0.10; /* opacity lerp speed */
 
     /* Layout zones — updated on resize */
@@ -178,7 +178,7 @@
           b.y   = floor;
           b.vy *= -RESTITUTION;
           b.vx *= FRICTION;
-          if (Math.abs(b.vy) < 0.8) b.vy = 0;
+          if (Math.abs(b.vy) < 0.3) b.vy = 0;
         }
 
         if (b.x - b.radius < 0)  { b.x = b.radius;       b.vx *= -0.5; }
@@ -189,10 +189,10 @@
 
         /* ── Settle detection ── */
         const atFloor   = b.y >= floor - 0.5;
-        const isSettled = atFloor && Math.abs(b.vy) < 0.1 && Math.abs(b.vx) < 0.4;
+        const isSettled = atFloor && Math.abs(b.vy) < 0.05 && Math.abs(b.vx) < 0.15;
         if (isSettled) {
           if (!b.settledAt) b.settledAt = ts;
-        } else if (b.settledAt && (Math.abs(b.vy) > 0.8 || Math.abs(b.vx) > 1)) {
+        } else if (b.settledAt && (Math.abs(b.vy) > 0.3 || Math.abs(b.vx) > 0.4)) {
           b.settledAt = null;
         }
 
@@ -305,9 +305,12 @@
   function hitTest(cx, cy) {
     for (let i = allCircles.length - 1; i >= 0; i--) {
       const c = allCircles[i];
-      if (c === grabbed) continue; /* skip already-grabbed ball */
+      if (c === grabbed) continue;
+      /* Skip invisible balls */
+      const ball = c._ball;
+      if (ball && ball.displayOpacity < 0.3) continue;
       const r = c.getBoundingClientRect();
-      if (r.width === 0) continue;
+      if (r.width === 0 || r.height === 0) continue;
       const dx = cx - (r.left + r.width  / 2);
       const dy = cy - (r.top  + r.height / 2);
       if (dx * dx + dy * dy <= (r.width / 2) * (r.width / 2)) return c;
@@ -377,8 +380,9 @@
     const target = hitTest(e.clientX, e.clientY);
     if (!target) return;
     e.preventDefault();
+    e.stopPropagation();
     grabBall(target, e.clientX, e.clientY);
-  });
+  }, { capture: true });
 
   document.addEventListener('pointermove', e => {
     if (grabbed && grabbed._ghost) {
