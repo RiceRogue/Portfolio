@@ -527,6 +527,69 @@
   });
 })();
 
+/* ── Cursor trail ───────────────────────────────────────────── */
+(function () {
+  const TRAIL_FACES = [
+    ':)', ':)', ':)', ':)', ':)',
+    ':D', ':D', ':D',
+    ';)', ';)',
+    ':]', ':3', ':P', ':P',
+    ':O', ':>', '(:', '8)', 'B)',
+  ];
+  const TRAIL_COLORS = [
+    'hsl(0,90%,58%)',   'hsl(25,95%,55%)',  'hsl(48,100%,50%)',
+    'hsl(130,70%,45%)', 'hsl(190,85%,48%)', 'hsl(220,85%,60%)',
+    'hsl(270,80%,62%)', 'hsl(310,80%,58%)', 'hsl(340,85%,55%)',
+  ];
+
+  /* Minimum px moved before spawning next particle */
+  const MIN_DIST = 28;
+  let lastX = -9999, lastY = -9999;
+
+  function spawnTrail(x, y) {
+    const face  = TRAIL_FACES[Math.floor(Math.random() * TRAIL_FACES.length)];
+    const color = TRAIL_COLORS[Math.floor(Math.random() * TRAIL_COLORS.length)];
+    const size  = 13 + Math.random() * 14; /* 13–27 px */
+    const drift = (Math.random() - 0.5) * 24;
+
+    const el = document.createElement('div');
+    el.textContent = face;
+    el.style.cssText = [
+      'position:fixed',
+      `left:${x}px`,
+      `top:${y}px`,
+      'transform:translate(-50%,-50%) rotate(90deg)',
+      `font-size:${size}px`,
+      `color:${color}`,
+      'pointer-events:none',
+      'z-index:99999',
+      'user-select:none',
+      'will-change:transform,opacity',
+      'transition:opacity 0.8s ease, transform 0.8s ease',
+      'white-space:nowrap',
+      'line-height:1',
+      'font-family:monospace,sans-serif',
+    ].join(';');
+
+    document.body.appendChild(el);
+
+    /* Kick off fade + float on next frame */
+    requestAnimationFrame(() => {
+      el.style.opacity = '0';
+      el.style.transform = `translate(calc(-50% + ${drift}px), calc(-50% - 28px)) rotate(90deg)`;
+    });
+
+    setTimeout(() => el.remove(), 900);
+  }
+
+  document.addEventListener('mousemove', e => {
+    const dx = e.clientX - lastX, dy = e.clientY - lastY;
+    if (dx * dx + dy * dy < MIN_DIST * MIN_DIST) return;
+    lastX = e.clientX; lastY = e.clientY;
+    spawnTrail(e.clientX, e.clientY);
+  });
+})();
+
 (function () {
   const btn  = document.getElementById('hamburger');
   const menu = document.getElementById('mobile-menu');
