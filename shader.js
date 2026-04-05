@@ -58,13 +58,14 @@
     const container = document.getElementById('smiley-bg');
     if (!container) return;
 
-    const COUNT       = 90;
-    const GRAVITY     = 0.003;
-    const RESTITUTION = 0.82;
-    const FRICTION    = 0.992;
-    const DAMPING     = 0.9999;
-    const LERP        = 0.10; /* opacity lerp speed */
-    const MOUSE_PUSH_R = 72; /* px — cursor repulsion radius */
+    const COUNT        = 90;
+    const GRAVITY      = 0.003;
+    const RESTITUTION  = 0.82;
+    const FRICTION     = 0.992;
+    const DAMPING      = 0.9999;
+    const LERP         = 0.10;
+    const MOUSE_PUSH_R = 100; /* px — cursor repulsion radius */
+    const CLICK_R      = 160; /* px — click impulse radius */
 
     /* Layout zones — updated on resize */
     let introTop = 0, introBottom = 0;
@@ -114,13 +115,11 @@
       container.appendChild(wrapper);
       allCircles.push(circle);
 
-      /* Evenly distribute X across page width, then jitter slightly */
-      const xSlot = (i + 0.5) / COUNT;
-      const xJitter = (Math.random() - 0.5) * (1 / COUNT) * 1.6;
-      const xPct = Math.max(3, Math.min(97, (xSlot + xJitter) * 100));
+      /* Fully random X, evenly staggered Y so they don't arrive all at once */
+      const xPct = 3 + Math.random() * 94;
       const ball = {
         x:              xPct / 100 * (window.innerWidth || 1200),
-        y:             -radius - i * (3200 / COUNT) - Math.random() * 80, /* even vertical spread */
+        y:             -radius - Math.random() * 4000, /* random Y across 4000px queue */
         vx:             (Math.random() - 0.5) * 0.4,
         vy:             0,
         radius,
@@ -129,8 +128,9 @@
         settledAt:      null,
         displayOpacity: 0,
         isMargin:       false,
+        flashedAt:      null, /* timestamp of last face-activate */
       };
-      circle._ball = ball; /* back-ref for grab/release */
+      circle._ball = ball;
       balls.push(ball);
     }
 
@@ -223,11 +223,9 @@
         b.wrapper.style.top     = (b.y - b.radius) + 'px';
       }
 
-      /* ── Mouse push ── */
+      /* ── Mouse push + proximity hover ── */
       const scrollY = window.pageYOffset;
-      /* Convert ball doc-Y to viewport-Y for comparison with mouseDocY */
       for (const b of balls) {
-        if (b.circle === grabbed) continue;
         if (b.displayOpacity < 0.1) continue;
         const dx = b.x - mouseDocX;
         const dy = (b.y - scrollY) - mouseDocY;
@@ -235,11 +233,16 @@
         if (dSq < MOUSE_PUSH_R * MOUSE_PUSH_R && dSq > 0.001) {
           const d = Math.sqrt(dSq);
           const nx = dx / d, ny = dy / d;
-          /* Push strength falls off with distance */
-          const strength = (1 - d / MOUSE_PUSH_R) * 0.6;
-          b.vx += nx * strength + mouseVelX * 0.12;
-          b.vy += ny * strength + mouseVelY * 0.12;
-          b.settledAt = null; /* unsettled by mouse */
+          const strength = (1 - d / MOUSE_PUSH_R) * 0.7;
+          b.vx += nx * strength + mouseVelX * 0.16;
+          b.vy += ny * strength + mouseVelY * 0.16;
+          b.settledAt = null;
+          /* Activate face on close contact */
+          if (d < b.radius * 1.4 && (!b.flashedAt || ts - b.flashedAt > 800)) {
+            b.flashedAt = ts;
+            applyHover(b.circle);
+            setTimeout(() => unhover(b.circle), 700);
+          }
         }
       }
 
@@ -270,12 +273,60 @@
       requestAnimationFrame(loop);
     }
 
+    /* Click burst — strong radial impulse + face activation */
+    window._smileyClickBurst = function(cx, cy) {
+      const scrollY = window.pageYOffset;
+      const now = performance.now();
+      for (const b of balls) {
+        if (b.displayOpacity < 0.1) continue;
+        const dx = b.x - cx;
+        const dy = (b.y - scrollY) - cy;
+        const dSq = dx * dx + dy * dy;
+        if (dSq < CLICK_R * CLICK_R && dSq > 0.001) {
+          const d = Math.sqrt(dSq);
+          const nx = dx / d, ny = dy / d;
+          const strength = (1 - d / CLICK_R) * 3.5;
+          b.vx += nx * strength;
+          b.vy += ny * strength - 0.8;
+          b.settledAt = null;
+          if (!b.flashedAt || now - b.flashedAt > 400) {
+            b.flashedAt = now;
+            applyHover(b.circle);
+            setTimeout(() => unhover(b.circle), 900);
+          }
+        }
+      }
+    };
+
+    /* Expose push function for cursor trail to interact with balls */
+    window._smileyPush = function(cx, cy) {
+      const scrollY = window.pageYOffset;
+      const now = performance.now();
+      for (const b of balls) {
+        if (b.displayOpacity < 0.1) continue;
+        const dx = b.x - cx;
+        const dy = (b.y - scrollY) - cy;
+        const dSq = dx * dx + dy * dy;
+        const R = b.radius + 20;
+        if (dSq < R * R && dSq > 0.001) {
+          const d = Math.sqrt(dSq);
+          const nx = dx / d, ny = dy / d;
+          b.vx += nx * 1.2;
+          b.vy += ny * 1.2 - 0.4;
+          b.settledAt = null;
+          if (!b.flashedAt || now - b.flashedAt > 600) {
+            b.flashedAt = now;
+            applyHover(b.circle);
+            setTimeout(() => unhover(b.circle), 700);
+          }
+        }
+      }
+    };
+
     requestAnimationFrame(loop);
   })();
 
   /* ── Hover helpers ── */
-  let lastHovered = null;
-
   function applyHover(c) {
     const p = c._palette;
     c.classList.add('hovered');
@@ -296,141 +347,30 @@
     }
   }
 
-  /* ── Mouse position (document-relative) for physics push ── */
+  /* ── Mouse position (viewport) for physics push ── */
   let mouseDocX = -9999, mouseDocY = -9999;
   let mousePrevDocX = -9999, mousePrevDocY = -9999;
   let mouseVelX = 0, mouseVelY = 0;
 
-  /* ── Drag state ── */
-  let grabbed     = null;
-  let dragOffsetX = 0;
-  let dragOffsetY = 0;
-  let dragPrevX   = 0;
-  let dragPrevY   = 0;
-  let dragVelX    = 0;
-  let dragVelY    = 0;
-
-  function hitTest(cx, cy) {
-    for (let i = allCircles.length - 1; i >= 0; i--) {
-      const c = allCircles[i];
-      if (c === grabbed) continue;
-      /* Skip invisible balls */
-      const ball = c._ball;
-      if (ball && ball.displayOpacity < 0.3) continue;
-      const r = c.getBoundingClientRect();
-      if (r.width === 0 || r.height === 0) continue;
-      const dx = cx - (r.left + r.width  / 2);
-      const dy = cy - (r.top  + r.height / 2);
-      if (dx * dx + dy * dy <= (r.width / 2) * (r.width / 2)) return c;
-    }
-    return null;
-  }
-
-  function grabBall(circle, cx, cy) {
-    const r = circle.getBoundingClientRect();
-    const p = circle._palette;
-
-    const ghost = document.createElement('div');
-    ghost.className = 'smiley-circle smiley-drag-ghost';
-    ghost.style.width      = r.width  + 'px';
-    ghost.style.height     = r.height + 'px';
-    ghost.style.left       = r.left   + 'px';
-    ghost.style.top        = r.top    + 'px';
-    ghost.style.background = p.bg;
-    ghost.style.color      = p.color;
-    ghost.style.boxShadow  = `0 0 32px ${p.glow}, 0 0 10px ${p.glow}`;
-    /* Copy inner HTML and let CSS transitions handle the face swap naturally */
-    ghost.innerHTML = circle.innerHTML;
-    document.body.appendChild(ghost);
-    /* Trigger face swap on next frame so CSS transition fires */
-    requestAnimationFrame(() => {
-      ghost.classList.add('hovered');
-    });
-
-    circle.parentElement.style.opacity = '0';
-    dragOffsetX = cx - r.left;
-    dragOffsetY = cy - r.top;
-    dragPrevX   = cx - dragOffsetX;
-    dragPrevY   = cy - dragOffsetY;
-    dragVelX    = 0;
-    dragVelY    = 0;
-    circle._ghost = ghost;
-    grabbed       = circle;
-  }
-
-  function releaseBall() {
-    if (!grabbed) return;
-    const c     = grabbed;
-    const ghost = c._ghost;
-
-    /* Sync physics ball to ghost position so ball continues from where released */
-    if (c._ball && ghost) {
-      const gr     = ghost.getBoundingClientRect();
-      c._ball.x    = gr.left + gr.width  / 2;
-      c._ball.y    = gr.top  + gr.height / 2 + window.pageYOffset;
-      c._ball.vx   = dragVelX * 0.55; /* carry cursor momentum into physics */
-      c._ball.vy   = dragVelY * 0.55;
-      c._ball.settledAt      = null;
-      c._ball.displayOpacity = 1;
-    }
-
-    c.parentElement.style.opacity = '';
-    if (ghost) {
-      ghost.classList.remove('hovered');
-      setTimeout(() => ghost.remove(), 200);
-    }
-    c._ghost = null;
-    grabbed  = null;
-  }
-
-  /* ── Global pointer events ── */
+  /* ── Click impulse — radial burst from click point ── */
   document.addEventListener('pointerdown', e => {
-    const target = hitTest(e.clientX, e.clientY);
-    if (!target) return;
-    e.preventDefault();
-    e.stopPropagation();
-    grabBall(target, e.clientX, e.clientY);
-  }, { capture: true });
+    if (window._smileyClickBurst) window._smileyClickBurst(e.clientX, e.clientY);
+  });
 
+  /* ── Mouse move — track velocity ── */
   document.addEventListener('pointermove', e => {
-    /* Track mouse position for physics push (viewport coords) */
     mouseVelX = (e.clientX - mousePrevDocX) * 0.4 + mouseVelX * 0.6;
     mouseVelY = (e.clientY - mousePrevDocY) * 0.4 + mouseVelY * 0.6;
     mousePrevDocX = mouseDocX;
     mousePrevDocY = mouseDocY;
     mouseDocX = e.clientX;
     mouseDocY = e.clientY;
-
-    if (grabbed && grabbed._ghost) {
-      const newLeft = e.clientX - dragOffsetX;
-      const newTop  = e.clientY - dragOffsetY;
-      /* Smooth velocity tracking for throw-on-release */
-      dragVelX = dragVelX * 0.6 + (newLeft - dragPrevX) * 0.4;
-      dragVelY = dragVelY * 0.6 + (newTop  - dragPrevY) * 0.4;
-      dragPrevX = newLeft;
-      dragPrevY = newTop;
-      grabbed._ghost.style.left = newLeft + 'px';
-      grabbed._ghost.style.top  = newTop  + 'px';
-      return;
-    }
-
-    const found = hitTest(e.clientX, e.clientY);
-    if (found !== lastHovered) {
-      unhover(lastHovered);
-      lastHovered = found;
-      if (found) applyHover(found);
-    }
-    if (found && typeof gsap !== 'undefined') {
-      const r  = found.getBoundingClientRect();
-      const rx =  ((e.clientY - (r.top  + r.height / 2)) / r.height) * 38;
-      const ry = -((e.clientX - (r.left + r.width  / 2)) / r.width)  * 38;
-      gsap.to(found, { rotateX: rx, rotateY: ry, scale: 1.2, overwrite: true, duration: 0.15 });
-    }
   });
 
-  document.addEventListener('pointerup',     () => releaseBall());
-  document.addEventListener('pointercancel', () => releaseBall());
-  document.addEventListener('pointerleave',  () => { releaseBall(); unhover(lastHovered); lastHovered = null; });
+  document.addEventListener('pointerleave', () => {
+    mouseDocX = -9999; mouseDocY = -9999;
+    mouseVelX = 0; mouseVelY = 0;
+  });
 })();
 
 /* ── Animated favicon ────────────────────────────────────────── */
@@ -619,6 +559,9 @@
     });
 
     setTimeout(() => el.remove(), 900);
+
+    /* Push physics balls away from trail spawn point */
+    if (window._smileyPush) window._smileyPush(x, y);
   }
 
   document.addEventListener('mousemove', e => {
