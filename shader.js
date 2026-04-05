@@ -375,8 +375,10 @@
 
 /* ── Animated favicon ────────────────────────────────────────── */
 (function () {
+  const S   = 256; /* canvas size — max supported by all modern browsers */
+  const C   = S / 2;
   const cvs = document.createElement('canvas');
-  cvs.width = cvs.height = 64;
+  cvs.width = cvs.height = S;
   const ctx = cvs.getContext('2d');
 
   const link = document.getElementById('favicon-link') ||
@@ -394,8 +396,7 @@
   ];
 
   function fsize(txt) {
-    const s = 64;
-    return Math.min(Math.floor(s * 0.462), Math.floor(s * 0.99 / (txt.length * 0.58 + 0.3)));
+    return Math.min(Math.floor(S * 0.462), Math.floor(S * 0.99 / (txt.length * 0.58 + 0.3)));
   }
 
   let frame   = 0;
@@ -405,15 +406,15 @@
     const hue  = (frame * 1.2) % 360;
     const hue2 = (hue + 25) % 360;
 
-    ctx.clearRect(0, 0, 64, 64);
+    ctx.clearRect(0, 0, S, S);
 
     /* Circle gradient — matches site ball palette formula */
-    const g = ctx.createRadialGradient(22, 19, 2, 32, 32, 32);
+    const g = ctx.createRadialGradient(C * 0.69, C * 0.59, S * 0.03, C, C, C);
     g.addColorStop(0, `hsl(${hue},  95%, 72%)`);
     g.addColorStop(1, `hsl(${hue2}, 100%, 40%)`);
     ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.arc(32, 32, 31, 0, Math.PI * 2);
+    ctx.arc(C, C, C - 2, 0, Math.PI * 2);
     ctx.fill();
 
     /* Text emoticon rotated 90° CW — matches site CSS rotate(90deg) */
@@ -421,7 +422,7 @@
     const fs        = fsize(expr);
     const faceColor = `hsl(${hue}, 80%, 12%)`;
     ctx.save();
-    ctx.translate(32, 32);
+    ctx.translate(C, C);
     ctx.rotate(Math.PI / 2);
     ctx.font         = `bold ${fs}px "Inter", Arial, sans-serif`;
     ctx.fillStyle    = faceColor;
