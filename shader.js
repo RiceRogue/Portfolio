@@ -58,7 +58,7 @@
     const container = document.getElementById('smiley-bg');
     if (!container) return;
 
-    const COUNT       = 70;
+    const COUNT       = 90;
     const GRAVITY     = 0.008;
     const RESTITUTION = 0.88;
     const FRICTION    = 0.995;
@@ -113,10 +113,13 @@
       container.appendChild(wrapper);
       allCircles.push(circle);
 
-      const xPct = 3 + Math.random() * 94;
+      /* Evenly distribute X across page width, then jitter slightly */
+      const xSlot = (i + 0.5) / COUNT;
+      const xJitter = (Math.random() - 0.5) * (1 / COUNT) * 1.6;
+      const xPct = Math.max(3, Math.min(97, (xSlot + xJitter) * 100));
       const ball = {
         x:              xPct / 100 * (window.innerWidth || 1200),
-        y:             -radius - Math.random() * 3200, /* spread for constant top stream */
+        y:             -radius - i * (3200 / COUNT) - Math.random() * 80, /* even vertical spread */
         vx:             (Math.random() - 0.5) * 0.4,
         vy:             0,
         radius,
@@ -183,9 +186,9 @@
           if (elapsed > 1500) {
             targetOpacity = Math.max(0, 1 - (elapsed - 1500) / 2000);
             if (targetOpacity <= 0) {
-              /* Respawn */
-              b.x              = b.radius + Math.random() * (cW - b.radius * 2);
-              b.y              = -b.radius - Math.random() * 80;
+              /* Respawn — spread Y over 3000px so trickle stays continuous */
+              b.x              = b.radius * 2 + Math.random() * (cW - b.radius * 4);
+              b.y              = -b.radius - Math.random() * 3000;
               b.vx             = (Math.random() - 0.5) * 0.6;
               b.vy             = 0;
               b.settledAt      = null;
