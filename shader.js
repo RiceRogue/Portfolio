@@ -59,11 +59,12 @@
     if (!container) return;
 
     const COUNT       = 90;
-    const GRAVITY     = 0.008;
-    const RESTITUTION = 0.88;
-    const FRICTION    = 0.995;
+    const GRAVITY     = 0.003;
+    const RESTITUTION = 0.82;
+    const FRICTION    = 0.992;
     const DAMPING     = 0.9999;
     const LERP        = 0.10; /* opacity lerp speed */
+    const MOUSE_PUSH_R = 72; /* px — cursor repulsion radius */
 
     /* Layout zones — updated on resize */
     let introTop = 0, introBottom = 0;
@@ -175,6 +176,8 @@
         } else if (b.settledAt && (Math.abs(b.vy) > 0.04 || Math.abs(b.vx) > 0.06)) {
           b.settledAt = null;
         }
+        /* Reset settle timer while hovered so ball won't fade under the cursor */
+        if (b.circle === lastHovered && b.settledAt) b.settledAt = null;
 
         /* ── Target opacity ── */
         let targetOpacity = 1;
@@ -183,8 +186,8 @@
           targetOpacity = 0; /* above page top */
         } else if (b.settledAt) {
           const elapsed = ts - b.settledAt;
-          if (elapsed > 1500) {
-            targetOpacity = Math.max(0, 1 - (elapsed - 1500) / 2000);
+          if (elapsed > 5000) {
+            targetOpacity = Math.max(0, 1 - (elapsed - 5000) / 2500);
             if (targetOpacity <= 0) {
               /* Respawn — spread Y over 3000px so trickle stays continuous */
               b.x              = b.radius * 2 + Math.random() * (cW - b.radius * 4);
@@ -205,7 +208,7 @@
         }
 
         /* ── Opacity lerp (direct for settle timing, smooth lerp otherwise) ── */
-        if (b.settledAt && ts - b.settledAt > 1500) {
+        if (b.settledAt && ts - b.settledAt > 5000) {
           b.displayOpacity = targetOpacity; /* linear fade matches elapsed time */
         } else {
           const speed = targetOpacity > b.displayOpacity ? LERP * 1.5 : LERP;
@@ -218,6 +221,26 @@
         b.wrapper.style.opacity = b.displayOpacity.toFixed(3);
         b.wrapper.style.left    = (b.x - b.radius) + 'px';
         b.wrapper.style.top     = (b.y - b.radius) + 'px';
+      }
+
+      /* ── Mouse push ── */
+      const scrollY = window.pageYOffset;
+      /* Convert ball doc-Y to viewport-Y for comparison with mouseDocY */
+      for (const b of balls) {
+        if (b.circle === grabbed) continue;
+        if (b.displayOpacity < 0.1) continue;
+        const dx = b.x - mouseDocX;
+        const dy = (b.y - scrollY) - mouseDocY;
+        const dSq = dx * dx + dy * dy;
+        if (dSq < MOUSE_PUSH_R * MOUSE_PUSH_R && dSq > 0.001) {
+          const d = Math.sqrt(dSq);
+          const nx = dx / d, ny = dy / d;
+          /* Push strength falls off with distance */
+          const strength = (1 - d / MOUSE_PUSH_R) * 0.6;
+          b.vx += nx * strength + mouseVelX * 0.12;
+          b.vy += ny * strength + mouseVelY * 0.12;
+          b.settledAt = null; /* unsettled by mouse */
+        }
       }
 
       /* ── Ball–ball collisions ── */
@@ -272,6 +295,11 @@
                    ease: 'elastic.out(1, 0.38)', overwrite: true });
     }
   }
+
+  /* ── Mouse position (document-relative) for physics push ── */
+  let mouseDocX = -9999, mouseDocY = -9999;
+  let mousePrevDocX = -9999, mousePrevDocY = -9999;
+  let mouseVelX = 0, mouseVelY = 0;
 
   /* ── Drag state ── */
   let grabbed     = null;
@@ -365,6 +393,14 @@
   }, { capture: true });
 
   document.addEventListener('pointermove', e => {
+    /* Track mouse position for physics push (viewport coords) */
+    mouseVelX = (e.clientX - mousePrevDocX) * 0.4 + mouseVelX * 0.6;
+    mouseVelY = (e.clientY - mousePrevDocY) * 0.4 + mouseVelY * 0.6;
+    mousePrevDocX = mouseDocX;
+    mousePrevDocY = mouseDocY;
+    mouseDocX = e.clientX;
+    mouseDocY = e.clientY;
+
     if (grabbed && grabbed._ghost) {
       const newLeft = e.clientX - dragOffsetX;
       const newTop  = e.clientY - dragOffsetY;
