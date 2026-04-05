@@ -59,12 +59,13 @@
     if (!container) return;
 
     const COUNT        = 90;
-    const GRAVITY      = 0.003;
-    const RESTITUTION  = 0.82;
-    const FRICTION     = 0.992;
-    const DAMPING      = 0.9999;
+    const GRAVITY      = 0.0012; /* very floaty */
+    const RESTITUTION  = 0.85;
+    const FRICTION     = 0.993;
+    const DAMPING      = 0.9995;
     const LERP         = 0.10;
-    const MOUSE_PUSH_R = 100; /* px — cursor repulsion radius */
+    const MOUSE_R      = 48;  /* px — hard collision radius around cursor */
+    const MOUSE_PUSH_R = 110; /* px — soft repulsion beyond hard radius */
     const CLICK_R      = 160; /* px — click impulse radius */
 
     /* Layout zones — updated on resize */
@@ -223,26 +224,45 @@
         b.wrapper.style.top     = (b.y - b.radius) + 'px';
       }
 
-      /* ── Mouse push + proximity hover ── */
+      /* ── Mouse collision + push ── */
       const scrollY = window.pageYOffset;
       for (const b of balls) {
         if (b.displayOpacity < 0.1) continue;
         const dx = b.x - mouseDocX;
         const dy = (b.y - scrollY) - mouseDocY;
         const dSq = dx * dx + dy * dy;
-        if (dSq < MOUSE_PUSH_R * MOUSE_PUSH_R && dSq > 0.001) {
-          const d = Math.sqrt(dSq);
+        const hardR = MOUSE_R + b.radius;
+
+        if (dSq < hardR * hardR && dSq > 0.001) {
+          /* Hard bounce — push ball out of cursor radius and reflect velocity */
+          const d  = Math.sqrt(dSq);
           const nx = dx / d, ny = dy / d;
-          const strength = (1 - d / MOUSE_PUSH_R) * 0.7;
-          b.vx += nx * strength + mouseVelX * 0.16;
-          b.vy += ny * strength + mouseVelY * 0.16;
+          /* Separate */
+          b.x = mouseDocX + nx * hardR;
+          b.y = (mouseDocY + scrollY) + ny * hardR;
+          /* Reflect velocity component along normal + transfer cursor momentum */
+          const dvn = (b.vx - mouseVelX) * nx + (b.vy - mouseVelY) * ny;
+          if (dvn < 0) {
+            b.vx -= dvn * nx * (1 + RESTITUTION);
+            b.vy -= dvn * ny * (1 + RESTITUTION);
+          }
+          b.vx += mouseVelX * 0.25;
+          b.vy += mouseVelY * 0.25;
           b.settledAt = null;
-          /* Activate face on close contact */
-          if (d < b.radius * 1.4 && (!b.flashedAt || ts - b.flashedAt > 800)) {
+          /* Face flash on contact */
+          if (!b.flashedAt || ts - b.flashedAt > 600) {
             b.flashedAt = ts;
             applyHover(b.circle);
             setTimeout(() => unhover(b.circle), 700);
           }
+        } else if (dSq < MOUSE_PUSH_R * MOUSE_PUSH_R) {
+          /* Soft repulsion outside hard radius */
+          const d  = Math.sqrt(dSq);
+          const nx = dx / d, ny = dy / d;
+          const strength = (1 - d / MOUSE_PUSH_R) * 0.4;
+          b.vx += nx * strength;
+          b.vy += ny * strength;
+          b.settledAt = null;
         }
       }
 
