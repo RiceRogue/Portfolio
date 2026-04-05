@@ -48,29 +48,6 @@
     return circle;
   }
 
-  /* ── CSS-animated field (hero + margin columns) ── */
-  function buildCSSField(containerId, wrapperClass, count, durMin, durRange) {
-    const bg = document.getElementById(containerId);
-    if (!bg) return;
-    for (let i = 0; i < count; i++) {
-      const size  = SIZES[Math.floor(Math.random() * SIZES.length)];
-      const dur   = durMin + Math.random() * durRange;
-      const xPct  = 3 + Math.random() * 94;
-      const delay = -(Math.random() * dur);
-      const expr  = EXPRESSIONS[Math.floor(Math.random() * EXPRESSIONS.length)];
-
-      const wrapper = document.createElement('div');
-      wrapper.className = wrapperClass;
-      wrapper.style.cssText =
-        `left:${xPct.toFixed(1)}%;width:${size}px;height:${size}px;` +
-        `--dur:${dur.toFixed(2)}s;--delay:${delay.toFixed(2)}s;`;
-
-      const circle = makeCircle(size, expr);
-      wrapper.appendChild(circle);
-      bg.appendChild(wrapper);
-      allCircles.push(circle);
-    }
-  }
 
   /* ── Unified full-page physics field ────────────────────────────
      All balls fall from above the page, hit the floor just above
@@ -81,7 +58,7 @@
     const container = document.getElementById('smiley-bg');
     if (!container) return;
 
-    const COUNT       = 44;
+    const COUNT       = 70;
     const GRAVITY     = 0.008;
     const RESTITUTION = 0.88;
     const FRICTION    = 0.995;
@@ -100,9 +77,8 @@
       const projects = document.querySelector('.projects-section');
       const pageYOff = window.pageYOffset;
 
-      floorY = footer
-        ? footer.getBoundingClientRect().top + pageYOff
-        : document.body.scrollHeight - 10;
+      /* offsetTop is document-relative and scroll-independent */
+      floorY = footer ? footer.offsetTop : document.body.scrollHeight - 10;
 
       if (intro) {
         introTop    = intro.getBoundingClientRect().top    + pageYOff - 20;
@@ -140,8 +116,8 @@
       const xPct = 3 + Math.random() * 94;
       const ball = {
         x:              xPct / 100 * (window.innerWidth || 1200),
-        y:             -radius - Math.random() * 900, /* stagger above page */
-        vx:             (Math.random() - 0.5) * 0.6,
+        y:             -radius - Math.random() * 3200, /* spread for constant top stream */
+        vx:             (Math.random() - 0.5) * 0.4,
         vy:             0,
         radius,
         wrapper,
@@ -157,6 +133,7 @@
     updateLayout();
     window.addEventListener('resize', updateLayout);
     window.addEventListener('load',   updateLayout);
+    window.addEventListener('scroll', updateLayout, { passive: true });
 
     function loop(ts) {
       const cW = container.clientWidth || window.innerWidth;
@@ -172,7 +149,7 @@
         b.x  += b.vx;
         b.y  += b.vy;
 
-        const floor = floorY - b.radius;
+        const floor = floorY - b.radius - 14; /* rest 14px above footer border */
 
         if (b.y >= floor) {
           b.y   = floor;

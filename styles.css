@@ -119,15 +119,13 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 37px;
-  height: 37px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  color: #fff;
-  transition: transform var(--transition), box-shadow var(--transition);
+  color: var(--fg-muted);
+  transition: transform var(--transition), color var(--transition);
 }
-.site-nav .icon-link:hover { transform: scale(1.12); box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
-.site-nav .icon-link[aria-label="LinkedIn"] { background: #0A66C2; }
-.site-nav .icon-link[aria-label="Itch.io"]  { background: #FA5C5C; }
+.site-nav .icon-link:hover { transform: scale(1.15); color: var(--fg); }
 .site-nav .icon-link svg { width: 20px; height: 20px; }
 
 /* Dark mode toggle */
