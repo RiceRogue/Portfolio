@@ -154,13 +154,14 @@
         b.x  += b.vx;
         b.y  += b.vy;
 
-        const floor = floorY - b.radius - 14; /* rest 14px above footer border */
+        const floor = floorY - b.radius - 2; /* sit right on the footer border */
 
         if (b.y >= floor) {
           b.y   = floor;
           b.vy *= -RESTITUTION;
           b.vx *= FRICTION;
-          if (Math.abs(b.vy) < 0.04) b.vy = 0;
+          if (Math.abs(b.vy) < 0.12) b.vy = 0;
+          if (Math.abs(b.vx) < 0.06) b.vx = 0;
         }
 
         if (b.x - b.radius < 0)  { b.x = b.radius;       b.vx *= -0.5; }
@@ -234,32 +235,34 @@
         const hardR = MOUSE_R + b.radius;
 
         if (dSq < hardR * hardR && dSq > 0.001) {
-          /* Hard bounce — push ball out of cursor radius and reflect velocity */
+          /* Hard bounce — always separate and ensure outward velocity */
           const d  = Math.sqrt(dSq);
           const nx = dx / d, ny = dy / d;
-          /* Separate */
-          b.x = mouseDocX + nx * hardR;
-          b.y = (mouseDocY + scrollY) + ny * hardR;
-          /* Reflect velocity component along normal + transfer cursor momentum */
+          /* Push ball to edge of collision zone */
+          b.x = mouseDocX + nx * (hardR + 0.5);
+          b.y = (mouseDocY + scrollY) + ny * (hardR + 0.5);
+          /* Relative velocity along normal */
           const dvn = (b.vx - mouseVelX) * nx + (b.vy - mouseVelY) * ny;
-          if (dvn < 0) {
-            b.vx -= dvn * nx * (1 + RESTITUTION);
-            b.vy -= dvn * ny * (1 + RESTITUTION);
+          /* Always ensure ball moves outward at a minimum speed */
+          const minOut = 1.2;
+          if (dvn < minOut) {
+            b.vx += nx * (minOut - dvn);
+            b.vy += ny * (minOut - dvn);
           }
-          b.vx += mouseVelX * 0.25;
-          b.vy += mouseVelY * 0.25;
+          /* Carry cursor momentum */
+          b.vx += mouseVelX * 0.35;
+          b.vy += mouseVelY * 0.35;
           b.settledAt = null;
-          /* Face flash on contact */
           if (!b.flashedAt || ts - b.flashedAt > 600) {
             b.flashedAt = ts;
             applyHover(b.circle);
             setTimeout(() => unhover(b.circle), 700);
           }
         } else if (dSq < MOUSE_PUSH_R * MOUSE_PUSH_R) {
-          /* Soft repulsion outside hard radius */
+          /* Soft repulsion just outside hard radius */
           const d  = Math.sqrt(dSq);
           const nx = dx / d, ny = dy / d;
-          const strength = (1 - d / MOUSE_PUSH_R) * 0.4;
+          const strength = (1 - d / MOUSE_PUSH_R) * 0.35;
           b.vx += nx * strength;
           b.vy += ny * strength;
           b.settledAt = null;
