@@ -175,8 +175,6 @@
         } else if (b.settledAt && (Math.abs(b.vy) > 0.04 || Math.abs(b.vx) > 0.06)) {
           b.settledAt = null;
         }
-        /* Reset settle timer while hovered so ball won't fade under the cursor */
-        if (b.circle === lastHovered && b.settledAt) b.settledAt = null;
 
         /* ── Target opacity ── */
         let targetOpacity = 1;
