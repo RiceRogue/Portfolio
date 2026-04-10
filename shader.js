@@ -116,13 +116,15 @@
       container.appendChild(wrapper);
       allCircles.push(circle);
 
-      /* Fully random X, evenly staggered Y so they don't arrive all at once */
+      /* Fully random X; stagger Y just above viewport so balls appear quickly */
       const xPct = 3 + Math.random() * 94;
+      /* Give initial downward velocity so balls enter view fast despite low gravity */
+      const initVy = 0.5 + Math.random() * 1.5;
       const ball = {
         x:              xPct / 100 * (window.innerWidth || 1200),
-        y:             -radius - Math.random() * 4000, /* random Y across 4000px queue */
-        vx:             (Math.random() - 0.5) * 0.4,
-        vy:             0,
+        y:             -radius - Math.random() * 600, /* stay close to top */
+        vx:             (Math.random() - 0.5) * 0.6,
+        vy:             initVy,
         radius,
         wrapper,
         circle,
@@ -186,11 +188,11 @@
           if (elapsed > 5000) {
             targetOpacity = Math.max(0, 1 - (elapsed - 5000) / 2500);
             if (targetOpacity <= 0) {
-              /* Respawn — spread Y over 3000px so trickle stays continuous */
+              /* Respawn just above viewport with initial velocity */
               b.x              = b.radius * 2 + Math.random() * (cW - b.radius * 4);
-              b.y              = -b.radius - Math.random() * 3000;
+              b.y              = -b.radius - Math.random() * 400;
               b.vx             = (Math.random() - 0.5) * 0.6;
-              b.vy             = 0;
+              b.vy             = 0.4 + Math.random() * 1.2;
               b.settledAt      = null;
               b.displayOpacity = 0;
               targetOpacity    = 0;
