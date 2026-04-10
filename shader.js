@@ -144,9 +144,6 @@
       const cW = container.clientWidth || window.innerWidth;
 
       for (const b of balls) {
-        /* Skip grabbed ball — ghost follows cursor instead */
-        if (b.circle === grabbed) continue;
-
         /* ── Physics ── */
         b.vy += GRAVITY;
         b.vx *= DAMPING;
