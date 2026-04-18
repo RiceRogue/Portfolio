@@ -58,7 +58,7 @@
     const container = document.getElementById('smiley-bg');
     if (!container) return;
 
-    const COUNT        = 90;
+    const COUNT        = 130;
     const GRAVITY      = 0.0012; /* very floaty */
     const RESTITUTION  = 0.85;
     const FRICTION     = 0.993;
@@ -240,15 +240,15 @@
           b.y = (mouseDocY + scrollY) + ny * (hardR + 0.5);
           /* Relative velocity along normal */
           const dvn = (b.vx - mouseVelX) * nx + (b.vy - mouseVelY) * ny;
-          /* Always ensure ball moves outward at a minimum speed */
-          const minOut = 1.2;
+          /* Gentle nudge outward — enough to displace, not launch */
+          const minOut = 0.4;
           if (dvn < minOut) {
-            b.vx += nx * (minOut - dvn);
-            b.vy += ny * (minOut - dvn);
+            b.vx += nx * (minOut - dvn) * 0.5;
+            b.vy += ny * (minOut - dvn) * 0.5;
           }
-          /* Carry cursor momentum */
-          b.vx += mouseVelX * 0.35;
-          b.vy += mouseVelY * 0.35;
+          /* Carry a fraction of cursor momentum */
+          b.vx += mouseVelX * 0.12;
+          b.vy += mouseVelY * 0.12;
           b.settledAt = null;
           if (!b.flashedAt || ts - b.flashedAt > 600) {
             b.flashedAt = ts;
@@ -259,7 +259,7 @@
           /* Soft repulsion just outside hard radius */
           const d  = Math.sqrt(dSq);
           const nx = dx / d, ny = dy / d;
-          const strength = (1 - d / MOUSE_PUSH_R) * 0.35;
+          const strength = (1 - d / MOUSE_PUSH_R) * 0.15;
           b.vx += nx * strength;
           b.vy += ny * strength;
           b.settledAt = null;
@@ -305,9 +305,9 @@
         if (dSq < CLICK_R * CLICK_R && dSq > 0.001) {
           const d = Math.sqrt(dSq);
           const nx = dx / d, ny = dy / d;
-          const strength = (1 - d / CLICK_R) * 3.5;
+          const strength = (1 - d / CLICK_R) * 1.8;
           b.vx += nx * strength;
-          b.vy += ny * strength - 0.8;
+          b.vy += ny * strength - 0.3;
           b.settledAt = null;
           if (!b.flashedAt || now - b.flashedAt > 400) {
             b.flashedAt = now;
