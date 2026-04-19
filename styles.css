@@ -228,9 +228,10 @@ a {
   border-radius: 50%;
   pointer-events: none;
   z-index: 99998;
-  left: -999px;
-  top: -999px;
-  margin: -28px 0 0 -28px; /* offset so center = cursor tip */
+  left: 0;
+  top: 0;
+  opacity: 0;
+  will-change: transform;
   background: radial-gradient(circle, rgba(255,190,70,0.22) 0%, rgba(255,140,40,0.10) 50%, transparent 75%);
 }
 

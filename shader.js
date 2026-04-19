@@ -106,7 +106,7 @@
       { w: 15, br: '26%' },                                                           /* squircle */
       { w: 12, br: '0', cp: 'polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)' },  /* pentagon */
       { w:  8, br: '0', cp: 'polygon(50% 0%,89% 19%,99% 61%,72% 95%,28% 95%,1% 61%,11% 19%)' }, /* heptagon */
-      { w:  8, br: '0', cp: 'polygon(50% 0%,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0% 50%,40% 40%)' }, /* fat 4-point star */
+      { w:  8, br: '0', cp: 'polygon(50% 0%,55% 45%,100% 50%,55% 55%,50% 100%,45% 55%,0% 50%,45% 45%)' }, /* fat 4-point star */
       { w:  5, br: '0', cp: 'polygon(50% 0%,65% 30%,98% 35%,74% 58%,79% 91%,50% 75%,21% 91%,26% 58%,2% 35%,35% 30%)' }, /* fat 5-point star */
       { w:  2, br: '0', cp: 'polygon(50% 8%,90% 85%,68% 100%,32% 100%,10% 85%)' }, /* fat triangle→pentagon */
     ];
@@ -538,12 +538,12 @@
   document.body.appendChild(sun);
 
   document.addEventListener('pointermove', e => {
-    sun.style.left = e.clientX + 'px';
-    sun.style.top  = e.clientY + 'px';
+    sun.style.transform = `translate(${e.clientX - 28}px,${e.clientY - 28}px)`;
+    sun.style.opacity = '1';
   }, { capture: true, passive: true });
 
   document.addEventListener('mouseleave', () => {
-    sun.style.left = '-999px';
+    sun.style.opacity = '0';
   });
 
   document.addEventListener('pointerdown', e => {
