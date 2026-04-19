@@ -161,7 +161,7 @@
       const initVy = 0.55 + Math.random() * 0.35;
       const ball = {
         x:              xPct / 100 * (window.innerWidth || 1200),
-        y:             -radius - Math.random() * 800,
+        y:             -radius - (i / COUNT) * 900 - Math.random() * 15,
         vx:             (Math.random() - 0.5) * 0.6,
         vy:             initVy,
         radius,
