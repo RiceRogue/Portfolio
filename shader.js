@@ -106,7 +106,7 @@
       { w: 15, br: '26%' },                                                           /* squircle */
       { w: 12, br: '0', cp: 'polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)' },  /* pentagon */
       { w:  8, br: '0', cp: 'polygon(50% 0%,89% 19%,99% 61%,72% 95%,28% 95%,1% 61%,11% 19%)' }, /* heptagon */
-      { w:  8, br: '0', cp: 'polygon(50% 3%,75% 18%,97% 50%,75% 82%,50% 97%,25% 82%,3% 50%,25% 18%)' }, /* diamond */
+      { w:  8, br: '0', cp: 'polygon(50% 0%,100% 50%,50% 100%,0% 50%)' }, /* diamond */
       { w:  6, br: '0', cp: 'polygon(50% 2%,93% 26%,93% 74%,50% 98%,7% 74%,7% 26%)' }, /* hexagon */
       { w:  5, br: '0', cp: 'polygon(50% 0%,65% 30%,98% 35%,74% 58%,79% 91%,50% 75%,21% 91%,26% 58%,2% 35%,35% 30%)' }, /* 5-point star */
       { w:  3, br: '0', cp: 'polygon(50% 5%,85% 14%,98% 85%,83% 97%,17% 97%,2% 85%,15% 14%)' }, /* rounded triangle */
@@ -475,6 +475,22 @@
   Array.from(track.children).forEach(el => track.appendChild(el.cloneNode(true)));
   let x = 0;
   const speed = 1.035;
+  function step() {
+    x -= speed;
+    const half = track.scrollWidth / 2;
+    if (Math.abs(x) >= half) x = 0;
+    track.style.transform = 'translateX(' + x + 'px)';
+    requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+})();
+
+(function () {
+  const track = document.querySelector('.plink-track');
+  if (!track) return;
+  Array.from(track.children).forEach(el => track.appendChild(el.cloneNode(true)));
+  let x = 0;
+  const speed = 0.72;
   function step() {
     x -= speed;
     const half = track.scrollWidth / 2;
