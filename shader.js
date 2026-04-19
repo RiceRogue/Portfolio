@@ -106,9 +106,11 @@
       { w: 15, br: '26%' },                                                           /* squircle */
       { w: 12, br: '0', cp: 'polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)' },  /* pentagon */
       { w:  8, br: '0', cp: 'polygon(50% 0%,89% 19%,99% 61%,72% 95%,28% 95%,1% 61%,11% 19%)' }, /* heptagon */
-      { w:  8, br: '0', cp: 'polygon(50% 0%,62% 22%,78% 22%,100% 50%,78% 78%,62% 78%,50% 100%,38% 78%,22% 78%,0% 50%,22% 22%,38% 22%)' }, /* fat rounded 4-point star */
-      { w:  5, br: '0', cp: 'polygon(50% 0%,65% 30%,98% 35%,74% 58%,79% 91%,50% 75%,21% 91%,26% 58%,2% 35%,35% 30%)' }, /* fat 5-point star */
-      { w:  2, br: '0', cp: 'polygon(50% 8%,90% 85%,68% 100%,32% 100%,10% 85%)' }, /* fat triangle→pentagon */
+      { w:  8, br: '0', cp: 'polygon(50% 3%,75% 18%,97% 50%,75% 82%,50% 97%,25% 82%,3% 50%,25% 18%)' }, /* diamond */
+      { w:  6, br: '0', cp: 'polygon(50% 2%,93% 26%,93% 74%,50% 98%,7% 74%,7% 26%)' }, /* hexagon */
+      { w:  5, br: '0', cp: 'polygon(50% 0%,65% 30%,98% 35%,74% 58%,79% 91%,50% 75%,21% 91%,26% 58%,2% 35%,35% 30%)' }, /* 5-point star */
+      { w:  3, br: '0', cp: 'polygon(50% 5%,85% 14%,98% 85%,83% 97%,17% 97%,2% 85%,15% 14%)' }, /* rounded triangle */
+      { w:  2, br: '0', cp: 'polygon(50% 2%,70% 10%,86% 28%,93% 50%,86% 72%,70% 90%,50% 98%,30% 90%,14% 72%,7% 50%,14% 28%,30% 10%)' }, /* teardrop/egg */
     ];
     const _shapeBag = SHAPE_PROFILES.flatMap((s, i) => Array(s.w).fill(i));
 
@@ -137,7 +139,7 @@
       const initVy = 0.55 + Math.random() * 0.35;
       const ball = {
         x:              xPct / 100 * (window.innerWidth || 1200),
-        y:             -radius - (i / COUNT) * 2800 - Math.random() * 40,
+        y:             -radius - 200 - Math.random() * 4000,
         vx:             (Math.random() - 0.5) * 0.6,
         vy:             initVy,
         radius,
