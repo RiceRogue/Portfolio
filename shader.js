@@ -58,15 +58,15 @@
     const container = document.getElementById('smiley-bg');
     if (!container) return;
 
-    const COUNT        = 130;
-    const GRAVITY      = 0.0012; /* very floaty */
+    const COUNT        = 160;
+    const GRAVITY      = 0.0012;
     const RESTITUTION  = 0.85;
     const FRICTION     = 0.993;
-    const DAMPING      = 0.9995;
+    const DAMPING      = 0.9998; /* keep velocity longer for floatier drift */
     const LERP         = 0.10;
-    const MOUSE_R      = 48;  /* px — hard collision radius around cursor */
-    const MOUSE_PUSH_R = 110; /* px — soft repulsion beyond hard radius */
-    const CLICK_R      = 160; /* px — click impulse radius */
+    const MOUSE_R      = 6;   /* px — cursor tip only; ball must be physically touched */
+    const MOUSE_PUSH_R = 14;  /* px — tiny soft field just outside cursor */
+    const CLICK_R      = 160;
 
     /* Layout zones — updated on resize */
     let introTop = 0, introBottom = 0;
@@ -153,7 +153,7 @@
         b.x  += b.vx;
         b.y  += b.vy;
 
-        const floor = floorY - b.radius - 2; /* sit right on the footer border */
+        const floor = floorY - b.radius - 1; /* ~30% tighter gap above footer */
 
         if (b.y >= floor) {
           b.y   = floor;
@@ -585,12 +585,13 @@
     if (window._smileyPush) window._smileyPush(x, y);
   }
 
-  document.addEventListener('mousemove', e => {
+  /* capture:true ensures trail fires even over links/cards/footer */
+  document.addEventListener('pointermove', e => {
     const dx = e.clientX - lastX, dy = e.clientY - lastY;
     if (dx * dx + dy * dy < MIN_DIST * MIN_DIST) return;
     lastX = e.clientX; lastY = e.clientY;
     spawnTrail(e.clientX, e.clientY);
-  });
+  }, { capture: true, passive: true });
 })();
 
 (function () {
