@@ -156,21 +156,20 @@
       container.appendChild(wrapper);
       allCircles.push(circle);
 
-      /* Even vertical stagger so balls trickle in steadily, not all at once */
       const xPct = 3 + Math.random() * 94;
-      const initVy = 0.55 + Math.random() * 0.35;
       const ball = {
         x:              xPct / 100 * (window.innerWidth || 1200),
-        y:             -radius - (i / COUNT) * 900 - Math.random() * 15,
+        y:             -radius - 20,
         vx:             (Math.random() - 0.5) * 0.6,
-        vy:             initVy,
+        vy:             0.55 + Math.random() * 0.35,
         radius,
         wrapper,
         circle,
         settledAt:      null,
         displayOpacity: 0,
         isMargin:       false,
-        flashedAt:      null, /* timestamp of last face-activate */
+        flashedAt:      null,
+        activateAt:     i * 200, /* ms — one ball released every 200ms */
       };
       circle._ball = ball;
       balls.push(ball);
@@ -185,6 +184,12 @@
       const cW = container.clientWidth || window.innerWidth;
 
       for (const b of balls) {
+        /* ── Activation gate — hold ball above viewport until its turn ── */
+        if (b.activateAt && ts < b.activateAt) {
+          b.wrapper.style.opacity = '0';
+          continue;
+        }
+
         /* ── Physics ── */
         b.vy += GRAVITY;
         b.vx *= DAMPING;
@@ -242,10 +247,11 @@
             if (targetOpacity <= 0) {
               /* Respawn just above viewport with initial velocity */
               b.x              = b.radius * 2 + Math.random() * (cW - b.radius * 4);
-              b.y              = -b.radius - Math.random() * 400;
+              b.y              = -b.radius - Math.random() * 80;
               b.vx             = (Math.random() - 0.5) * 0.6;
-              b.vy             = 0.4 + Math.random() * 1.2;
+              b.vy             = 0.55 + Math.random() * 0.35;
               b.settledAt      = null;
+              b.activateAt     = 0;
               b.displayOpacity = 0;
               targetOpacity    = 0;
             }
