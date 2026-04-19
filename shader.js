@@ -106,9 +106,9 @@
       { w: 15, br: '26%' },                                                           /* squircle */
       { w: 12, br: '0', cp: 'polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)' },  /* pentagon */
       { w:  8, br: '0', cp: 'polygon(50% 0%,89% 19%,99% 61%,72% 95%,28% 95%,1% 61%,11% 19%)' }, /* heptagon */
-      { w:  8, br: '0', cp: 'polygon(50% 0%,64% 36%,100% 50%,64% 64%,50% 100%,36% 64%,0% 50%,36% 36%)' }, /* wide 4-point star */
-      { w:  5, br: '0', cp: 'polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)' }, /* 5-point star */
-      { w:  2, br: '0', cp: 'polygon(50% 4%,96% 92%,4% 92%)' },                     /* triangle */
+      { w:  8, br: '0', cp: 'polygon(50% 0%,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0% 50%,40% 40%)' }, /* fat 4-point star */
+      { w:  5, br: '0', cp: 'polygon(50% 0%,65% 30%,98% 35%,74% 58%,79% 91%,50% 75%,21% 91%,26% 58%,2% 35%,35% 30%)' }, /* fat 5-point star */
+      { w:  2, br: '0', cp: 'polygon(50% 8%,90% 85%,68% 100%,32% 100%,10% 85%)' }, /* fat triangle→pentagon */
     ];
     const _shapeBag = SHAPE_PROFILES.flatMap((s, i) => Array(s.w).fill(i));
 
@@ -132,13 +132,12 @@
       container.appendChild(wrapper);
       allCircles.push(circle);
 
-      /* Fully random X; stagger Y just above viewport so balls appear quickly */
+      /* Even vertical stagger so balls trickle in steadily, not all at once */
       const xPct = 3 + Math.random() * 94;
-      /* Give initial downward velocity so balls enter view fast despite low gravity */
-      const initVy = 0.5 + Math.random() * 1.5;
+      const initVy = 0.55 + Math.random() * 0.35;
       const ball = {
         x:              xPct / 100 * (window.innerWidth || 1200),
-        y:             -radius - Math.random() * 600, /* stay close to top */
+        y:             -radius - (i / COUNT) * 1400 - Math.random() * 40,
         vx:             (Math.random() - 0.5) * 0.6,
         vy:             initVy,
         radius,
@@ -532,71 +531,25 @@
   });
 })();
 
-/* ── Cursor trail ───────────────────────────────────────────── */
+/* ── Sun cursor ─────────────────────────────────────────────── */
 (function () {
-  const TRAIL_FACES = [
-    ':)', ':)', ':)', ':)', ':)',
-    ':D', ':D', ':D',
-    ';)', ';)',
-    ':]', ':3', ':P', ':P',
-    ':O', ':>', '(:', '8)', 'B)',
-  ];
-  const TRAIL_COLORS = [
-    'hsl(0,90%,58%)',   'hsl(25,95%,55%)',  'hsl(48,100%,50%)',
-    'hsl(130,70%,45%)', 'hsl(190,85%,48%)', 'hsl(220,85%,60%)',
-    'hsl(270,80%,62%)', 'hsl(310,80%,58%)', 'hsl(340,85%,55%)',
-  ];
+  const sun = document.createElement('div');
+  sun.id = 'sun-cursor';
+  document.body.appendChild(sun);
 
-  /* Minimum px moved before spawning next particle */
-  const MIN_DIST = 28;
-  let lastX = -9999, lastY = -9999;
-
-  function spawnTrail(x, y) {
-    const face  = TRAIL_FACES[Math.floor(Math.random() * TRAIL_FACES.length)];
-    const color = TRAIL_COLORS[Math.floor(Math.random() * TRAIL_COLORS.length)];
-    const size  = 13 + Math.random() * 14; /* 13–27 px */
-    const drift = (Math.random() - 0.5) * 24;
-
-    const el = document.createElement('div');
-    el.textContent = face;
-    el.style.cssText = [
-      'position:fixed',
-      `left:${x}px`,
-      `top:${y}px`,
-      'transform:translate(-50%,-50%) rotate(90deg)',
-      `font-size:${size}px`,
-      `color:${color}`,
-      'pointer-events:none',
-      'z-index:99999',
-      'user-select:none',
-      'will-change:transform,opacity',
-      'transition:opacity 0.8s ease, transform 0.8s ease',
-      'white-space:nowrap',
-      'line-height:1',
-      'font-family:monospace,sans-serif',
-    ].join(';');
-
-    document.body.appendChild(el);
-
-    /* Kick off fade + float on next frame */
-    requestAnimationFrame(() => {
-      el.style.opacity = '0';
-      el.style.transform = `translate(calc(-50% + ${drift}px), calc(-50% - 28px)) rotate(90deg)`;
-    });
-
-    setTimeout(() => el.remove(), 900);
-
-    /* Push physics balls away from trail spawn point */
-    if (window._smileyPush) window._smileyPush(x, y);
-  }
-
-  /* capture:true ensures trail fires even over links/cards/footer */
   document.addEventListener('pointermove', e => {
-    const dx = e.clientX - lastX, dy = e.clientY - lastY;
-    if (dx * dx + dy * dy < MIN_DIST * MIN_DIST) return;
-    lastX = e.clientX; lastY = e.clientY;
-    spawnTrail(e.clientX, e.clientY);
+    sun.style.left = e.clientX + 'px';
+    sun.style.top  = e.clientY + 'px';
   }, { capture: true, passive: true });
+
+  document.addEventListener('pointerdown', e => {
+    const g = document.createElement('div');
+    g.className = 'sun-click';
+    g.style.left = e.clientX + 'px';
+    g.style.top  = e.clientY + 'px';
+    document.body.appendChild(g);
+    setTimeout(() => g.remove(), 700);
+  });
 })();
 
 (function () {
