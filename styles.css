@@ -228,11 +228,24 @@ a {
   border-radius: 50%;
   pointer-events: none;
   z-index: 99998;
-  left: 0;
-  top: 0;
-  opacity: 0;
-  will-change: transform;
-  background: radial-gradient(circle, rgba(255,190,70,0.22) 0%, rgba(255,140,40,0.10) 50%, transparent 75%);
+  left: -100px;
+  top: -100px;
+  background: radial-gradient(circle, rgba(255,190,70,0.38) 0%, rgba(255,140,40,0.18) 50%, transparent 75%);
+}
+
+/* ── Mouse trail faces ────────────────────────────────────────── */
+.trail-face {
+  position: fixed;
+  pointer-events: none;
+  z-index: 99996;
+  font-size: 13px;
+  font-family: monospace;
+  color: var(--accent);
+  animation: trail-rise 0.75s ease-out forwards;
+}
+@keyframes trail-rise {
+  0%   { opacity: 0.7; transform: translate(-50%,-50%) scale(1); }
+  100% { opacity: 0;   transform: translate(-50%,-130%) scale(0.55); }
 }
 
 .sun-click {
@@ -324,11 +337,13 @@ a {
   user-select: none;
 }
 
-/* Grey gradient — light to dark over the dark shader bg */
-.marquee-item:nth-child(4n+1) { color: #ffffff; }
-.marquee-item:nth-child(4n+2) { color: #cccccc; }
-.marquee-item:nth-child(4n+3) { color: #999999; }
-.marquee-item:nth-child(4n+4) { color: #666666; }
+/* Warm cycling gradient — white → peach → orange → blush → rose → gray */
+.marquee-item:nth-child(6n+1) { color: #ffffff; }
+.marquee-item:nth-child(6n+2) { color: #ffc8a8; }
+.marquee-item:nth-child(6n+3) { color: #e8843a; }
+.marquee-item:nth-child(6n+4) { color: #f0d0d4; }
+.marquee-item:nth-child(6n+5) { color: #c07878; }
+.marquee-item:nth-child(6n+6) { color: #777777; }
 
 /* ── PLINK BUCKETS ───────────────────────────────────────────── */
 /* ── Plinko bucket labels — rendered inside #smiley-bg by JS ── */

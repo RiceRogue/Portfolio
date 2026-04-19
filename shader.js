@@ -59,7 +59,7 @@
     if (!container) return;
 
     const COUNT        = 80;
-    const GRAVITY      = 0.0012;
+    const GRAVITY      = 0.0015;
     const RESTITUTION  = 0.85;
     const FRICTION     = 0.993;
     const DAMPING      = 0.9998; /* keep velocity longer for floatier drift */
@@ -70,7 +70,7 @@
 
     const BUCKET_WORDS = ['Conversation','Connection','Craft','Chaos','Culture','Care'];
     const NUM_BUCKETS  = BUCKET_WORDS.length;
-    const BUCKET_H     = 68;
+    const BUCKET_H     = 100;
     let   bucketDividers = []; /* x positions of inner walls */
 
     /* Layout zones — updated on resize */
@@ -581,13 +581,17 @@
   sun.id = 'sun-cursor';
   document.body.appendChild(sun);
 
+  function moveSun(x, y) {
+    sun.style.left = (x - 28) + 'px';
+    sun.style.top  = (y - 28) + 'px';
+  }
+
   document.addEventListener('pointermove', e => {
-    sun.style.transform = `translate(${e.clientX - 28}px,${e.clientY - 28}px)`;
-    sun.style.opacity = '1';
+    moveSun(e.clientX, e.clientY);
   }, { capture: true, passive: true });
 
   document.addEventListener('mouseleave', () => {
-    sun.style.opacity = '0';
+    sun.style.left = '-100px';
   });
 
   document.addEventListener('pointerdown', e => {
@@ -608,4 +612,23 @@
     btn.classList.toggle('open');
     menu.classList.toggle('open');
   });
+})();
+
+/* ── Face mouse trail ────────────────────────────────────────── */
+(function () {
+  const FACES = [':)', ':D', ':3', ';)', ':]', ':P', '8)', ':>'];
+  let lastX = -999, lastY = -999, lastT = 0;
+  document.addEventListener('mousemove', e => {
+    const now = performance.now();
+    const dx = e.clientX - lastX, dy = e.clientY - lastY;
+    if (dx * dx + dy * dy < 625 && now - lastT < 80) return;
+    lastX = e.clientX; lastY = e.clientY; lastT = now;
+    const el = document.createElement('div');
+    el.className = 'trail-face';
+    el.textContent = FACES[Math.floor(Math.random() * FACES.length)];
+    el.style.left = e.clientX + 'px';
+    el.style.top  = e.clientY + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.parentNode && el.parentNode.removeChild(el), 750);
+  }, { capture: true, passive: true });
 })();
