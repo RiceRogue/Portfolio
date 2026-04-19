@@ -58,7 +58,7 @@
     const container = document.getElementById('smiley-bg');
     if (!container) return;
 
-    const COUNT        = 160;
+    const COUNT        = 80;
     const GRAVITY      = 0.0012;
     const RESTITUTION  = 0.85;
     const FRICTION     = 0.993;
@@ -68,11 +68,31 @@
     const MOUSE_PUSH_R = 14;  /* px — tiny soft field just outside cursor */
     const CLICK_R      = 160;
 
+    const BUCKET_WORDS = ['Conversation','Connection','Craft','Chaos','Culture','Care'];
+    const NUM_BUCKETS  = BUCKET_WORDS.length;
+    const BUCKET_H     = 68;
+    let   bucketDividers = []; /* x positions of inner walls */
+
     /* Layout zones — updated on resize */
     let introTop = 0, introBottom = 0;
     let projTop  = 0, projBottom  = 0;
     let contentLeft = 0, contentRight = 0;
     let floorY = 0;
+
+    function buildBuckets() {
+      container.querySelectorAll('.plink-bkt').forEach(el => el.remove());
+      bucketDividers = [];
+      const W  = window.innerWidth;
+      const bW = W / NUM_BUCKETS;
+      BUCKET_WORDS.forEach((word, i) => {
+        const el = document.createElement('div');
+        el.className = 'plink-bkt';
+        el.textContent = word;
+        el.style.cssText = `left:${i*bW}px;width:${bW}px;top:${floorY - BUCKET_H}px;height:${BUCKET_H}px;${i===0 ? 'border-left-width:1.5px;' : ''}`;
+        container.insertBefore(el, container.firstChild); /* before balls so balls paint on top */
+        if (i > 0) bucketDividers.push(i * bW);
+      });
+    }
 
     function updateLayout() {
       const footer   = document.querySelector('.site-footer');
@@ -98,6 +118,8 @@
       const sidePad    = Math.max(gutter, (window.innerWidth - maxW) / 2);
       contentLeft  = sidePad + 40;
       contentRight = window.innerWidth - sidePad - 40;
+
+      buildBuckets();
     }
 
     /* ── Shape profiles (weighted) ── */
@@ -139,7 +161,7 @@
       const initVy = 0.55 + Math.random() * 0.35;
       const ball = {
         x:              xPct / 100 * (window.innerWidth || 1200),
-        y:             -radius - 200 - Math.random() * 4000,
+        y:             -radius - Math.random() * 800,
         vx:             (Math.random() - 0.5) * 0.6,
         vy:             initVy,
         radius,
@@ -182,6 +204,19 @@
 
         if (b.x - b.radius < 0)  { b.x = b.radius;       b.vx *= -0.5; }
         if (b.x + b.radius > cW) { b.x = cW - b.radius;  b.vx *= -0.5; }
+
+        /* ── Bucket wall collisions ── */
+        if (b.y + b.radius > floorY - BUCKET_H) {
+          for (const wx of bucketDividers) {
+            const dx = b.x - wx;
+            const r  = b.radius + 2;
+            if (Math.abs(dx) < r) {
+              b.x  = wx + (dx >= 0 ? r : -r);
+              b.vx *= -RESTITUTION * 0.6;
+              b.settledAt = null;
+            }
+          }
+        }
 
         /* ── Margin classification ── */
         b.isMargin = b.x < contentLeft || b.x > contentRight;
@@ -485,21 +520,6 @@
   requestAnimationFrame(step);
 })();
 
-(function () {
-  const track = document.querySelector('.plink-track');
-  if (!track) return;
-  Array.from(track.children).forEach(el => track.appendChild(el.cloneNode(true)));
-  let x = 0;
-  const speed = 0.72;
-  function step() {
-    x -= speed;
-    const half = track.scrollWidth / 2;
-    if (Math.abs(x) >= half) x = 0;
-    track.style.transform = 'translateX(' + x + 'px)';
-    requestAnimationFrame(step);
-  }
-  requestAnimationFrame(step);
-})();
 
 (function () {
   const els = document.querySelectorAll('.reveal');
