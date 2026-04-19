@@ -137,7 +137,7 @@
       const initVy = 0.55 + Math.random() * 0.35;
       const ball = {
         x:              xPct / 100 * (window.innerWidth || 1200),
-        y:             -radius - (i / COUNT) * 1400 - Math.random() * 40,
+        y:             -radius - (i / COUNT) * 2800 - Math.random() * 40,
         vx:             (Math.random() - 0.5) * 0.6,
         vy:             initVy,
         radius,
@@ -541,6 +541,10 @@
     sun.style.left = e.clientX + 'px';
     sun.style.top  = e.clientY + 'px';
   }, { capture: true, passive: true });
+
+  document.addEventListener('mouseleave', () => {
+    sun.style.left = '-999px';
+  });
 
   document.addEventListener('pointerdown', e => {
     const g = document.createElement('div');

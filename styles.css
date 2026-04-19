@@ -10,35 +10,31 @@
 }
 
 :root {
-  --bg: #faf7f2;          /* warm cream */
-  --fg: #1a1410;          /* warm near-black */
-  --fg-muted: #6b5c4e;    /* warm brown-grey */
-  --fg-subtle: #9e8e82;
-  --accent: #c2601a;      /* sunset orange */
-  --border: #e8ddd4;      /* warm sand border */
-  --card-bg: #fffcf8;
-  --nav-bg: rgba(250, 247, 242, 0.90);
+  --bg: #f8f7f4;
+  --fg: #111111;
+  --fg-muted: #555555;
+  --fg-subtle: #888888;
+  --accent: #c2601a;
+  --border: #e0ded9;
+  --card-bg: #ffffff;
+  --nav-bg: rgba(248, 247, 244, 0.88);
   --max-w: 1500px;
   --gutter: 4vw;
   --font: 'Inter', 'Helvetica Neue', Arial, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
   --radius: 0px;
   --transition: 0.22s ease;
-  --sun-glow: rgba(255,180,60,0.14);
-  --sun-mid:  rgba(255,130,40,0.07);
 }
 
 [data-theme="dark"] {
-  --bg: #18120e;          /* warm dark brown */
-  --fg: #f5ede4;          /* warm off-white */
-  --fg-muted: #c4a98e;
-  --fg-subtle: #8a7060;
-  --accent: #e8843a;      /* deeper sunset */
-  --border: #2e2018;
-  --card-bg: #211810;
-  --nav-bg: rgba(24, 18, 14, 0.93);
-  --sun-glow: rgba(255,160,50,0.18);
-  --sun-mid:  rgba(255,110,30,0.09);
+  --bg: #0d0d0d;
+  --fg: #f0efec;
+  --fg-muted: #c8c8c8;
+  --fg-subtle: #909090;
+  --accent: #e8843a;
+  --border: #2c2c2c;
+  --card-bg: #1a1a1a;
+  --nav-bg: rgba(13, 13, 13, 0.92);
 }
 
 html { scroll-behavior: smooth; }
@@ -227,14 +223,15 @@ a {
 /* ── Sun cursor ─────────────────────────────────────────────── */
 #sun-cursor {
   position: fixed;
-  width: 130px;
-  height: 130px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   pointer-events: none;
   z-index: 99998;
-  transform: translate(-50%, -50%);
-  background: radial-gradient(circle, var(--sun-glow) 0%, var(--sun-mid) 45%, transparent 70%);
-  transition: left 0.04s linear, top 0.04s linear;
+  left: -999px;
+  top: -999px;
+  margin: -28px 0 0 -28px; /* offset so center = cursor tip */
+  background: radial-gradient(circle, rgba(255,190,70,0.22) 0%, rgba(255,140,40,0.10) 50%, transparent 75%);
 }
 
 .sun-click {
