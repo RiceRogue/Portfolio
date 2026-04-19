@@ -183,7 +183,7 @@ a {
   align-items: center;
   justify-content: center;
   position: relative;
-  cursor: grab;
+  cursor: default;
   pointer-events: auto;
   transform-style: preserve-3d;
   transition: background 0.25s, color 0.25s, box-shadow 0.25s;
@@ -250,6 +250,17 @@ a {
   line-height: 1.5;
   max-width: 56ch;
   color: #ffffff;
+}
+
+.mouse-hint {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.06em;
+  margin-top: 1rem;
+  text-align: left;
+  position: relative;
+  z-index: 1;
+  user-select: none;
 }
 .intro-tagline em {
   font-style: normal;
@@ -413,6 +424,14 @@ main {
   justify-content: space-between;
   gap: 2rem;
   flex-wrap: wrap;
+}
+
+.footer-cta {
+  width: 100%;
+  font-size: 0.95rem;
+  color: var(--fg-muted);
+  margin-bottom: 0.5rem;
+  font-style: italic;
 }
 
 .footer-contact {

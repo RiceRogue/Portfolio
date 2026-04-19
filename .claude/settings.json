@@ -1,5 +1,6 @@
 {
   "permissions": {
+    "defaultMode": "bypassPermissions",
     "allow": [
       "WebFetch(domain:ericni.squarespace.com)",
       "WebFetch(domain:static1.squarespace.com)",
@@ -15,7 +16,36 @@
       "Bash(python fix_icons.py)",
       "Bash(python add_favicon.py)",
       "Bash(rm add_favicon.py)",
-      "Bash(python3 -:*)"
+      "Bash(python3 -:*)",
+      "Bash(gh auth:*)",
+      "Bash(cmd /c \"gh --version\")",
+      "Read(//c/Users/ericn/.config/gh/**)",
+      "Bash(curl -s -H \"Authorization: token $\\(cat ~/.config/gh/hosts.yml)",
+      "Bash(cmd /c \"winget --version\")",
+      "Bash(cmd /c \"choco --version\")",
+      "Bash(cmd /c \"scoop --version\")",
+      "Bash(cmd /c \"winget install --id GitHub.cli -e --accept-package-agreements --accept-source-agreements\")",
+      "Bash(cmd /c \"winget install GitHub.cli --accept-package-agreements --accept-source-agreements 2>&1\")",
+      "Bash(export PATH=\"$PATH:/c/Program Files/GitHub CLI\")",
+      "Bash(gh --version)",
+      "Bash(powershell -Command \"& 'C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe' --version\")",
+      "Bash(grep -l \"shader.js\" \"x:\\\\Claude Experiments\\\\GithubPortfolio\"/**/*.html \"x:\\\\Claude Experiments\\\\GithubPortfolio\"/*.html)",
+      "Bash(grep -L \"shader.js\" \"x:\\\\Claude Experiments\\\\GithubPortfolio\"/**/*.html \"x:\\\\Claude Experiments\\\\GithubPortfolio\"/*.html)",
+      "Bash(gh repo:*)",
+      "Bash(mkdir -p \"x:/Claude Experiments/SocialNetwork\")",
+      "Read(//x/Claude Experiments/SocialNetwork/**)",
+      "Bash(npm create:*)",
+      "Bash(mkdir -p \"x:/Claude Experiments/SocialNetwork/server/src\")",
+      "Bash(npm init:*)",
+      "Bash(pip install:*)",
+      "Bash(python C:\\\\Users\\\\ericn\\\\keep_keyboard_lit.py)"
+    ],
+    "additionalDirectories": [
+      "x:\\Claude Experiments\\GithubPortfolio\\src",
+      "x:\\Claude Experiments\\SocialNetwork\\client",
+      "x:\\Claude Experiments\\SocialNetwork\\server\\src",
+      "x:\\Claude Experiments\\SocialNetwork\\server",
+      "x:\\Claude Experiments\\SocialNetwork"
     ]
   }
 }

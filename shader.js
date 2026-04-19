@@ -100,6 +100,18 @@
       contentRight = window.innerWidth - sidePad - 40;
     }
 
+    /* ── Shape profiles (weighted) ── */
+    const SHAPE_PROFILES = [
+      { w: 50 },                                                                      /* circle */
+      { w: 15, br: '26%' },                                                           /* squircle */
+      { w: 12, br: '0', cp: 'polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)' },  /* pentagon */
+      { w:  8, br: '0', cp: 'polygon(50% 0%,89% 19%,99% 61%,72% 95%,28% 95%,1% 61%,11% 19%)' }, /* heptagon */
+      { w:  8, br: '0', cp: 'polygon(50% 0%,64% 36%,100% 50%,64% 64%,50% 100%,36% 64%,0% 50%,36% 36%)' }, /* wide 4-point star */
+      { w:  5, br: '0', cp: 'polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)' }, /* 5-point star */
+      { w:  2, br: '0', cp: 'polygon(50% 4%,96% 92%,4% 92%)' },                     /* triangle */
+    ];
+    const _shapeBag = SHAPE_PROFILES.flatMap((s, i) => Array(s.w).fill(i));
+
     /* Create balls */
     const balls = [];
     for (let i = 0; i < COUNT; i++) {
@@ -112,6 +124,10 @@
       wrapper.style.cssText = `width:${size}px;height:${size}px;opacity:0;`;
 
       const circle = makeCircle(size, expr);
+      /* Apply shape */
+      const sp = SHAPE_PROFILES[_shapeBag[Math.floor(Math.random() * _shapeBag.length)]];
+      if (sp.br) circle.style.borderRadius = sp.br;
+      if (sp.cp) circle.style.clipPath = sp.cp;
       wrapper.appendChild(circle);
       container.appendChild(wrapper);
       allCircles.push(circle);
@@ -232,23 +248,14 @@
         const hardR = MOUSE_R + b.radius;
 
         if (dSq < hardR * hardR && dSq > 0.001) {
-          /* Hard bounce — always separate and ensure outward velocity */
+          /* Lerpy spring push — gradual, not sudden */
           const d  = Math.sqrt(dSq);
           const nx = dx / d, ny = dy / d;
-          /* Push ball to edge of collision zone */
-          b.x = mouseDocX + nx * (hardR + 0.5);
-          b.y = (mouseDocY + scrollY) + ny * (hardR + 0.5);
-          /* Relative velocity along normal */
-          const dvn = (b.vx - mouseVelX) * nx + (b.vy - mouseVelY) * ny;
-          /* Gentle nudge outward — enough to displace, not launch */
-          const minOut = 0.4;
-          if (dvn < minOut) {
-            b.vx += nx * (minOut - dvn) * 0.5;
-            b.vy += ny * (minOut - dvn) * 0.5;
-          }
-          /* Carry a fraction of cursor momentum */
-          b.vx += mouseVelX * 0.12;
-          b.vy += mouseVelY * 0.12;
+          const overlap  = hardR - d;
+          /* Spring force capped per frame so fast cursor sweeps feel smooth */
+          const spring = Math.min(overlap * 0.055, 0.9);
+          b.vx += nx * spring + mouseVelX * 0.07;
+          b.vy += ny * spring + mouseVelY * 0.07;
           b.settledAt = null;
           if (!b.flashedAt || ts - b.flashedAt > 600) {
             b.flashedAt = ts;
@@ -256,12 +263,10 @@
             setTimeout(() => unhover(b.circle), 700);
           }
         } else if (dSq < MOUSE_PUSH_R * MOUSE_PUSH_R) {
-          /* Soft repulsion just outside hard radius */
           const d  = Math.sqrt(dSq);
           const nx = dx / d, ny = dy / d;
-          const strength = (1 - d / MOUSE_PUSH_R) * 0.15;
-          b.vx += nx * strength;
-          b.vy += ny * strength;
+          b.vx += nx * (1 - d / MOUSE_PUSH_R) * 0.1;
+          b.vy += ny * (1 - d / MOUSE_PUSH_R) * 0.1;
           b.settledAt = null;
         }
       }
