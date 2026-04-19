@@ -169,6 +169,7 @@
         displayOpacity: 0,
         isMargin:       false,
         flashedAt:      null,
+        boosted:        false,   /* true after first mouse touch — extra gravity */
         activateAt:     i * 200, /* ms — one ball released every 200ms */
       };
       circle._ball = ball;
@@ -191,7 +192,7 @@
         }
 
         /* ── Physics ── */
-        b.vy += GRAVITY;
+        b.vy += GRAVITY + (b.boosted ? 0.002 : 0); /* extra pull after first mouse contact */
         b.vx *= DAMPING;
         b.vy *= DAMPING;
         b.x  += b.vx;
@@ -252,6 +253,7 @@
               b.vy             = 0.55 + Math.random() * 0.35;
               b.settledAt      = null;
               b.activateAt     = 0;
+              b.boosted        = false;
               b.displayOpacity = 0;
               targetOpacity    = 0;
             }
@@ -298,7 +300,8 @@
           const spring = Math.min(overlap * 0.055, 0.9);
           b.vx += nx * spring + mouseVelX * 0.07;
           b.vy += ny * spring + mouseVelY * 0.07;
-          b.settledAt = null;
+          b.boosted    = true;
+          b.settledAt  = null;
           if (!b.flashedAt || ts - b.flashedAt > 600) {
             b.flashedAt = ts;
             applyHover(b.circle);
@@ -583,7 +586,7 @@
 
   function moveSun(x, y) {
     sun.style.left = (x - 28) + 'px';
-    sun.style.top  = (y - 28) + 'px';
+    sun.style.top  = (y - 10) + 'px'; /* cursor hotspot is at tip; offset down so glow follows body */
   }
 
   document.addEventListener('pointermove', e => {
@@ -627,7 +630,7 @@
     el.className = 'trail-face';
     el.textContent = FACES[Math.floor(Math.random() * FACES.length)];
     el.style.left = e.clientX + 'px';
-    el.style.top  = e.clientY + 'px';
+    el.style.top  = (e.clientY + 6) + 'px'; /* spawn at cursor tip, float upward */
     document.body.appendChild(el);
     setTimeout(() => el.parentNode && el.parentNode.removeChild(el), 750);
   }, { capture: true, passive: true });
