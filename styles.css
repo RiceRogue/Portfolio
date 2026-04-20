@@ -223,14 +223,15 @@ a {
 /* ── Sun cursor ─────────────────────────────────────────────── */
 #sun-cursor {
   position: fixed;
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   pointer-events: none;
-  z-index: 99998;
+  z-index: 99999;
   left: -100px;
   top: -100px;
-  background: radial-gradient(circle, rgba(255,190,70,0.38) 0%, rgba(255,140,40,0.18) 50%, transparent 75%);
+  mix-blend-mode: overlay;
+  background: radial-gradient(circle, rgba(255,200,80,0.75) 0%, rgba(255,140,40,0.40) 50%, transparent 75%);
 }
 
 /* ── Mouse trail faces ────────────────────────────────────────── */
@@ -241,6 +242,7 @@ a {
   font-size: 13px;
   font-family: monospace;
   color: var(--accent);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.35), 0 0 10px rgba(255,160,60,0.4);
   animation: trail-rise 0.75s ease-out forwards;
 }
 @keyframes trail-rise {
@@ -423,11 +425,11 @@ main {
   position: relative;
   display: block;
   background: var(--card-bg);
+  transition: border-color var(--transition), background 0.35s ease, box-shadow 0.35s ease;
   overflow: hidden;
   cursor: pointer;
   outline: none;
   border: 2px solid transparent;
-  transition: border-color var(--transition);
 }
 .project-card:hover,
 .project-card:focus-visible { border-color: var(--fg); }

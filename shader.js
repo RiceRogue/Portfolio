@@ -202,8 +202,8 @@
 
         if (b.y >= floor) {
           b.y   = floor;
-          b.vy *= -RESTITUTION;
-          b.vx *= FRICTION;
+          b.vy *= -(b.boosted ? RESTITUTION * 0.28 : RESTITUTION); /* boosted = nearly no bounce */
+          b.vx *= b.boosted ? FRICTION * 0.7 : FRICTION;
           if (Math.abs(b.vy) < 0.12) b.vy = 0;
           if (Math.abs(b.vx) < 0.06) b.vx = 0;
         }
@@ -585,8 +585,8 @@
   document.body.appendChild(sun);
 
   function moveSun(x, y) {
-    sun.style.left = (x - 28) + 'px';
-    sun.style.top  = (y - 28) + 'px'; /* center glow exactly on cursor */
+    sun.style.left = (x - 32) + 'px';
+    sun.style.top  = (y - 32) + 'px';
   }
 
   document.addEventListener('pointermove', e => {
@@ -614,6 +614,23 @@
   btn.addEventListener('click', () => {
     btn.classList.toggle('open');
     menu.classList.toggle('open');
+  });
+})();
+
+/* ── Project card glow on hover ─────────────────────────────── */
+(function () {
+  document.querySelectorAll('.project-card[data-glow]').forEach(card => {
+    const hex = card.getAttribute('data-glow');
+    card.addEventListener('mouseenter', () => {
+      card.style.background  = hex + '28';
+      card.style.boxShadow   = `0 0 40px ${hex}55, inset 0 0 20px ${hex}18`;
+      card.style.borderColor = hex + '99';
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.background  = '';
+      card.style.boxShadow   = '';
+      card.style.borderColor = '';
+    });
   });
 })();
 
