@@ -616,9 +616,11 @@
   sun.id = 'sun-cursor';
   document.body.appendChild(sun);
 
+  let sunVisible = false;
+
   function moveSun(x, y) {
-    sun.style.left = (x - 32) + 'px';
-    sun.style.top  = (y - 32) + 'px';
+    sun.style.transform = `translate(${x - 36}px, ${y - 36}px)`;
+    if (!sunVisible) { sun.style.opacity = '1'; sunVisible = true; }
   }
 
   document.addEventListener('pointermove', e => {
@@ -626,17 +628,14 @@
   }, { capture: true, passive: true });
 
   document.addEventListener('mouseleave', () => {
-    sun.style.left = '-100px';
+    sun.style.opacity = '0';
+    sunVisible = false;
   });
 
-  window.addEventListener('scroll', () => {}, { passive: true }); /* keep compositing layer fresh */
-  setInterval(() => {
-    if (sun.style.left === '-100px' || sun.style.left === '') return;
-    /* force repaint to recover from stacking context issues */
-    sun.style.display = 'none';
-    void sun.offsetHeight;
-    sun.style.display = '';
-  }, 3000);
+  document.addEventListener('mouseenter', () => {
+    sun.style.opacity = '1';
+    sunVisible = true;
+  });
 
   document.addEventListener('pointerdown', e => {
     const g = document.createElement('div');

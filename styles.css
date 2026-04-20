@@ -254,11 +254,13 @@ a {
   height: 72px;
   border-radius: 50%;
   pointer-events: none;
-  z-index: 99999;
-  left: -100px;
-  top: -100px;
-  mix-blend-mode: overlay;
-  background: radial-gradient(circle, rgba(255,210,120,0.45) 0%, rgba(255,160,60,0.18) 45%, rgba(255,130,40,0.06) 70%, transparent 100%);
+  z-index: 2147483647;
+  left: 0;
+  top: 0;
+  will-change: transform;
+  transform: translate(-200px, -200px);
+  opacity: 0;
+  background: radial-gradient(circle, rgba(255,210,120,0.5) 0%, rgba(255,160,60,0.22) 45%, rgba(255,130,40,0.08) 70%, transparent 100%);
 }
 
 /* ── Mouse trail faces ────────────────────────────────────────── */
