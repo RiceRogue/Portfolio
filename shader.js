@@ -68,10 +68,14 @@
     const MOUSE_PUSH_R = 14;  /* px — tiny soft field just outside cursor */
     const CLICK_R      = 160;
 
-    const BUCKET_WORDS = ['Conversation','Connection','Craft','Chaos','Culture','Care'];
+    const _bw = ['Conversation','Connection','Craft','Chaos','Culture','Care'];
+    for (let i = _bw.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [_bw[i],_bw[j]]=[_bw[j],_bw[i]]; }
+    const BUCKET_WORDS = _bw;
     const NUM_BUCKETS  = BUCKET_WORDS.length;
     const BUCKET_H     = 100;
     let   bucketDividers = []; /* x positions of inner walls */
+    let nextRespawnTs    = 0;
+    const bucketCounts   = new Array(NUM_BUCKETS).fill(0);
 
     /* Layout zones — updated on resize */
     let introTop = 0, introBottom = 0;
@@ -80,16 +84,24 @@
     let floorY = 0;
 
     function buildBuckets() {
-      container.querySelectorAll('.plink-bkt').forEach(el => el.remove());
+      container.querySelectorAll('.plink-bkt,.plink-cnt').forEach(el => el.remove());
       bucketDividers = [];
       const W  = window.innerWidth;
       const bW = W / NUM_BUCKETS;
       BUCKET_WORDS.forEach((word, i) => {
+        /* bucket wall */
         const el = document.createElement('div');
         el.className = 'plink-bkt';
         el.textContent = word;
         el.style.cssText = `left:${i*bW}px;width:${bW}px;top:${floorY - BUCKET_H}px;height:${BUCKET_H}px;${i===0 ? 'border-left-width:1.5px;' : ''}`;
-        container.insertBefore(el, container.firstChild); /* before balls so balls paint on top */
+        container.insertBefore(el, container.firstChild);
+        /* counter */
+        const cnt = document.createElement('div');
+        cnt.className = 'plink-cnt';
+        cnt.id = `plink-cnt-${i}`;
+        cnt.textContent = '0';
+        cnt.style.cssText = `left:${i*bW}px;width:${bW}px;top:${floorY - BUCKET_H - 28}px;`;
+        container.insertBefore(cnt, container.firstChild);
         if (i > 0) bucketDividers.push(i * bW);
       });
     }
@@ -169,6 +181,8 @@
         displayOpacity: 0,
         isMargin:       false,
         flashedAt:      null,
+        countedBucket:  false,
+        enteredAt:      null,
         boosted:        false,   /* true after first mouse touch — extra gravity */
         activateAt:     i * 200, /* ms — one ball released every 200ms */
       };
@@ -232,6 +246,13 @@
         const isSettled = atFloor && Math.abs(b.vy) < 0.01 && Math.abs(b.vx) < 0.03;
         if (isSettled) {
           if (!b.settledAt) b.settledAt = ts;
+          if (!b.countedBucket) {
+            const bi = Math.min(NUM_BUCKETS - 1, Math.floor(b.x / (window.innerWidth / NUM_BUCKETS)));
+            bucketCounts[bi]++;
+            b.countedBucket = true;
+            const el = document.getElementById(`plink-cnt-${bi}`);
+            if (el) el.textContent = bucketCounts[bi];
+          }
         } else if (b.settledAt && (Math.abs(b.vy) > 0.04 || Math.abs(b.vx) > 0.06)) {
           b.settledAt = null;
         }
@@ -240,7 +261,13 @@
         let targetOpacity = 1;
 
         if (b.y < 0) {
-          targetOpacity = 0; /* above page top */
+          targetOpacity = 0;
+        } else {
+          if (!b.enteredAt) b.enteredAt = ts; /* first frame in viewport */
+        }
+
+        if (b.enteredAt && ts - b.enteredAt < 1800) {
+          targetOpacity = Math.min(1, (ts - b.enteredAt) / 1800); /* linear fade-in */
         } else if (b.settledAt) {
           const elapsed = ts - b.settledAt;
           if (elapsed > 5000) {
@@ -248,12 +275,15 @@
             if (targetOpacity <= 0) {
               /* Respawn just above viewport with initial velocity */
               b.x              = b.radius * 2 + Math.random() * (cW - b.radius * 4);
-              b.y              = -b.radius - Math.random() * 80;
+              b.y              = -b.radius - 20;
               b.vx             = (Math.random() - 0.5) * 0.6;
               b.vy             = 0.55 + Math.random() * 0.35;
               b.settledAt      = null;
-              b.activateAt     = 0;
+              nextRespawnTs    = Math.max(ts, nextRespawnTs) + 350;
+              b.activateAt     = nextRespawnTs;
               b.boosted        = false;
+              b.countedBucket  = false;
+              b.enteredAt      = null;
               b.displayOpacity = 0;
               targetOpacity    = 0;
             }
@@ -597,6 +627,15 @@
     sun.style.left = '-100px';
   });
 
+  window.addEventListener('scroll', () => {}, { passive: true }); /* keep compositing layer fresh */
+  setInterval(() => {
+    if (sun.style.left === '-100px' || sun.style.left === '') return;
+    /* force repaint to recover from stacking context issues */
+    sun.style.display = 'none';
+    void sun.offsetHeight;
+    sun.style.display = '';
+  }, 3000);
+
   document.addEventListener('pointerdown', e => {
     const g = document.createElement('div');
     g.className = 'sun-click';
@@ -622,9 +661,9 @@
   document.querySelectorAll('.project-card[data-glow]').forEach(card => {
     const hex = card.getAttribute('data-glow');
     card.addEventListener('mouseenter', () => {
-      card.style.background  = hex + '28';
-      card.style.boxShadow   = `0 0 40px ${hex}55, inset 0 0 20px ${hex}18`;
-      card.style.borderColor = hex + '99';
+      card.style.background  = `linear-gradient(160deg, var(--card-bg) 20%, ${hex}28 100%)`;
+      card.style.boxShadow   = `0 2px 16px ${hex}22`;
+      card.style.borderColor = hex + '55';
     });
     card.addEventListener('mouseleave', () => {
       card.style.background  = '';

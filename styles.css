@@ -198,6 +198,33 @@ a {
   transition: background 0.25s, color 0.25s, box-shadow 0.25s;
 }
 
+/* ── Gradient animation (titles + through-line) ──────────────── */
+@keyframes gradient-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.gradient-title {
+  background: linear-gradient(90deg, #c2601a, #c87828, #8c1c1c, #4a3888, #388030, #c84818, #c2601a);
+  background-size: 400% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 7s linear infinite;
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, #ffffff, #ffc8a8, #e8843a, #f0d0d4, #c07878, #ffffff);
+  background-size: 300% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 5s ease infinite;
+  font-weight: 700;
+  font-size: 1.05em;
+}
+
 .face-default,
 .face-hover {
   display: inline-flex;
@@ -223,15 +250,15 @@ a {
 /* ── Sun cursor ─────────────────────────────────────────────── */
 #sun-cursor {
   position: fixed;
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   pointer-events: none;
   z-index: 99999;
   left: -100px;
   top: -100px;
   mix-blend-mode: overlay;
-  background: radial-gradient(circle, rgba(255,200,80,0.75) 0%, rgba(255,140,40,0.40) 50%, transparent 75%);
+  background: radial-gradient(circle, rgba(255,210,120,0.45) 0%, rgba(255,160,60,0.18) 45%, rgba(255,130,40,0.06) 70%, transparent 100%);
 }
 
 /* ── Mouse trail faces ────────────────────────────────────────── */
@@ -358,7 +385,7 @@ a {
   box-sizing: border-box;
   pointer-events: none;
   font-family: var(--font);
-  font-size: clamp(0.5rem, 1vw, 0.75rem);
+  font-size: clamp(0.75rem, 1.5vw, 1.125rem);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -371,6 +398,20 @@ a {
   border-right-color: rgba(255,200,190,0.18);
   border-bottom-color: rgba(255,200,190,0.24);
   color: rgba(255,200,190,0.22);
+}
+
+.plink-cnt {
+  position: absolute;
+  text-align: center;
+  pointer-events: none;
+  font-family: var(--font);
+  font-size: clamp(0.6rem, 1vw, 0.8rem);
+  font-weight: 700;
+  color: rgba(100,60,60,0.45);
+  letter-spacing: 0.04em;
+}
+[data-theme="dark"] .plink-cnt {
+  color: rgba(255,200,190,0.35);
 }
 
 @media (max-width: 700px) {
