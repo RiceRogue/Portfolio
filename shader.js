@@ -192,7 +192,7 @@
         }
 
         /* ── Physics ── */
-        b.vy += GRAVITY + (b.boosted ? 0.002 : 0); /* extra pull after first mouse contact */
+        b.vy += GRAVITY + (b.boosted ? 0.005 : 0); /* extra pull after first mouse contact */
         b.vx *= DAMPING;
         b.vy *= DAMPING;
         b.x  += b.vx;
@@ -300,7 +300,7 @@
           const spring = Math.min(overlap * 0.055, 0.9);
           b.vx += nx * spring + mouseVelX * 0.07;
           b.vy += ny * spring + mouseVelY * 0.07;
-          b.boosted    = true;
+          if (!b.boosted) { b.vy += 2.5; b.boosted = true; } /* one-time downward kick */
           b.settledAt  = null;
           if (!b.flashedAt || ts - b.flashedAt > 600) {
             b.flashedAt = ts;
@@ -586,7 +586,7 @@
 
   function moveSun(x, y) {
     sun.style.left = (x - 28) + 'px';
-    sun.style.top  = (y - 10) + 'px'; /* cursor hotspot is at tip; offset down so glow follows body */
+    sun.style.top  = (y - 28) + 'px'; /* center glow exactly on cursor */
   }
 
   document.addEventListener('pointermove', e => {
@@ -630,7 +630,7 @@
     el.className = 'trail-face';
     el.textContent = FACES[Math.floor(Math.random() * FACES.length)];
     el.style.left = e.clientX + 'px';
-    el.style.top  = (e.clientY + 6) + 'px'; /* spawn at cursor tip, float upward */
+    el.style.top  = e.clientY + 'px';
     document.body.appendChild(el);
     setTimeout(() => el.parentNode && el.parentNode.removeChild(el), 750);
   }, { capture: true, passive: true });
