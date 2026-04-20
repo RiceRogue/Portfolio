@@ -662,14 +662,12 @@
   document.querySelectorAll('.project-card[data-glow]').forEach(card => {
     const hex = card.getAttribute('data-glow');
     card.addEventListener('mouseenter', () => {
-      card.style.background  = `linear-gradient(160deg, var(--card-bg) 20%, ${hex}28 100%)`;
-      card.style.boxShadow   = `0 2px 16px ${hex}22`;
-      card.style.borderColor = hex + '55';
+      card.style.backgroundColor = hex + '30';
+      card.style.borderColor     = hex + '88';
     });
     card.addEventListener('mouseleave', () => {
-      card.style.background  = '';
-      card.style.boxShadow   = '';
-      card.style.borderColor = '';
+      card.style.backgroundColor = '';
+      card.style.borderColor     = '';
     });
   });
 })();
