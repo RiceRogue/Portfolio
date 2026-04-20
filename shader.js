@@ -241,18 +241,20 @@
         /* ── Margin classification ── */
         b.isMargin = b.x < contentLeft || b.x > contentRight;
 
+        /* ── Bucket entry count ── */
+        if (!b.countedBucket && b.y > floorY - BUCKET_H) {
+          const bi = Math.min(NUM_BUCKETS - 1, Math.floor(b.x / (window.innerWidth / NUM_BUCKETS)));
+          bucketCounts[bi]++;
+          b.countedBucket = true;
+          const el = document.getElementById(`plink-cnt-${bi}`);
+          if (el) el.textContent = bucketCounts[bi];
+        }
+
         /* ── Settle detection ── */
         const atFloor   = b.y >= floor - 0.5;
         const isSettled = atFloor && Math.abs(b.vy) < 0.01 && Math.abs(b.vx) < 0.03;
         if (isSettled) {
           if (!b.settledAt) b.settledAt = ts;
-          if (!b.countedBucket) {
-            const bi = Math.min(NUM_BUCKETS - 1, Math.floor(b.x / (window.innerWidth / NUM_BUCKETS)));
-            bucketCounts[bi]++;
-            b.countedBucket = true;
-            const el = document.getElementById(`plink-cnt-${bi}`);
-            if (el) el.textContent = bucketCounts[bi];
-          }
         } else if (b.settledAt && (Math.abs(b.vy) > 0.04 || Math.abs(b.vx) > 0.06)) {
           b.settledAt = null;
         }
