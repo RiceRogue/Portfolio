@@ -1,3 +1,34 @@
+/* ── Pop sound (Web Audio, synthesized) ─────────────────────── */
+const _popAudio = (function () {
+  let ctx = null;
+  let lastPop = 0;
+  function init() {
+    if (!ctx) ctx = new (window.AudioContext || window['webkitAudioContext'])();
+  }
+  return function pop(pitch) {
+    const now = performance.now();
+    if (now - lastPop < 40) return; /* max ~25 pops/s */
+    lastPop = now;
+    try {
+      init();
+      if (ctx.state === 'suspended') ctx.resume();
+      const t   = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      const freq = (pitch || 1) * (520 + Math.random() * 180);
+      osc.frequency.setValueAtTime(freq * 1.4, t);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.7, t + 0.08);
+      gain.gain.setValueAtTime(0.18, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
+      osc.start(t);
+      osc.stop(t + 0.14);
+    } catch (_) {}
+  };
+})();
+
 /* ── Smiley fields: top hero, physics bottom, margin columns ──── */
 (function () {
   const SIZES = [36, 44, 52, 60, 68, 76];
@@ -332,10 +363,11 @@
           const spring = Math.min(overlap * 0.055, 0.9);
           b.vx += nx * spring + mouseVelX * 0.07;
           b.vy += ny * spring + mouseVelY * 0.07;
-          if (!b.boosted) { b.vy += 2.5; b.boosted = true; } /* one-time downward kick */
+          if (!b.boosted) { b.vy += 2.5; b.boosted = true; }
           b.settledAt  = null;
           if (!b.flashedAt || ts - b.flashedAt > 600) {
             b.flashedAt = ts;
+            _popAudio(b.radius / 52);
             applyHover(b.circle);
             setTimeout(() => unhover(b.circle), 700);
           }
