@@ -107,7 +107,7 @@ const _popAudio = (function () {
     const container = document.getElementById('smiley-bg');
     if (!container) return;
 
-    const COUNT        = 80;
+    const COUNT        = 100;
     const GRAVITY      = 0.0015;
     const RESTITUTION  = 0.85;
     const FRICTION     = 0.993;
@@ -124,6 +124,7 @@ const _popAudio = (function () {
     const BUCKET_H     = 100;
     let   bucketDividers = [];
     let   bucketEls      = [];
+    let   bucketWidth    = 0;
     let nextRespawnTs    = 0;
     const bucketCounts    = new Array(NUM_BUCKETS).fill(0);
     const bucketGoals     = Array.from({length: NUM_BUCKETS}, () => 1 + Math.floor(Math.random() * 100));
@@ -145,6 +146,7 @@ const _popAudio = (function () {
       bucketEls      = [];
       const W  = window.innerWidth;
       const bW = W / NUM_BUCKETS;
+      bucketWidth = bW;
       BUCKET_WORDS.forEach((word, i) => {
         const el = document.createElement('div');
         el.className = 'plink-bkt';
@@ -311,10 +313,10 @@ const _popAudio = (function () {
         if (b.y + b.radius > floorY - BUCKET_H) {
           for (const wx of bucketDividers) {
             const dx = b.x - wx;
-            const r  = b.radius + 2;
+            const r  = b.radius + 1;
             if (Math.abs(dx) < r) {
               b.x  = wx + (dx >= 0 ? r : -r);
-              b.vx *= -RESTITUTION * 0.6;
+              b.vx *= -RESTITUTION * 0.55;
               b.settledAt = null;
             }
           }
@@ -324,8 +326,8 @@ const _popAudio = (function () {
         b.isMargin = b.x < contentLeft || b.x > contentRight;
 
         /* ── Bucket entry count ── */
-        if (!b.countedBucket && b.y > floorY - BUCKET_H) {
-          const bi = Math.min(NUM_BUCKETS - 1, Math.floor(b.x / (window.innerWidth / NUM_BUCKETS)));
+        if (!b.countedBucket && b.y + b.radius > floorY - BUCKET_H && bucketWidth > 0) {
+          const bi = Math.min(NUM_BUCKETS - 1, Math.floor(b.x / bucketWidth));
           bucketCounts[bi]++;
           b.countedBucket = true;
           const cnt = document.getElementById(`plink-cnt-${bi}`);
@@ -711,7 +713,7 @@ const _popAudio = (function () {
   let sunVisible = false;
 
   function moveSun(x, y) {
-    sun.style.transform = `translate(${x - 36}px, ${y - 36}px)`;
+    sun.style.transform = `translate(${x - 33}px, ${y - 33}px)`;
     if (!sunVisible) { sun.style.opacity = '1'; sunVisible = true; }
   }
 
@@ -734,7 +736,7 @@ const _popAudio = (function () {
     g.className = 'sun-click';
     g.style.left = e.clientX + 'px';
     g.style.top  = e.clientY + 'px';
-    document.body.appendChild(g);
+    document.documentElement.appendChild(g);
     setTimeout(() => g.remove(), 700);
   });
 })();
