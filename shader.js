@@ -1,43 +1,44 @@
 /* ── Pop sound (Web Audio, synthesized) ─────────────────────── */
 const _popAudio = (function () {
-  let ctx = null;
+  let ctx   = null;
   let lastPop = 0;
+  const api = { muted: false };
 
   function getCtx() {
-    if (!ctx) ctx = new (window.AudioContext || window['webkitAudioContext'])();
+    if (!ctx) {
+      try { ctx = new (window.AudioContext || window['webkitAudioContext'])(); } catch (_) {}
+    }
     return ctx;
   }
 
-  /* Unlock on first user gesture — browsers suspend AudioContext until then */
-  function unlock() {
-    try { getCtx().resume(); } catch (_) {}
-  }
-  document.addEventListener('pointerdown', unlock, { once: false, passive: true });
-  document.addEventListener('keydown',     unlock, { once: false, passive: true });
-
   function playNote(pitch) {
-    const ac = getCtx();
-    const t  = ac.currentTime;
-    const osc  = ac.createOscillator();
-    const gain = ac.createGain();
-    osc.connect(gain);
-    gain.connect(ac.destination);
-    osc.type = 'sine';
-    const freq = (pitch || 1) * (500 + Math.random() * 200);
-    osc.frequency.setValueAtTime(freq * 1.5, t);
-    osc.frequency.exponentialRampToValueAtTime(freq * 0.65, t + 0.09);
-    gain.gain.setValueAtTime(0.22, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
-    osc.start(t);
-    osc.stop(t + 0.16);
+    try {
+      const ac = getCtx();
+      if (!ac || ac.state !== 'running') return;
+      const t    = ac.currentTime;
+      const osc  = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.connect(gain);
+      gain.connect(ac.destination);
+      osc.type = 'sine';
+      const freq = (pitch || 1) * (500 + Math.random() * 200);
+      osc.frequency.setValueAtTime(freq * 1.5, t);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.65, t + 0.09);
+      gain.gain.setValueAtTime(0.22, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+      osc.start(t);
+      osc.stop(t + 0.16);
+    } catch (_) {}
   }
 
-  return function pop(pitch) {
+  api.pop = function (pitch) {
+    if (api.muted) return;
     const now = performance.now();
     if (now - lastPop < 40) return;
     lastPop = now;
     try {
       const ac = getCtx();
+      if (!ac) return;
       if (ac.state === 'suspended') {
         ac.resume().then(() => playNote(pitch));
       } else {
@@ -45,6 +46,47 @@ const _popAudio = (function () {
       }
     } catch (_) {}
   };
+
+  api.unlock = function () {
+    try { const ac = getCtx(); if (ac && ac.state === 'suspended') ac.resume(); } catch (_) {}
+  };
+
+  /* Unlock on every user gesture so the context stays running */
+  document.addEventListener('pointerdown', api.unlock, { passive: true });
+  document.addEventListener('keydown',     api.unlock, { passive: true });
+
+  /* ── Mute button — injected next to dark-toggle ── */
+  function buildMuteBtn() {
+    const btn = document.createElement('button');
+    btn.className   = 'mute-toggle';
+    btn.id          = 'mute-toggle';
+    btn.setAttribute('aria-label', 'Toggle sound');
+    btn.innerHTML   =
+      `<svg class="icon-sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+         <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+         <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+         <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+       </svg>
+       <svg class="icon-sound-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+         <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+         <line x1="23" y1="9" x2="17" y2="15"/>
+         <line x1="17" y1="9" x2="23" y2="15"/>
+       </svg>`;
+    btn.addEventListener('click', () => {
+      api.muted = !api.muted;
+      btn.classList.toggle('muted', api.muted);
+    });
+    const darkToggle = document.getElementById('dark-toggle');
+    if (darkToggle) darkToggle.insertAdjacentElement('afterend', btn);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', buildMuteBtn);
+  } else {
+    buildMuteBtn();
+  }
+
+  return api;
 })();
 
 /* ── Smiley fields: top hero, physics bottom, margin columns ──── */
@@ -429,7 +471,7 @@ const _popAudio = (function () {
           b.settledAt  = null;
           if (!b.flashedAt || ts - b.flashedAt > 600) {
             b.flashedAt = ts;
-            _popAudio(b.radius / 52);
+            _popAudio.pop(b.radius / 52);
             applyHover(b.circle);
             setTimeout(() => unhover(b.circle), 700);
           }

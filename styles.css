@@ -146,6 +146,25 @@ a {
 [data-theme="dark"] .dark-toggle .icon-sun { display: block; }
 [data-theme="dark"] .dark-toggle .icon-moon { display: none; }
 
+/* Mute toggle */
+.mute-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--fg-muted);
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  transition: color var(--transition);
+}
+.mute-toggle:hover { color: var(--fg); }
+.mute-toggle svg { width: 20px; height: 20px; }
+.mute-toggle .icon-sound-off { display: none; }
+.mute-toggle .icon-sound-on  { display: block; }
+.mute-toggle.muted .icon-sound-on  { display: none; }
+.mute-toggle.muted .icon-sound-off { display: block; }
+.mute-toggle.muted { color: var(--fg-subtle); }
+
 /* ── HERO / MARQUEE ────────────────────────────────────────── */
 .hero {
   position: relative;
