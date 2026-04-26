@@ -250,8 +250,8 @@ a {
 /* ── Sun cursor ─────────────────────────────────────────────── */
 #sun-cursor {
   position: fixed;
-  width: 72px;
-  height: 72px;
+  width: 110px;
+  height: 110px;
   border-radius: 50%;
   pointer-events: none;
   z-index: 2147483647;
@@ -260,14 +260,14 @@ a {
   will-change: transform;
   transform: translate(-200px, -200px);
   opacity: 0;
-  background: radial-gradient(circle, rgba(255,210,120,0.5) 0%, rgba(255,160,60,0.22) 45%, rgba(255,130,40,0.08) 70%, transparent 100%);
+  background: radial-gradient(circle, rgba(255,220,130,0.28) 0%, rgba(255,175,60,0.1) 35%, rgba(255,145,40,0.04) 58%, transparent 100%);
 }
 
 /* ── Mouse trail faces ────────────────────────────────────────── */
 .trail-face {
   position: fixed;
   pointer-events: none;
-  z-index: 99996;
+  z-index: 2147483646;
   font-size: 13px;
   font-family: monospace;
   color: var(--accent);
@@ -400,6 +400,21 @@ a {
   border-right-color: rgba(255,200,190,0.18);
   border-bottom-color: rgba(255,200,190,0.24);
   color: rgba(255,200,190,0.22);
+}
+.plink-bkt.completed {
+  border-bottom-width: 2.5px;
+  transition: background 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+}
+@keyframes bucket-fanfare {
+  0%   { transform: scaleX(1) translateY(0); }
+  18%  { transform: scaleX(1.04) translateY(-6px); }
+  36%  { transform: scaleX(0.97) translateY(0px); }
+  54%  { transform: scaleX(1.02) translateY(-3px); }
+  72%  { transform: scaleX(0.99) translateY(0px); }
+  100% { transform: scaleX(1)   translateY(0); }
+}
+.plink-bkt.fanfare {
+  animation: bucket-fanfare 0.75s cubic-bezier(0.34,1.56,0.64,1);
 }
 
 .plink-cnt {

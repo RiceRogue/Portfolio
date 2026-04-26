@@ -2,29 +2,47 @@
 const _popAudio = (function () {
   let ctx = null;
   let lastPop = 0;
-  function init() {
+
+  function getCtx() {
     if (!ctx) ctx = new (window.AudioContext || window['webkitAudioContext'])();
+    return ctx;
   }
+
+  /* Unlock on first user gesture — browsers suspend AudioContext until then */
+  function unlock() {
+    try { getCtx().resume(); } catch (_) {}
+  }
+  document.addEventListener('pointerdown', unlock, { once: false, passive: true });
+  document.addEventListener('keydown',     unlock, { once: false, passive: true });
+
+  function playNote(pitch) {
+    const ac = getCtx();
+    const t  = ac.currentTime;
+    const osc  = ac.createOscillator();
+    const gain = ac.createGain();
+    osc.connect(gain);
+    gain.connect(ac.destination);
+    osc.type = 'sine';
+    const freq = (pitch || 1) * (500 + Math.random() * 200);
+    osc.frequency.setValueAtTime(freq * 1.5, t);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.65, t + 0.09);
+    gain.gain.setValueAtTime(0.22, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    osc.start(t);
+    osc.stop(t + 0.16);
+  }
+
   return function pop(pitch) {
     const now = performance.now();
-    if (now - lastPop < 40) return; /* max ~25 pops/s */
+    if (now - lastPop < 40) return;
     lastPop = now;
     try {
-      init();
-      if (ctx.state === 'suspended') ctx.resume();
-      const t   = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.type = 'sine';
-      const freq = (pitch || 1) * (520 + Math.random() * 180);
-      osc.frequency.setValueAtTime(freq * 1.4, t);
-      osc.frequency.exponentialRampToValueAtTime(freq * 0.7, t + 0.08);
-      gain.gain.setValueAtTime(0.18, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
-      osc.start(t);
-      osc.stop(t + 0.14);
+      const ac = getCtx();
+      if (ac.state === 'suspended') {
+        ac.resume().then(() => playNote(pitch));
+      } else {
+        playNote(pitch);
+      }
     } catch (_) {}
   };
 })();
@@ -104,9 +122,16 @@ const _popAudio = (function () {
     const BUCKET_WORDS = _bw;
     const NUM_BUCKETS  = BUCKET_WORDS.length;
     const BUCKET_H     = 100;
-    let   bucketDividers = []; /* x positions of inner walls */
+    let   bucketDividers = [];
+    let   bucketEls      = [];
     let nextRespawnTs    = 0;
-    const bucketCounts   = new Array(NUM_BUCKETS).fill(0);
+    const bucketCounts    = new Array(NUM_BUCKETS).fill(0);
+    const bucketGoals     = Array.from({length: NUM_BUCKETS}, () => 1 + Math.floor(Math.random() * 100));
+    const bucketCompleted = new Array(NUM_BUCKETS).fill(false);
+    const bucketColors    = Array.from({length: NUM_BUCKETS}, () => {
+      const h = Math.floor(Math.random() * 12) * 30;
+      return `hsl(${h},80%,55%)`;
+    });
 
     /* Layout zones — updated on resize */
     let introTop = 0, introBottom = 0;
@@ -117,24 +142,50 @@ const _popAudio = (function () {
     function buildBuckets() {
       container.querySelectorAll('.plink-bkt,.plink-cnt').forEach(el => el.remove());
       bucketDividers = [];
+      bucketEls      = [];
       const W  = window.innerWidth;
       const bW = W / NUM_BUCKETS;
       BUCKET_WORDS.forEach((word, i) => {
-        /* bucket wall */
         const el = document.createElement('div');
         el.className = 'plink-bkt';
         el.textContent = word;
         el.style.cssText = `left:${i*bW}px;width:${bW}px;top:${floorY - BUCKET_H}px;height:${BUCKET_H}px;${i===0 ? 'border-left-width:1.5px;' : ''}`;
+        if (bucketCompleted[i]) {
+          el.classList.add('completed');
+          el.style.background   = `${bucketColors[i]}22`;
+          el.style.color        = bucketColors[i];
+          el.style.borderColor  = bucketColors[i];
+        }
         container.insertBefore(el, container.firstChild);
-        /* counter */
+        bucketEls.push(el);
+
         const cnt = document.createElement('div');
         cnt.className = 'plink-cnt';
         cnt.id = `plink-cnt-${i}`;
-        cnt.textContent = '0';
-        cnt.style.cssText = `left:${i*bW}px;width:${bW}px;top:${floorY - BUCKET_H - 28}px;`;
+        cnt.style.left  = `${i * bW}px`;
+        cnt.style.width = `${bW}px`;
+        cnt.style.top   = `${floorY - BUCKET_H - 32}px`;
+        cnt.textContent = bucketCompleted[i]
+          ? `${bucketCounts[i]}`
+          : `${bucketCounts[i]} / ${bucketGoals[i]}`;
+        if (bucketCompleted[i]) cnt.style.color = bucketColors[i];
         container.insertBefore(cnt, container.firstChild);
+
         if (i > 0) bucketDividers.push(i * bW);
       });
+    }
+
+    function triggerFanfare(bi) {
+      const el  = bucketEls[bi];
+      const cnt = document.getElementById(`plink-cnt-${bi}`);
+      if (el) {
+        el.classList.add('completed', 'fanfare');
+        el.style.background  = `${bucketColors[bi]}22`;
+        el.style.color       = bucketColors[bi];
+        el.style.borderColor = bucketColors[bi];
+        setTimeout(() => el && el.classList.remove('fanfare'), 800);
+      }
+      if (cnt) cnt.style.color = bucketColors[bi];
     }
 
     function updateLayout() {
@@ -277,8 +328,17 @@ const _popAudio = (function () {
           const bi = Math.min(NUM_BUCKETS - 1, Math.floor(b.x / (window.innerWidth / NUM_BUCKETS)));
           bucketCounts[bi]++;
           b.countedBucket = true;
-          const el = document.getElementById(`plink-cnt-${bi}`);
-          if (el) el.textContent = bucketCounts[bi];
+          const cnt = document.getElementById(`plink-cnt-${bi}`);
+          if (!bucketCompleted[bi]) {
+            if (cnt) cnt.textContent = `${bucketCounts[bi]} / ${bucketGoals[bi]}`;
+            if (bucketCounts[bi] >= bucketGoals[bi]) {
+              bucketCompleted[bi] = true;
+              if (cnt) cnt.textContent = `${bucketCounts[bi]}`;
+              triggerFanfare(bi);
+            }
+          } else {
+            if (cnt) cnt.textContent = `${bucketCounts[bi]}`;
+          }
         }
 
         /* ── Settle detection ── */
@@ -646,7 +706,7 @@ const _popAudio = (function () {
 (function () {
   const sun = document.createElement('div');
   sun.id = 'sun-cursor';
-  document.body.appendChild(sun);
+  document.documentElement.appendChild(sun);
 
   let sunVisible = false;
 
@@ -708,7 +768,8 @@ const _popAudio = (function () {
 (function () {
   const FACES = [':)', ':D', ':3', ';)', ':]', ':P', '8)', ':>'];
   let lastX = -999, lastY = -999, lastT = 0;
-  document.addEventListener('mousemove', e => {
+  document.addEventListener('pointermove', e => {
+    if (e.pointerType === 'touch') return;
     const now = performance.now();
     const dx = e.clientX - lastX, dy = e.clientY - lastY;
     if (dx * dx + dy * dy < 625 && now - lastT < 80) return;
@@ -718,7 +779,7 @@ const _popAudio = (function () {
     el.textContent = FACES[Math.floor(Math.random() * FACES.length)];
     el.style.left = e.clientX + 'px';
     el.style.top  = e.clientY + 'px';
-    document.body.appendChild(el);
+    document.documentElement.appendChild(el);
     setTimeout(() => el.parentNode && el.parentNode.removeChild(el), 750);
   }, { capture: true, passive: true });
 })();
