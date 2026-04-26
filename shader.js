@@ -149,7 +149,9 @@ const _popAudio = (function () {
     const container = document.getElementById('smiley-bg');
     if (!container) return;
 
-    const COUNT        = 100;
+    const isMobile     = window.innerWidth < 600;
+    const isTablet     = window.innerWidth < 900;
+    const COUNT        = isMobile ? 35 : isTablet ? 60 : 100;
     const GRAVITY      = 0.0015;
     const RESTITUTION  = 0.85;
     const FRICTION     = 0.993;
@@ -159,6 +161,14 @@ const _popAudio = (function () {
     const MOUSE_PUSH_R = 14;  /* px — tiny soft field just outside cursor */
     const CLICK_R      = 160;
 
+    const BUCKET_TIPS = {
+      'Conversation': 'Never short of a good exchange — I lead every room with curiosity',
+      'Connection':   'Building genuine relationships wherever I go',
+      'Craft':        'Intentional design across games, events & experiences',
+      'Chaos':        'Thriving in fast-paced, dynamic environments',
+      'Culture':      'Deep roots in gaming, esports & fandom communities',
+      'Care':         'Every interaction matters — I always show up fully',
+    };
     const _bw = ['Conversation','Connection','Craft','Chaos','Culture','Care'];
     for (let i = _bw.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [_bw[i],_bw[j]]=[_bw[j],_bw[i]]; }
     const BUCKET_WORDS = _bw;
@@ -192,7 +202,6 @@ const _popAudio = (function () {
       BUCKET_WORDS.forEach((word, i) => {
         const el = document.createElement('div');
         el.className = 'plink-bkt';
-        el.textContent = word;
         el.style.cssText = `left:${i*bW}px;width:${bW}px;top:${floorY - BUCKET_H}px;height:${BUCKET_H}px;${i===0 ? 'border-left-width:1.5px;' : ''}`;
         if (bucketCompleted[i]) {
           el.classList.add('completed');
@@ -200,6 +209,23 @@ const _popAudio = (function () {
           el.style.color        = bucketColors[i];
           el.style.borderColor  = bucketColors[i];
         }
+        const label = document.createElement('span');
+        label.className = 'plink-bkt-label';
+        label.textContent = word;
+        el.appendChild(label);
+        if (BUCKET_TIPS[word]) {
+          const tip = document.createElement('div');
+          tip.className = 'plink-tip';
+          tip.textContent = BUCKET_TIPS[word];
+          el.appendChild(tip);
+        }
+        /* tap to toggle tooltip on touch devices */
+        el.addEventListener('touchstart', ev => {
+          ev.stopPropagation();
+          const wasOpen = el.classList.contains('tip-open');
+          container.querySelectorAll('.plink-bkt.tip-open').forEach(b => b.classList.remove('tip-open'));
+          if (!wasOpen) el.classList.add('tip-open');
+        }, { passive: true });
         container.insertBefore(el, container.firstChild);
         bucketEls.push(el);
 
@@ -748,32 +774,37 @@ const _popAudio = (function () {
 
 /* ── Sun cursor ─────────────────────────────────────────────── */
 (function () {
+  const isTouch = window.matchMedia('(pointer: coarse)').matches;
   const sun = document.createElement('div');
   sun.id = 'sun-cursor';
   document.documentElement.appendChild(sun);
 
+  let sunEnabled = !isTouch;
   let sunVisible = false;
 
   function moveSun(x, y) {
+    if (!sunEnabled) return;
     sun.style.transform = `translate(${x - 33}px, ${y - 33}px)`;
     if (!sunVisible) { sun.style.opacity = '1'; sunVisible = true; }
   }
 
-  document.addEventListener('pointermove', e => {
-    moveSun(e.clientX, e.clientY);
-  }, { capture: true, passive: true });
+  if (!isTouch) {
+    document.addEventListener('pointermove', e => {
+      if (e.pointerType === 'touch') return;
+      moveSun(e.clientX, e.clientY);
+    }, { capture: true, passive: true });
 
-  document.addEventListener('mouseleave', () => {
-    sun.style.opacity = '0';
-    sunVisible = false;
-  });
-
-  document.addEventListener('mouseenter', () => {
-    sun.style.opacity = '1';
-    sunVisible = true;
-  });
+    document.addEventListener('mouseleave', () => {
+      sun.style.opacity = '0';
+      sunVisible = false;
+    });
+    document.addEventListener('mouseenter', () => {
+      if (sunEnabled) { sun.style.opacity = '1'; sunVisible = true; }
+    });
+  }
 
   document.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'touch') return;
     const g = document.createElement('div');
     g.className = 'sun-click';
     g.style.left = e.clientX + 'px';
@@ -781,6 +812,40 @@ const _popAudio = (function () {
     document.documentElement.appendChild(g);
     setTimeout(() => g.remove(), 700);
   });
+
+  /* ── Sun toggle button in header ── */
+  function buildSunToggle() {
+    const btn = document.createElement('button');
+    btn.className = 'sun-toggle';
+    btn.id = 'sun-toggle';
+    btn.setAttribute('aria-label', 'Toggle glow effect');
+    btn.innerHTML =
+      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+         <circle cx="12" cy="12" r="5"/>
+         <line x1="12" y1="1" x2="12" y2="3"/>
+         <line x1="12" y1="21" x2="12" y2="23"/>
+         <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+         <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+         <line x1="1" y1="12" x2="3" y2="12"/>
+         <line x1="21" y1="12" x2="23" y2="12"/>
+         <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+       </svg>`;
+    if (isTouch) btn.style.display = 'none';
+    btn.addEventListener('click', () => {
+      sunEnabled = !sunEnabled;
+      btn.classList.toggle('off', !sunEnabled);
+      if (!sunEnabled) { sun.style.opacity = '0'; sunVisible = false; }
+    });
+    const darkToggle = document.getElementById('dark-toggle');
+    if (darkToggle) darkToggle.insertAdjacentElement('beforebegin', btn);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', buildSunToggle);
+  } else {
+    buildSunToggle();
+  }
 })();
 
 (function () {
@@ -810,6 +875,7 @@ const _popAudio = (function () {
 
 /* ── Face mouse trail ────────────────────────────────────────── */
 (function () {
+  if (window.matchMedia('(pointer: coarse)').matches) return;
   const FACES = [':)', ':D', ':3', ';)', ':]', ':P', '8)', ':>'];
   let lastX = -999, lastY = -999, lastT = 0;
   document.addEventListener('pointermove', e => {

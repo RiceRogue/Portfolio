@@ -146,6 +146,21 @@ a {
 [data-theme="dark"] .dark-toggle .icon-sun { display: block; }
 [data-theme="dark"] .dark-toggle .icon-moon { display: none; }
 
+/* Sun glow toggle */
+.sun-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--fg-muted);
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  transition: color var(--transition);
+}
+.sun-toggle:hover { color: var(--fg); }
+.sun-toggle svg { width: 20px; height: 20px; }
+.sun-toggle.off { color: var(--fg-subtle); opacity: 0.45; }
+
 /* Mute toggle */
 .mute-toggle {
   background: none;
@@ -396,17 +411,17 @@ a {
 .marquee-item:nth-child(6n+6) { color: #777777; }
 
 /* ── PLINK BUCKETS ───────────────────────────────────────────── */
-/* ── Plinko bucket labels — rendered inside #smiley-bg by JS ── */
 .plink-bkt {
   position: absolute;
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
   padding-bottom: 10px;
   box-sizing: border-box;
-  pointer-events: none;
+  pointer-events: auto;
   font-family: var(--font);
-  font-size: clamp(0.75rem, 1.5vw, 1.125rem);
+  font-size: clamp(0.55rem, 1.2vw, 1.125rem);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -414,6 +429,40 @@ a {
   border-bottom: 2px solid rgba(120,80,80,0.28);
   border-left-width: 0;
   color: rgba(100,60,60,0.3);
+  overflow: visible;
+}
+.plink-bkt-label {
+  pointer-events: none;
+}
+
+/* Tooltip */
+.plink-tip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-6px);
+  background: var(--bg);
+  color: var(--fg-muted);
+  border: 1px solid var(--border);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  white-space: nowrap;
+  padding: 0.3rem 0.6rem;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 9999;
+  max-width: 200px;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.35;
+}
+.plink-bkt:hover .plink-tip,
+.plink-bkt.tip-open .plink-tip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-10px);
 }
 [data-theme="dark"] .plink-bkt {
   border-right-color: rgba(255,200,190,0.18);
@@ -986,9 +1035,21 @@ ul.bullet-list li::before {
 
   .site-nav { display: none; }
   .hamburger { display: flex; }
+  .sun-toggle { display: none; }
 
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
   .footer-inner { flex-direction: column; }
+
+  /* Compact buckets on mobile — 3 per row via smaller font */
+  .plink-bkt { font-size: clamp(0.42rem, 2.2vw, 0.65rem); letter-spacing: 0.04em; }
+  .plink-cnt { font-size: clamp(0.6rem, 2.8vw, 0.85rem); }
+  .plink-tip { font-size: 0.62rem; max-width: 140px; }
+}
+
+/* Large screen: cap gutter so content doesn't over-stretch */
+@media (min-width: 1600px) {
+  :root { --gutter: max(3vw, 48px); }
+  .plink-bkt { font-size: clamp(1rem, 1.1vw, 1.3rem); }
 }
 
 /* ── SCROLL REVEAL ANIMATION ───────────────────────────────── */
