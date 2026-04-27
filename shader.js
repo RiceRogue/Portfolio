@@ -158,6 +158,7 @@ const _popAudio = (function () {
     const isMobile     = window.innerWidth < 600;
     const isTablet     = window.innerWidth < 900;
     const COUNT        = isMobile ? 50 : isTablet ? 80 : 130;
+    const BALL_SIZES   = isMobile ? [20, 24, 28, 32] : SIZES;
     const GRAVITY      = 0.0015;
     const RESTITUTION  = 0.85;
     const FRICTION     = 0.993;
@@ -178,7 +179,7 @@ const _popAudio = (function () {
     const _bw = ['Conversation','Connection','Craft','Chaos','Culture','Care'];
     for (let i = _bw.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [_bw[i],_bw[j]]=[_bw[j],_bw[i]]; }
     const BUCKET_WORDS = _bw;
-    const NUM_BUCKETS  = BUCKET_WORDS.length;
+    const NUM_BUCKETS  = isMobile ? 3 : BUCKET_WORDS.length;
     const BUCKET_H     = 100;
     let   bucketDividers = [];
     let   bucketEls      = [];
@@ -300,7 +301,7 @@ const _popAudio = (function () {
       { w:  8, br: '0', cp: 'polygon(50% 0%,89% 19%,99% 61%,72% 95%,28% 95%,1% 61%,11% 19%)' }, /* heptagon */
       { w:  8, br: '0', cp: 'polygon(50% 0%,100% 50%,50% 100%,0% 50%)' }, /* diamond */
       { w:  6, br: '0', cp: 'polygon(50% 2%,93% 26%,93% 74%,50% 98%,7% 74%,7% 26%)' }, /* hexagon */
-      { w:  5, br: '0', cp: 'polygon(50% 0%,65% 30%,98% 35%,74% 58%,79% 91%,50% 75%,21% 91%,26% 58%,2% 35%,35% 30%)' }, /* 5-point star */
+      { w:  5, br: '0', cp: 'polygon(50% 0%,69% 23%,98% 35%,81% 60%,79% 91%,50% 83%,21% 91%,19% 60%,2% 35%,31% 23%)' }, /* 5-point star */
       { w:  3, br: '0', cp: 'polygon(50% 5%,85% 14%,98% 85%,83% 97%,17% 97%,2% 85%,15% 14%)' }, /* rounded triangle */
       { w:  2, br: '0', cp: 'polygon(50% 2%,70% 10%,86% 28%,93% 50%,86% 72%,70% 90%,50% 98%,30% 90%,14% 72%,7% 50%,14% 28%,30% 10%)' }, /* teardrop/egg */
     ];
@@ -309,7 +310,7 @@ const _popAudio = (function () {
     /* Create balls */
     const balls = [];
     for (let i = 0; i < COUNT; i++) {
-      const size   = SIZES[Math.floor(Math.random() * SIZES.length)];
+      const size   = BALL_SIZES[Math.floor(Math.random() * BALL_SIZES.length)];
       const expr   = EXPRESSIONS[Math.floor(Math.random() * EXPRESSIONS.length)];
       const radius = size / 2;
 
@@ -794,6 +795,7 @@ const _popAudio = (function () {
 
   let sunEnabled = !isTouch;
   let sunVisible = false;
+  window._sunEnabled = sunEnabled;
 
   function moveSun(x, y) {
     if (!sunEnabled) return;
@@ -817,7 +819,7 @@ const _popAudio = (function () {
   }
 
   document.addEventListener('pointerdown', e => {
-    if (e.pointerType === 'touch') return;
+    if (!window._sunEnabled) return;
     const g = document.createElement('div');
     g.className = 'sun-click';
     g.style.left = e.clientX + 'px';
@@ -839,8 +841,13 @@ const _popAudio = (function () {
     if (isTouch) btn.style.display = 'none';
     btn.addEventListener('click', () => {
       sunEnabled = !sunEnabled;
+      window._sunEnabled = sunEnabled;
       btn.classList.toggle('off', !sunEnabled);
-      if (!sunEnabled) { sun.style.opacity = '0'; sunVisible = false; }
+      if (!sunEnabled) {
+        sun.style.opacity = '0';
+        sunVisible = false;
+        document.querySelectorAll('.trail-face').forEach(el => el.remove());
+      }
     });
     const grp = document.querySelector('.controls-group');
     if (grp) {
@@ -870,16 +877,43 @@ const _popAudio = (function () {
 
 /* ── Project card glow on hover ─────────────────────────────── */
 (function () {
+  function hexToRgb(h) {
+    const s = h.replace('#', '');
+    const n = parseInt(s.length === 3
+      ? s.split('').map(c => c + c).join('')
+      : s, 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function blendColor(hex) {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const bg = isDark ? 26 : 255;
+    const a = 0.28;
+    const [r, g, b] = hexToRgb(hex);
+    const ri = Math.round(bg * (1 - a) + r * a);
+    const gi = Math.round(bg * (1 - a) + g * a);
+    const bi = Math.round(bg * (1 - a) + b * a);
+    return `rgb(${ri},${gi},${bi})`;
+  }
+
   document.querySelectorAll('.project-card[data-glow]').forEach(card => {
     const hex = card.getAttribute('data-glow');
-    card.addEventListener('mouseenter', () => {
-      card.style.backgroundColor = hex + '30';
+
+    function applyColor() {
+      card.style.backgroundColor = blendColor(hex);
       card.style.borderColor     = hex + '88';
-    });
-    card.addEventListener('mouseleave', () => {
+    }
+    function clearColor() {
       card.style.backgroundColor = '';
       card.style.borderColor     = '';
-    });
+    }
+
+    card.addEventListener('mouseenter', applyColor);
+    card.addEventListener('mouseleave', clearColor);
+
+    /* Touch equivalent */
+    card.addEventListener('touchstart', applyColor, { passive: true });
+    card.addEventListener('touchend',   clearColor, { passive: true });
+    card.addEventListener('touchcancel',clearColor, { passive: true });
   });
 })();
 
@@ -890,6 +924,7 @@ const _popAudio = (function () {
   let lastX = -999, lastY = -999, lastT = 0;
   document.addEventListener('pointermove', e => {
     if (e.pointerType === 'touch') return;
+    if (!window._sunEnabled) return;
     const now = performance.now();
     const dx = e.clientX - lastX, dy = e.clientY - lastY;
     if (dx * dx + dy * dy < 625 && now - lastT < 80) return;

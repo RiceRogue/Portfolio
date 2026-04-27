@@ -504,6 +504,14 @@ a {
   line-height: 1.4;
   box-shadow: 0 2px 12px rgba(0,0,0,0.08);
 }
+.plink-bkt::before {
+  content: '';
+  position: absolute;
+  top: -52px;
+  left: 0;
+  right: 0;
+  height: 52px;
+}
 .plink-bkt:hover .plink-tip,
 .plink-bkt.tip-open .plink-tip {
   opacity: 1;
