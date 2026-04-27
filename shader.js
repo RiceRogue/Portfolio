@@ -1,10 +1,12 @@
 /* ── Pop sound (Web Audio, synthesized) ─────────────────────── */
 const _popAudio = (function () {
-  let ctx   = null;
-  let lastPop = 0;
+  let ctx      = null;
+  let lastPop  = 0;
+  let gestured = false;
   const api = { muted: false };
 
   function getCtx() {
+    if (!gestured) return null;
     if (!ctx) {
       try { ctx = new (window.AudioContext || window['webkitAudioContext'])(); } catch (_) {}
     }
@@ -48,6 +50,7 @@ const _popAudio = (function () {
   };
 
   api.unlock = function () {
+    gestured = true;
     try { const ac = getCtx(); if (ac && ac.state === 'suspended') ac.resume(); } catch (_) {}
   };
 
@@ -61,6 +64,7 @@ const _popAudio = (function () {
     btn.className   = 'mute-toggle';
     btn.id          = 'mute-toggle';
     btn.setAttribute('aria-label', 'Toggle sound');
+    btn.setAttribute('data-nav-tip', 'Sound on/off');
     btn.innerHTML   =
       `<svg class="icon-sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
@@ -179,11 +183,13 @@ const _popAudio = (function () {
     const _bw = ['Conversation','Connection','Craft','Chaos','Culture','Care'];
     for (let i = _bw.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [_bw[i],_bw[j]]=[_bw[j],_bw[i]]; }
     const BUCKET_WORDS = _bw;
-    const NUM_BUCKETS  = isMobile ? 3 : BUCKET_WORDS.length;
+    const NUM_BUCKETS  = BUCKET_WORDS.length;
     const BUCKET_H     = 100;
     let   bucketDividers = [];
     let   bucketEls      = [];
     let   bucketWidth    = 0;
+    let   mobilePage     = 0;
+    let   bucketTrackEl  = null;
     let nextRespawnTs    = 0;
     const bucketCounts    = new Array(NUM_BUCKETS).fill(0);
     const bucketGoals     = Array.from({length: NUM_BUCKETS}, () => 1 + Math.floor(Math.random() * 100));
@@ -200,21 +206,21 @@ const _popAudio = (function () {
     let floorY = 0;
 
     function buildBuckets() {
-      container.querySelectorAll('.plink-bkt,.plink-cnt').forEach(el => el.remove());
+      container.querySelectorAll('.plink-bkt,.plink-cnt,.plink-bucket-track').forEach(el => el.remove());
       bucketDividers = [];
       bucketEls      = [];
-      const W  = window.innerWidth;
-      const bW = W / NUM_BUCKETS;
-      bucketWidth = bW;
-      BUCKET_WORDS.forEach((word, i) => {
+      const W = window.innerWidth;
+
+      function makeBucket(word, i, bW, parent, isTrack) {
         const el = document.createElement('div');
         el.className = 'plink-bkt';
-        el.style.cssText = `left:${i*bW}px;width:${bW}px;top:${floorY - BUCKET_H}px;height:${BUCKET_H}px;${i===0 ? 'border-left-width:1.5px;' : ''}`;
+        const topPos = isTrack ? 0 : floorY - BUCKET_H;
+        el.style.cssText = `left:${i*bW}px;width:${bW}px;top:${topPos}px;height:${BUCKET_H}px;${i===0?'border-left-width:1.5px;':''}`;
         if (bucketCompleted[i]) {
           el.classList.add('completed');
-          el.style.background   = `${bucketColors[i]}22`;
-          el.style.color        = bucketColors[i];
-          el.style.borderColor  = bucketColors[i];
+          el.style.background  = `${bucketColors[i]}22`;
+          el.style.color       = bucketColors[i];
+          el.style.borderColor = bucketColors[i];
         }
         const label = document.createElement('span');
         label.className = 'plink-bkt-label';
@@ -226,30 +232,71 @@ const _popAudio = (function () {
           tip.textContent = BUCKET_TIPS[word];
           el.appendChild(tip);
         }
-        /* tap to toggle tooltip on touch devices */
         el.addEventListener('touchstart', ev => {
           ev.stopPropagation();
           const wasOpen = el.classList.contains('tip-open');
-          container.querySelectorAll('.plink-bkt.tip-open').forEach(b => b.classList.remove('tip-open'));
+          parent.querySelectorAll('.plink-bkt.tip-open').forEach(b => b.classList.remove('tip-open'));
           if (!wasOpen) el.classList.add('tip-open');
         }, { passive: true });
-        container.insertBefore(el, container.firstChild);
         bucketEls.push(el);
+        return el;
+      }
 
-        const cnt = document.createElement('div');
-        cnt.className = 'plink-cnt';
-        cnt.id = `plink-cnt-${i}`;
-        cnt.style.left  = `${i * bW}px`;
-        cnt.style.width = `${bW}px`;
-        cnt.style.top   = `${floorY - BUCKET_H - 32}px`;
-        cnt.textContent = bucketCompleted[i]
-          ? `${bucketCounts[i]}`
-          : `${bucketCounts[i]} / ${bucketGoals[i]}`;
-        if (bucketCompleted[i]) cnt.style.color = bucketColors[i];
-        container.insertBefore(cnt, container.firstChild);
+      if (isMobile) {
+        const bW = W / 3;
+        bucketWidth    = bW;
+        bucketDividers = [bW, bW * 2];
 
-        if (i > 0) bucketDividers.push(i * bW);
-      });
+        const track = document.createElement('div');
+        track.className = 'plink-bucket-track';
+        track.style.cssText = `position:absolute;left:0;top:${floorY - BUCKET_H}px;width:${W * 2}px;height:${BUCKET_H + 40}px;overflow:visible;pointer-events:auto;transition:transform 0.7s cubic-bezier(0.4,0,0.2,1);transform:translateX(${-mobilePage * W}px);`;
+        bucketTrackEl = track;
+
+        BUCKET_WORDS.forEach((word, i) => {
+          track.appendChild(makeBucket(word, i, bW, track, true));
+          const cnt = document.createElement('div');
+          cnt.className = 'plink-cnt';
+          cnt.id = `plink-cnt-${i}`;
+          cnt.style.cssText = `position:absolute;left:${i*bW}px;width:${bW}px;top:-36px;`;
+          cnt.textContent = bucketCompleted[i] ? `${bucketCounts[i]}` : `${bucketCounts[i]} / ${bucketGoals[i]}`;
+          if (bucketCompleted[i]) cnt.style.color = bucketColors[i];
+          track.appendChild(cnt);
+        });
+
+        container.insertBefore(track, container.firstChild);
+      } else {
+        const bW = W / NUM_BUCKETS;
+        bucketWidth = bW;
+
+        BUCKET_WORDS.forEach((word, i) => {
+          container.insertBefore(makeBucket(word, i, bW, container, false), container.firstChild);
+          const cnt = document.createElement('div');
+          cnt.className = 'plink-cnt';
+          cnt.id = `plink-cnt-${i}`;
+          cnt.style.left  = `${i * bW}px`;
+          cnt.style.width = `${bW}px`;
+          cnt.style.top   = `${floorY - BUCKET_H - 32}px`;
+          cnt.textContent = bucketCompleted[i] ? `${bucketCounts[i]}` : `${bucketCounts[i]} / ${bucketGoals[i]}`;
+          if (bucketCompleted[i]) cnt.style.color = bucketColors[i];
+          container.insertBefore(cnt, container.firstChild);
+          if (i > 0) bucketDividers.push(i * bW);
+        });
+      }
+    }
+
+    function cycleMobileBuckets() {
+      mobilePage = (mobilePage + 1) % 2;
+      for (const b of balls) {
+        if (b.y + b.radius > floorY - BUCKET_H - 20) {
+          b.vy = -(0.8 + Math.random() * 0.5);
+          b.y  = floorY - BUCKET_H - b.radius - 25;
+          b.countedBucket = false;
+          b.settledAt     = null;
+        }
+      }
+      if (bucketTrackEl) {
+        bucketTrackEl.style.transform = `translateX(${-mobilePage * window.innerWidth}px)`;
+      }
     }
 
     function triggerFanfare(bi) {
@@ -353,6 +400,7 @@ const _popAudio = (function () {
     window.addEventListener('resize', updateLayout);
     window.addEventListener('load',   updateLayout);
     window.addEventListener('scroll', updateLayout, { passive: true });
+    if (isMobile) setInterval(cycleMobileBuckets, 10000);
 
     let firstFrameTs = null;
     function loop(ts) {
@@ -409,7 +457,9 @@ const _popAudio = (function () {
 
         /* ── Bucket entry count ── */
         if (!b.countedBucket && b.y + b.radius > floorY - BUCKET_H && bucketWidth > 0) {
-          const bi = Math.min(NUM_BUCKETS - 1, Math.floor(b.x / bucketWidth));
+          const bi = isMobile
+            ? mobilePage * 3 + Math.min(2, Math.floor(b.x / bucketWidth))
+            : Math.min(NUM_BUCKETS - 1, Math.floor(b.x / bucketWidth));
           bucketCounts[bi]++;
           b.countedBucket = true;
           const cnt = document.getElementById(`plink-cnt-${bi}`);
@@ -779,6 +829,7 @@ const _popAudio = (function () {
   if (stored) document.documentElement.setAttribute('data-theme', stored);
   const btn = document.getElementById('dark-toggle');
   if (!btn) return;
+  btn.setAttribute('data-nav-tip', 'Dark / Light mode');
   btn.addEventListener('click', () => {
     const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
@@ -834,6 +885,7 @@ const _popAudio = (function () {
     btn.className = 'sun-toggle';
     btn.id = 'sun-toggle';
     btn.setAttribute('aria-label', 'Toggle glow effect');
+    btn.setAttribute('data-nav-tip', 'Cursor effects');
     btn.innerHTML =
       `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
          <path d="M4 4l7.07 17 2.51-7.39L21 11.07z"/>

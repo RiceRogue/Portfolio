@@ -150,7 +150,7 @@ a {
 .controls-group {
   display: flex;
   align-items: center;
-  gap: 0.1rem;
+  gap: 2.5rem;
 }
 
 /* ── Nav tooltips ────────────────────────────────────────────── */
@@ -456,6 +456,11 @@ a {
 .marquee-item:nth-child(6n+6) { color: #777777; }
 
 /* ── PLINK BUCKETS ───────────────────────────────────────────── */
+.plink-bucket-track {
+  position: absolute;
+  pointer-events: auto;
+  overflow: visible;
+}
 .plink-bkt {
   position: absolute;
   display: flex;
