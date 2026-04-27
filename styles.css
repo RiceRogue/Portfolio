@@ -146,6 +146,40 @@ a {
 [data-theme="dark"] .dark-toggle .icon-sun { display: block; }
 [data-theme="dark"] .dark-toggle .icon-moon { display: none; }
 
+/* ── Header controls group (cursor + dark + mute — injected together) ── */
+.controls-group {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+/* ── Nav tooltips ────────────────────────────────────────────── */
+[data-nav-tip] { position: relative; }
+[data-nav-tip]::after {
+  content: attr(data-nav-tip);
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg);
+  color: var(--fg-muted);
+  border: 1px solid var(--border);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  padding: 0.28rem 0.6rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 10000;
+  transform: translateX(-50%) translateY(-4px);
+}
+[data-nav-tip]:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 /* Sun glow toggle */
 .sun-toggle {
   background: none;
@@ -249,7 +283,7 @@ a {
 }
 
 .gradient-text {
-  background: linear-gradient(90deg, #ffffff, #ffc8a8, #e8843a, #f0d0d4, #c07878, #ffffff);
+  background: linear-gradient(90deg, #c2601a, #ffc8a8, #e8843a, #f0d0d4, #c07878, #c2601a);
   background-size: 300% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -257,6 +291,9 @@ a {
   animation: gradient-shift 5s ease infinite;
   font-weight: 700;
   font-size: 1.05em;
+}
+[data-theme="dark"] .gradient-text {
+  background-image: linear-gradient(90deg, #ffffff, #ffc8a8, #e8843a, #f0d0d4, #c07878, #ffffff);
 }
 
 .face-default,
@@ -351,20 +388,21 @@ a {
 /* Ensure hero text stays visible over the dark shader */
 .marquee-block,
 .intro-section { position: relative; z-index: 1; }
-.marquee-item { text-shadow: 0 1px 8px rgba(0,0,0,0.6); }
-.intro-tagline { text-shadow: 0 1px 6px rgba(0,0,0,0.5); }
+[data-theme="dark"] .marquee-item { text-shadow: 0 1px 8px rgba(0,0,0,0.6); }
+[data-theme="dark"] .intro-tagline { text-shadow: 0 1px 6px rgba(0,0,0,0.5); }
 
 .intro-tagline {
   font-size: clamp(1.1rem, 2.2vw, 1.55rem);
   font-weight: 400;
   line-height: 1.5;
   max-width: 56ch;
-  color: #ffffff;
+  color: var(--fg);
 }
+[data-theme="dark"] .intro-tagline { color: #ffffff; }
 
 .mouse-hint {
   font-size: 0.72rem;
-  color: rgba(255,255,255,0.55);
+  color: var(--fg-subtle);
   letter-spacing: 0.06em;
   margin-top: 1rem;
   text-align: left;
@@ -374,8 +412,14 @@ a {
 }
 .intro-tagline em {
   font-style: normal;
-  border-bottom: 2px solid rgba(255,255,255,0.7);
+  border-bottom: 2px solid rgba(100,60,20,0.4);
   padding-bottom: 1px;
+}
+[data-theme="dark"] .intro-tagline em {
+  border-bottom-color: rgba(255,255,255,0.7);
+}
+.intro-tagline em {
+  font-style: normal;
 }
 
 /* ── MARQUEE ───────────────────────────────────────────────── */
@@ -403,7 +447,8 @@ a {
 }
 
 /* Warm cycling gradient — white → peach → orange → blush → rose → gray */
-.marquee-item:nth-child(6n+1) { color: #ffffff; }
+.marquee-item:nth-child(6n+1) { color: #c87828; }
+[data-theme="dark"] .marquee-item:nth-child(6n+1) { color: #ffffff; }
 .marquee-item:nth-child(6n+2) { color: #ffc8a8; }
 .marquee-item:nth-child(6n+3) { color: #e8843a; }
 .marquee-item:nth-child(6n+4) { color: #f0d0d4; }
@@ -435,34 +480,34 @@ a {
   pointer-events: none;
 }
 
-/* Tooltip */
+/* Tooltip — appears above the score counter */
 .plink-tip {
   position: absolute;
-  bottom: 100%;
+  bottom: calc(100% + 52px); /* clears the score counter above bucket */
   left: 50%;
-  transform: translateX(-50%) translateY(-6px);
+  transform: translateX(-50%) translateY(4px);
   background: var(--bg);
   color: var(--fg-muted);
   border: 1px solid var(--border);
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   font-weight: 500;
   letter-spacing: 0.02em;
   text-transform: none;
-  white-space: nowrap;
-  padding: 0.3rem 0.6rem;
+  padding: 0.45rem 0.85rem;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.18s ease, transform 0.18s ease;
   z-index: 9999;
-  max-width: 200px;
+  max-width: 210px;
   white-space: normal;
   text-align: center;
-  line-height: 1.35;
+  line-height: 1.4;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
 }
 .plink-bkt:hover .plink-tip,
 .plink-bkt.tip-open .plink-tip {
   opacity: 1;
-  transform: translateX(-50%) translateY(-10px);
+  transform: translateX(-50%) translateY(0);
 }
 [data-theme="dark"] .plink-bkt {
   border-right-color: rgba(255,200,190,0.18);

@@ -77,7 +77,13 @@ const _popAudio = (function () {
       btn.classList.toggle('muted', api.muted);
     });
     const darkToggle = document.getElementById('dark-toggle');
-    if (darkToggle) darkToggle.insertAdjacentElement('afterend', btn);
+    if (darkToggle) {
+      const grp = document.createElement('div');
+      grp.className = 'controls-group';
+      darkToggle.parentNode.insertBefore(grp, darkToggle);
+      grp.appendChild(darkToggle);
+      grp.appendChild(btn);
+    }
   }
 
   if (document.readyState === 'loading') {
@@ -151,7 +157,7 @@ const _popAudio = (function () {
 
     const isMobile     = window.innerWidth < 600;
     const isTablet     = window.innerWidth < 900;
-    const COUNT        = isMobile ? 35 : isTablet ? 60 : 100;
+    const COUNT        = isMobile ? 50 : isTablet ? 80 : 130;
     const GRAVITY      = 0.0015;
     const RESTITUTION  = 0.85;
     const FRICTION     = 0.993;
@@ -162,12 +168,12 @@ const _popAudio = (function () {
     const CLICK_R      = 160;
 
     const BUCKET_TIPS = {
-      'Conversation': 'Never short of a good exchange — I lead every room with curiosity',
+      'Conversation': 'Never short of a good exchange, I lead every room with curiosity',
       'Connection':   'Building genuine relationships wherever I go',
-      'Craft':        'Intentional design across games, events & experiences',
+      'Craft':        'Intentional design across games, events and experiences',
       'Chaos':        'Thriving in fast-paced, dynamic environments',
-      'Culture':      'Deep roots in gaming, esports & fandom communities',
-      'Care':         'Every interaction matters — I always show up fully',
+      'Culture':      'Deep roots in gaming, esports and fandom communities',
+      'Care':         'Every interaction matters, I always show up fully',
     };
     const _bw = ['Conversation','Connection','Craft','Chaos','Culture','Care'];
     for (let i = _bw.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [_bw[i],_bw[j]]=[_bw[j],_bw[i]]; }
@@ -347,7 +353,14 @@ const _popAudio = (function () {
     window.addEventListener('load',   updateLayout);
     window.addEventListener('scroll', updateLayout, { passive: true });
 
+    let firstFrameTs = null;
     function loop(ts) {
+      /* On the very first frame, offset all activateAt times so rain
+         starts NOW regardless of how long the page took to load */
+      if (firstFrameTs === null) {
+        firstFrameTs = ts;
+        for (const b of balls) b.activateAt = firstFrameTs + b.activateAt;
+      }
       const cW = container.clientWidth || window.innerWidth;
 
       for (const b of balls) {
@@ -821,15 +834,7 @@ const _popAudio = (function () {
     btn.setAttribute('aria-label', 'Toggle glow effect');
     btn.innerHTML =
       `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-         <circle cx="12" cy="12" r="5"/>
-         <line x1="12" y1="1" x2="12" y2="3"/>
-         <line x1="12" y1="21" x2="12" y2="23"/>
-         <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-         <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-         <line x1="1" y1="12" x2="3" y2="12"/>
-         <line x1="21" y1="12" x2="23" y2="12"/>
-         <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+         <path d="M4 4l7.07 17 2.51-7.39L21 11.07z"/>
        </svg>`;
     if (isTouch) btn.style.display = 'none';
     btn.addEventListener('click', () => {
@@ -837,8 +842,13 @@ const _popAudio = (function () {
       btn.classList.toggle('off', !sunEnabled);
       if (!sunEnabled) { sun.style.opacity = '0'; sunVisible = false; }
     });
-    const darkToggle = document.getElementById('dark-toggle');
-    if (darkToggle) darkToggle.insertAdjacentElement('beforebegin', btn);
+    const grp = document.querySelector('.controls-group');
+    if (grp) {
+      grp.insertBefore(btn, grp.firstChild);
+    } else {
+      const darkToggle = document.getElementById('dark-toggle');
+      if (darkToggle) darkToggle.insertAdjacentElement('beforebegin', btn);
+    }
   }
 
   if (document.readyState === 'loading') {
@@ -892,4 +902,29 @@ const _popAudio = (function () {
     document.documentElement.appendChild(el);
     setTimeout(() => el.parentNode && el.parentNode.removeChild(el), 750);
   }, { capture: true, passive: true });
+})();
+
+/* ── Nav tooltips ────────────────────────────────────────────── */
+(function () {
+  const tips = {
+    'href=/':                   'Home',
+    'href=/about':              'About Eric',
+    'href=/resume':             'View Resume',
+    'linkedin.com':             'Connect on LinkedIn',
+    'itch.io':                  'Games on Itch.io',
+  };
+  function apply() {
+    document.querySelectorAll('.site-nav a, .site-header .container > a').forEach(a => {
+      const href = a.getAttribute('href') || '';
+      let label = null;
+      if (href === '/')             label = tips['href=/'];
+      else if (href === '/about')   label = tips['href=/about'];
+      else if (href === '/resume')  label = tips['href=/resume'];
+      else if (href.includes('linkedin.com')) label = tips['linkedin.com'];
+      else if (href.includes('itch.io'))      label = tips['itch.io'];
+      if (label) a.setAttribute('data-nav-tip', label);
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);
+  else apply();
 })();
