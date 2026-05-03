@@ -396,9 +396,8 @@ const _popAudio = (function () {
       balls.push(ball);
     }
 
-    updateLayout();
+    updateLayout(); /* initial render — buckets visible immediately */
     window.addEventListener('resize', updateLayout);
-    window.addEventListener('load',   updateLayout);
     window.addEventListener('scroll', updateLayout, { passive: true });
     if (isMobile) setInterval(cycleMobileBuckets, 10000);
 
@@ -651,7 +650,16 @@ const _popAudio = (function () {
       }
     };
 
-    requestAnimationFrame(loop);
+    /* Defer physics until fonts + all page resources are stable.
+       On new devices Inter loads from Google Fonts and the footer
+       reflows slightly when the font swaps in — this ensures floorY
+       is correct before balls start falling. */
+    const _domReady = new Promise(res => {
+      if (document.readyState === 'complete') res();
+      else window.addEventListener('load', res, { once: true });
+    });
+    Promise.all([_domReady, document.fonts ? document.fonts.ready : Promise.resolve()])
+      .then(() => { updateLayout(); requestAnimationFrame(loop); });
   })();
 
   /* ── Hover helpers ── */
