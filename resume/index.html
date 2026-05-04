@@ -59,17 +59,9 @@
 
   <main class="page-main">
     <div class="about-section">
-      <h1 class="page-title gradient-title reveal" style="margin-bottom:1.5rem">Resume</h1>
+      <h1 class="page-title reveal" style="margin-bottom:1.5rem">Resume</h1>
 
-      <div style="max-width:800px">
-
-        <div class="reveal" style="margin-bottom:1.5rem">
-          <a href="https://static1.squarespace.com/static/64b6d793b73c582ca6e94e8e/t/6998bebdae18cc405679786c/1771617981448/EricNi_Resume_2026_new.pdf"
-             target="_blank" rel="noopener" class="play-btn" style="display:inline-flex">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Download PDF
-          </a>
-        </div>
+      <div id="resume-content" style="max-width:800px">
 
         <section class="resume-section reveal">
           <h2>Education</h2>
@@ -84,6 +76,18 @@
 
         <section class="resume-section reveal">
           <h2>Experience</h2>
+
+          <div class="resume-entry">
+            <div class="resume-entry-body">
+              <div class="resume-entry-title">Gamer Zone Operations Manager</div>
+              <div class="resume-entry-sub">Newegg</div>
+              <ul>
+                <li>Lead <span class="resume-hl">event programming and vendor coordination</span> for a physical gaming tech space, curating organized play events, product showcases, and <span class="resume-hl">live activations</span> for first-time gamers, industry partners, and community members</li>
+                <li>Manage day-to-day operations and <span class="resume-hl">visitor experience</span>, building relationships with gaming brands and ensuring every guest leaves with a new perspective on gaming and tech</li>
+              </ul>
+            </div>
+            <div class="resume-entry-date">Mar 2026 – Present</div>
+          </div>
 
           <div class="resume-entry">
             <div class="resume-entry-body">
@@ -165,6 +169,13 @@
           </div>
         </section>
 
+        <div class="reveal" style="margin-top:2rem">
+          <button onclick="downloadResumeImage()" class="play-btn" style="display:inline-flex;cursor:pointer;border:none;background:none;font:inherit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download as Image
+          </button>
+        </div>
+
       </div>
     </div>
   </main>
@@ -188,5 +199,37 @@
     <img src="" alt="Full size preview" />
   </div>
   <script src="/shader.js"></script>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js" async></script>
+  <script>
+    function downloadResumeImage() {
+      var el = document.getElementById('resume-content');
+      var style = getComputedStyle(document.documentElement);
+      var bg = style.getPropertyValue('--bg').trim() || '#f8f7f4';
+      if (typeof html2canvas === 'undefined') {
+        alert('Image capture not loaded yet — please try again in a moment.');
+        return;
+      }
+      html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: bg,
+        scrollX: 0,
+        scrollY: -window.scrollY
+      }).then(function(canvas) {
+        var letterH = Math.round(canvas.width * (11 / 8.5));
+        var out = document.createElement('canvas');
+        out.width = canvas.width;
+        out.height = Math.max(canvas.height, letterH);
+        var ctx = out.getContext('2d');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, out.width, out.height);
+        ctx.drawImage(canvas, 0, 0);
+        var a = document.createElement('a');
+        a.download = 'EricNi_Resume.jpg';
+        a.href = out.toDataURL('image/jpeg', 0.95);
+        a.click();
+      });
+    }
+  </script>
 </body>
 </html>
