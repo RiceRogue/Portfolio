@@ -543,6 +543,55 @@ a {
   animation: bucket-fanfare 0.75s cubic-bezier(0.34,1.56,0.64,1);
 }
 
+/* ── Daily focus buckets ─────────────────────────────────────── */
+@keyframes focus-pulse {
+  0%, 100% { box-shadow: inset 0 0 10px rgba(255,200,80,0.15), 0 0 10px rgba(255,200,80,0.18); }
+  50%       { box-shadow: inset 0 0 22px rgba(255,200,80,0.35), 0 0 26px rgba(255,200,80,0.42); }
+}
+@keyframes goal-pulse {
+  0%, 100% { box-shadow: inset 0 0 14px rgba(255,215,0,0.25), 0 0 16px rgba(255,215,0,0.35); }
+  50%       { box-shadow: inset 0 0 28px rgba(255,215,0,0.55), 0 0 44px rgba(255,215,0,0.65), 0 0 70px rgba(255,215,0,0.18); }
+}
+.plink-bkt.focus-bucket {
+  animation: focus-pulse 2.6s ease-in-out infinite;
+}
+.plink-bkt.goal-bucket {
+  animation: goal-pulse 1.8s ease-in-out infinite;
+}
+.plink-bkt.goal-bucket.completed,
+.plink-bkt.focus-bucket.completed {
+  animation: none;
+}
+
+/* Permanent focus message after goal completion */
+.plink-bkt.focus-revealed .plink-tip {
+  opacity: 1 !important;
+  transform: translateX(-50%) translateY(0) !important;
+  pointer-events: auto;
+  max-width: 270px;
+  font-size: 0.79rem;
+  line-height: 1.52;
+  padding: 0.7rem 1rem;
+  border-color: var(--accent);
+  background: var(--bg);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+
+/* ── Confetti particles ──────────────────────────────────────── */
+.confetti-piece {
+  position: fixed;
+  z-index: 99999;
+  pointer-events: none;
+  border-radius: 2px;
+  transform-origin: center;
+  animation: confetti-fly 2.6s ease-out forwards;
+}
+@keyframes confetti-fly {
+  0%   { transform: translate(0, 0) rotate(0deg);   opacity: 1; }
+  75%  { opacity: 0.85; }
+  100% { transform: translate(var(--tx), calc(var(--ty) + 160px)) rotate(680deg); opacity: 0; }
+}
+
 .plink-cnt {
   position: absolute;
   text-align: center;

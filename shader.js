@@ -180,10 +180,25 @@ const _popAudio = (function () {
       'Culture':      'Deep roots in gaming, esports and fandom communities',
       'Care':         'Every interaction matters, I always show up fully',
     };
+    const BUCKET_FOCUS_MESSAGES = {
+      'Conversation': "Today's focus: Lead with a question. Every partnership I've built — from PAX West to brand activations — started with genuine curiosity about what the other person is solving. One real conversation is worth a hundred cold emails.",
+      'Connection':   "Today's focus: Reach out intentionally. The 1,000+ relationships I've built weren't luck — they were built one message at a time. Send the follow-up you've been putting off. That's the one that turns into something.",
+      'Craft':        "Today's focus: Build with intention. Game design taught me that every system, every mechanic, needs a reason to exist. Whether it's a level, an event layout, or a pitch — ask why before you ask how.",
+      'Chaos':        "Today's focus: Trust the pivot. The best events I've run had moments that went sideways — and became the highlight. Fast, confident decisions under pressure separate operators from coordinators. Lean in.",
+      'Culture':      "Today's focus: Go deeper than trends. At TwitchCon and The Game Awards, the people who stood out weren't the ones who knew the data — they were the ones who actually lived the fandom. Authentic passion is visible from across the room.",
+      'Care':         "Today's focus: Follow up. It's the detail most people skip. A check-in after an event, a thank-you after a meeting — it signals you're there for people, not just outcomes. That's what builds lasting trust.",
+    };
     const _bw = ['Conversation','Connection','Craft','Chaos','Culture','Care'];
     for (let i = _bw.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [_bw[i],_bw[j]]=[_bw[j],_bw[i]]; }
     const BUCKET_WORDS = _bw;
     const NUM_BUCKETS  = BUCKET_WORDS.length;
+
+    /* Daily focus — refreshes on every page load */
+    const NUM_FOCUS    = isMobile ? 1 : 3;
+    const focusIndices = [];
+    { const used = new Set(); while (focusIndices.length < NUM_FOCUS) { const r = Math.floor(Math.random()*NUM_BUCKETS); if (!used.has(r)) { used.add(r); focusIndices.push(r); } } }
+    const goalBucketIdx = focusIndices[Math.floor(Math.random() * focusIndices.length)];
+
     const BUCKET_H     = 100;
     let   bucketDividers = [];
     let   bucketEls      = [];
@@ -193,6 +208,7 @@ const _popAudio = (function () {
     let nextRespawnTs    = 0;
     const bucketCounts    = new Array(NUM_BUCKETS).fill(0);
     const bucketGoals     = Array.from({length: NUM_BUCKETS}, () => 1 + Math.floor(Math.random() * 100));
+    bucketGoals[goalBucketIdx] = 5 + Math.floor(Math.random() * 16); /* 5–20: achievable in a session */
     const bucketCompleted = new Array(NUM_BUCKETS).fill(false);
     const bucketColors    = Array.from({length: NUM_BUCKETS}, () => {
       const h = Math.floor(Math.random() * 12) * 30;
@@ -222,6 +238,8 @@ const _popAudio = (function () {
           el.style.color       = bucketColors[i];
           el.style.borderColor = bucketColors[i];
         }
+        if (focusIndices.includes(i)) el.classList.add('focus-bucket');
+        if (i === goalBucketIdx)       el.classList.add('goal-bucket');
         const label = document.createElement('span');
         label.className = 'plink-bkt-label';
         label.textContent = word;
@@ -229,7 +247,11 @@ const _popAudio = (function () {
         if (BUCKET_TIPS[word]) {
           const tip = document.createElement('div');
           tip.className = 'plink-tip';
-          tip.textContent = BUCKET_TIPS[word];
+          /* Goal bucket pre-loads focus message; revealed after completion */
+          tip.textContent = (i === goalBucketIdx && bucketCompleted[i])
+            ? (BUCKET_FOCUS_MESSAGES[word] || BUCKET_TIPS[word])
+            : BUCKET_TIPS[word];
+          if (i === goalBucketIdx && bucketCompleted[i]) el.classList.add('focus-revealed');
           el.appendChild(tip);
         }
         el.addEventListener('touchstart', ev => {
@@ -258,7 +280,9 @@ const _popAudio = (function () {
           cnt.className = 'plink-cnt';
           cnt.id = `plink-cnt-${i}`;
           cnt.style.cssText = `position:absolute;left:${i*bW}px;width:${bW}px;top:-36px;`;
-          cnt.textContent = bucketCompleted[i] ? `${bucketCounts[i]}` : `${bucketCounts[i]} / ${bucketGoals[i]}`;
+          cnt.textContent = (i === goalBucketIdx && !bucketCompleted[i])
+            ? `${bucketCounts[i]} / ${bucketGoals[i]}`
+            : `${bucketCounts[i]}`;
           if (bucketCompleted[i]) cnt.style.color = bucketColors[i];
           track.appendChild(cnt);
         });
@@ -276,7 +300,9 @@ const _popAudio = (function () {
           cnt.style.left  = `${i * bW}px`;
           cnt.style.width = `${bW}px`;
           cnt.style.top   = `${floorY - BUCKET_H - 32}px`;
-          cnt.textContent = bucketCompleted[i] ? `${bucketCounts[i]}` : `${bucketCounts[i]} / ${bucketGoals[i]}`;
+          cnt.textContent = (i === goalBucketIdx && !bucketCompleted[i])
+            ? `${bucketCounts[i]} / ${bucketGoals[i]}`
+            : `${bucketCounts[i]}`;
           if (bucketCompleted[i]) cnt.style.color = bucketColors[i];
           container.insertBefore(cnt, container.firstChild);
           if (i > 0) bucketDividers.push(i * bW);
@@ -297,6 +323,39 @@ const _popAudio = (function () {
       if (bucketTrackEl) {
         bucketTrackEl.style.transform = `translateX(${-mobilePage * window.innerWidth}px)`;
       }
+    }
+
+    function spawnConfetti(bucketEl) {
+      const COLS = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#c77dff','#ff9f43','#ff69b4','#40e0d0'];
+      const rect = bucketEl.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top  + rect.height / 2;
+      for (let i = 0; i < 65; i++) {
+        const p = document.createElement('div');
+        p.className = 'confetti-piece';
+        const ang = Math.random() * Math.PI * 2;
+        const spd = 70 + Math.random() * 130;
+        const tx  = Math.cos(ang) * spd;
+        const ty  = Math.sin(ang) * spd - (100 + Math.random() * 80);
+        p.style.cssText = `left:${cx}px;top:${cy}px;width:${4+Math.random()*6}px;height:${5+Math.random()*9}px;background:${COLS[i%COLS.length]};--tx:${tx}px;--ty:${ty}px;animation-delay:${Math.random()*0.35}s;`;
+        document.documentElement.appendChild(p);
+        setTimeout(() => p.remove(), 3200);
+      }
+    }
+
+    function triggerFocusFanfare(bi) {
+      const el = bucketEls[bi];
+      if (!el) return;
+      spawnConfetti(el);
+      setTimeout(() => {
+        const tip  = el.querySelector('.plink-tip');
+        const word = BUCKET_WORDS[bi];
+        if (tip && BUCKET_FOCUS_MESSAGES[word]) {
+          tip.textContent = BUCKET_FOCUS_MESSAGES[word];
+        }
+        el.classList.add('focus-revealed');
+        el.classList.remove('goal-bucket'); /* stop gold pulse once done */
+      }, 3000);
     }
 
     function triggerFanfare(bi) {
@@ -462,12 +521,13 @@ const _popAudio = (function () {
           bucketCounts[bi]++;
           b.countedBucket = true;
           const cnt = document.getElementById(`plink-cnt-${bi}`);
-          if (!bucketCompleted[bi]) {
+          if (bi === goalBucketIdx && !bucketCompleted[bi]) {
             if (cnt) cnt.textContent = `${bucketCounts[bi]} / ${bucketGoals[bi]}`;
             if (bucketCounts[bi] >= bucketGoals[bi]) {
               bucketCompleted[bi] = true;
               if (cnt) cnt.textContent = `${bucketCounts[bi]}`;
               triggerFanfare(bi);
+              triggerFocusFanfare(bi);
             }
           } else {
             if (cnt) cnt.textContent = `${bucketCounts[bi]}`;
