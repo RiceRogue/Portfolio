@@ -285,26 +285,23 @@ a {
 }
 
 .gradient-title {
-  background: linear-gradient(90deg, #c2601a, #c87828, #8c1c1c, #4a3888, #388030, #c84818, #c2601a);
-  background-size: 400% auto;
+  background: linear-gradient(90deg, #7a1a05, #c84010, #e87030, #ff9955, #ffc070, #ffaa40, #e06020, #c84010, #7a1a05);
+  background-size: 500% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: gradient-shift 7s linear infinite;
+  animation: gradient-shift 18s ease-in-out infinite;
 }
 
 .gradient-text {
-  background: linear-gradient(90deg, #c2601a, #ffc8a8, #e8843a, #f0d0d4, #c07878, #c2601a);
-  background-size: 300% auto;
+  background: linear-gradient(90deg, #7a1a05, #c84010, #e87030, #ff9955, #ffc070, #ffaa40, #e06020, #c84010, #7a1a05);
+  background-size: 500% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: gradient-shift 5s ease infinite;
+  animation: gradient-shift 22s ease-in-out infinite;
   font-weight: 700;
   font-size: 1.05em;
-}
-[data-theme="dark"] .gradient-text {
-  background-image: linear-gradient(90deg, #ffffff, #ffc8a8, #e8843a, #f0d0d4, #c07878, #ffffff);
 }
 
 .face-default,
