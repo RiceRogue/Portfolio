@@ -181,23 +181,17 @@ const _popAudio = (function () {
       'Care':         'Every interaction matters, I always show up fully',
     };
     const BUCKET_FOCUS_MESSAGES = {
-      'Conversation': "Nice. Start with a question today — curiosity is kind of your whole thing.",
-      'Connection':   "A good day for a follow-up. Even just a quick check-in goes a long way.",
-      'Craft':        "Take the extra minute to get it right. It always shows.",
-      'Chaos':        "Things going sideways? You tend to do well in those moments.",
-      'Culture':      "Go deep on something you're actually excited about today.",
-      'Care':         "Check in on someone you haven't talked to in a while.",
+      'Conversation': "The strongest partnerships start with genuine curiosity about the other person. Ask before you pitch.",
+      'Connection':   "A brief, warm follow-up after a meeting or event does more for a relationship than the initial conversation.",
+      'Craft':        "The details you care about are the ones people eventually notice, even if they can't articulate why.",
+      'Chaos':        "Clear, confident decisions made quickly under pressure are a skill — and one you've demonstrated before.",
+      'Culture':      "Authentic enthusiasm for a subject is more credible than any credential. Let it show.",
+      'Care':         "People remember how you made them feel long after the specifics fade. Consistency here compounds.",
     };
     const _bw = ['Conversation','Connection','Craft','Chaos','Culture','Care'];
     for (let i = _bw.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [_bw[i],_bw[j]]=[_bw[j],_bw[i]]; }
     const BUCKET_WORDS = _bw;
     const NUM_BUCKETS  = BUCKET_WORDS.length;
-
-    /* Daily focus — one glowing bucket only */
-    const NUM_FOCUS    = 1;
-    const focusIndices = [];
-    { const used = new Set(); while (focusIndices.length < NUM_FOCUS) { const r = Math.floor(Math.random()*NUM_BUCKETS); if (!used.has(r)) { used.add(r); focusIndices.push(r); } } }
-    const goalBucketIdx = focusIndices[Math.floor(Math.random() * focusIndices.length)];
 
     const BUCKET_H     = 100;
     let   bucketDividers = [];
@@ -207,8 +201,7 @@ const _popAudio = (function () {
     let   bucketTrackEl  = null;
     let nextRespawnTs    = 0;
     const bucketCounts    = new Array(NUM_BUCKETS).fill(0);
-    const bucketGoals     = Array.from({length: NUM_BUCKETS}, () => 1 + Math.floor(Math.random() * 100));
-    bucketGoals[goalBucketIdx] = 5 + Math.floor(Math.random() * 16); /* 5–20: achievable in a session */
+    const bucketGoals     = Array.from({length: NUM_BUCKETS}, () => 5 + Math.floor(Math.random() * 16));
     const bucketCompleted = new Array(NUM_BUCKETS).fill(false);
     const bucketColors    = Array.from({length: NUM_BUCKETS}, () => {
       const h = Math.floor(Math.random() * 12) * 30;
@@ -238,8 +231,6 @@ const _popAudio = (function () {
           el.style.color       = bucketColors[i];
           el.style.borderColor = bucketColors[i];
         }
-        if (focusIndices.includes(i)) el.classList.add('focus-bucket');
-        if (i === goalBucketIdx)       el.classList.add('goal-bucket');
         const label = document.createElement('span');
         label.className = 'plink-bkt-label';
         label.textContent = word;
@@ -247,11 +238,9 @@ const _popAudio = (function () {
         if (BUCKET_TIPS[word]) {
           const tip = document.createElement('div');
           tip.className = 'plink-tip';
-          /* Goal bucket pre-loads focus message; revealed after completion */
-          tip.textContent = (i === goalBucketIdx && bucketCompleted[i])
+          tip.textContent = bucketCompleted[i]
             ? (BUCKET_FOCUS_MESSAGES[word] || BUCKET_TIPS[word])
             : BUCKET_TIPS[word];
-          if (i === goalBucketIdx && bucketCompleted[i]) el.classList.add('focus-revealed');
           el.appendChild(tip);
         }
         el.addEventListener('touchstart', ev => {
@@ -280,9 +269,9 @@ const _popAudio = (function () {
           cnt.className = 'plink-cnt';
           cnt.id = `plink-cnt-${i}`;
           cnt.style.cssText = `position:absolute;left:${i*bW}px;width:${bW}px;top:-36px;`;
-          cnt.textContent = (i === goalBucketIdx && !bucketCompleted[i])
-            ? `${bucketCounts[i]} / ${bucketGoals[i]}`
-            : `${bucketCounts[i]}`;
+          cnt.textContent = bucketCompleted[i]
+            ? `${bucketCounts[i]}`
+            : `${bucketCounts[i]} / ${bucketGoals[i]}`;
           if (bucketCompleted[i]) cnt.style.color = bucketColors[i];
           track.appendChild(cnt);
         });
@@ -300,9 +289,9 @@ const _popAudio = (function () {
           cnt.style.left  = `${i * bW}px`;
           cnt.style.width = `${bW}px`;
           cnt.style.top   = `${floorY - BUCKET_H - 32}px`;
-          cnt.textContent = (i === goalBucketIdx && !bucketCompleted[i])
-            ? `${bucketCounts[i]} / ${bucketGoals[i]}`
-            : `${bucketCounts[i]}`;
+          cnt.textContent = bucketCompleted[i]
+            ? `${bucketCounts[i]}`
+            : `${bucketCounts[i]} / ${bucketGoals[i]}`;
           if (bucketCompleted[i]) cnt.style.color = bucketColors[i];
           container.insertBefore(cnt, container.firstChild);
           if (i > 0) bucketDividers.push(i * bW);
@@ -325,8 +314,17 @@ const _popAudio = (function () {
       }
     }
 
-    function spawnConfetti(bucketEl) {
-      const COLS = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#c77dff','#ff9f43','#ff69b4','#40e0d0'];
+    function spawnConfetti(bucketEl, color) {
+      /* Build palette from bucket hue */
+      const COLS = [];
+      const m = color && color.match(/hsl\((\d+),(\d+)%,(\d+)%\)/);
+      if (m) {
+        const h = m[1], s = m[2];
+        [30, 45, 60, 72, 82, 90].forEach(l => COLS.push(`hsl(${h},${s}%,${l}%)`));
+        COLS.push('#ffffff', `hsl(${h},40%,88%)`);
+      } else {
+        COLS.push('#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#c77dff','#ff9f43');
+      }
       const rect = bucketEl.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       const cy = rect.top  + rect.height / 2;
@@ -346,15 +344,13 @@ const _popAudio = (function () {
     function triggerFocusFanfare(bi) {
       const el = bucketEls[bi];
       if (!el) return;
-      spawnConfetti(el);
-      setTimeout(() => {
-        const tip  = el.querySelector('.plink-tip');
-        const word = BUCKET_WORDS[bi];
-        if (tip && BUCKET_FOCUS_MESSAGES[word]) {
-          tip.textContent = BUCKET_FOCUS_MESSAGES[word];
-        }
-        el.classList.remove('goal-bucket'); /* stop gold pulse once done */
-      }, 3000);
+      spawnConfetti(el, bucketColors[bi]);
+      const tip  = el.querySelector('.plink-tip');
+      const word = BUCKET_WORDS[bi];
+      if (tip && BUCKET_FOCUS_MESSAGES[word]) {
+        tip.textContent = BUCKET_FOCUS_MESSAGES[word];
+        tip.style.borderColor = bucketColors[bi];
+      }
     }
 
     function triggerFanfare(bi) {
@@ -520,13 +516,14 @@ const _popAudio = (function () {
           bucketCounts[bi]++;
           b.countedBucket = true;
           const cnt = document.getElementById(`plink-cnt-${bi}`);
-          if (bi === goalBucketIdx && !bucketCompleted[bi]) {
-            if (cnt) cnt.textContent = `${bucketCounts[bi]} / ${bucketGoals[bi]}`;
+          if (!bucketCompleted[bi]) {
             if (bucketCounts[bi] >= bucketGoals[bi]) {
               bucketCompleted[bi] = true;
-              if (cnt) cnt.textContent = `${bucketCounts[bi]}`;
+              if (cnt) { cnt.textContent = `${bucketCounts[bi]}`; cnt.style.color = bucketColors[bi]; }
               triggerFanfare(bi);
               triggerFocusFanfare(bi);
+            } else {
+              if (cnt) cnt.textContent = `${bucketCounts[bi]} / ${bucketGoals[bi]}`;
             }
           } else {
             if (cnt) cnt.textContent = `${bucketCounts[bi]}`;

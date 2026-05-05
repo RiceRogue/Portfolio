@@ -456,23 +456,23 @@ a {
   padding-right: 2.5vw;
   user-select: none;
   display: inline-block;
-  /* Same rich spectrum as the About page gradient-title, cycled slowly */
-  background: linear-gradient(90deg, #c2601a, #c87828, #ffc8a8, #8c1c1c, #4a3888, #388030, #c84818, #e8843a, #c2601a);
+  /* Exact same gradient + keyframe as .gradient-title on the About page, just slower */
+  background: linear-gradient(90deg, #c2601a, #c87828, #8c1c1c, #4a3888, #388030, #c84818, #c2601a);
   background-size: 400% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: marquee-shimmer 20s linear infinite;
+  animation: gradient-shift 22s linear infinite;
 }
 
 /* Each word starts at a different phase of the same gradient cycle */
-.mc-connection   { animation-delay:   0s; }
-.mc-craft        { animation-delay:  -3s; }
-.mc-chaos        { animation-delay:  -6s; }
-.mc-culture      { animation-delay:  -9s; }
-.mc-care         { animation-delay: -12s; }
-.mc-and          { animation-delay: -14s; font-size: clamp(1.8rem, 4vw, 3.5rem); opacity: 0.55; padding-right: 1.8vw; text-transform: lowercase; }
-.mc-conversation { animation-delay: -17s; }
+.mc-connection   { animation-delay:    0s; }
+.mc-craft        { animation-delay:   -4s; }
+.mc-chaos        { animation-delay:   -8s; }
+.mc-culture      { animation-delay:  -11s; }
+.mc-care         { animation-delay:  -15s; }
+.mc-and          { animation-delay:  -17s; font-size: clamp(1.8rem, 4vw, 3.5rem); opacity: 0.55; padding-right: 1.8vw; text-transform: lowercase; }
+.mc-conversation { animation-delay:  -19s; }
 
 /* ── PLINK BUCKETS ───────────────────────────────────────────── */
 .plink-bucket-track {
@@ -562,25 +562,6 @@ a {
   animation: bucket-fanfare 0.75s cubic-bezier(0.34,1.56,0.64,1);
 }
 
-/* ── Daily focus buckets ─────────────────────────────────────── */
-@keyframes focus-pulse {
-  0%, 100% { box-shadow: inset 0 0 10px rgba(255,200,80,0.15), 0 0 10px rgba(255,200,80,0.18); }
-  50%       { box-shadow: inset 0 0 22px rgba(255,200,80,0.35), 0 0 26px rgba(255,200,80,0.42); }
-}
-@keyframes goal-pulse {
-  0%, 100% { box-shadow: inset 0 0 14px rgba(255,215,0,0.25), 0 0 16px rgba(255,215,0,0.35); }
-  50%       { box-shadow: inset 0 0 28px rgba(255,215,0,0.55), 0 0 44px rgba(255,215,0,0.65), 0 0 70px rgba(255,215,0,0.18); }
-}
-.plink-bkt.focus-bucket {
-  animation: focus-pulse 2.6s ease-in-out infinite;
-}
-.plink-bkt.goal-bucket {
-  animation: goal-pulse 1.8s ease-in-out infinite;
-}
-.plink-bkt.goal-bucket.completed,
-.plink-bkt.focus-bucket.completed {
-  animation: none;
-}
 
 
 /* ── Confetti particles ──────────────────────────────────────── */
