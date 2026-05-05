@@ -342,7 +342,7 @@ a {
   will-change: transform;
   transform: translate(-200px, -200px);
   opacity: 0;
-  background: radial-gradient(circle, rgba(255,220,130,0.22) 0%, rgba(255,175,60,0.07) 40%, rgba(255,145,40,0.02) 65%, transparent 100%);
+  background: transparent; /* persistent glow removed — only click burst shows */
 }
 
 /* ── Mouse trail faces ────────────────────────────────────────── */
@@ -363,19 +363,19 @@ a {
 
 .sun-click {
   position: fixed;
-  width: 80px;
-  height: 80px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   pointer-events: none;
   z-index: 99997;
   transform: translate(-50%, -50%) scale(0.2);
-  background: radial-gradient(circle, rgba(255,200,80,0.55) 0%, rgba(255,130,40,0.25) 50%, transparent 70%);
-  animation: sun-burst 0.65s ease-out forwards;
+  background: radial-gradient(circle, rgba(255,200,80,0.7) 0%, rgba(255,130,40,0.35) 50%, transparent 70%);
+  animation: sun-burst 0.5s ease-out forwards;
 }
 
 @keyframes sun-burst {
-  0%   { transform: translate(-50%,-50%) scale(0.2); opacity: 1; }
-  100% { transform: translate(-50%,-50%) scale(3);   opacity: 0; }
+  0%   { transform: translate(-50%,-50%) scale(0.2); opacity: 0.9; }
+  100% { transform: translate(-50%,-50%) scale(2);   opacity: 0; }
 }
 
 /* drag ghost — floats freely above everything */
@@ -456,24 +456,24 @@ a {
   padding-right: 2.5vw;
   user-select: none;
   display: inline-block;
-  /* Large background-size so each word shows a narrow slice → one solid color at a time */
-  background: linear-gradient(90deg, #c2601a, #a04030, #8c1c1c, #4a3888, #2a6060, #388030, #6a7818, #c84818, #c2601a);
-  background-size: 900% auto;
+  /* Sunset palette — deep crimson-orange through amber, large size so each word shows one shade */
+  background: linear-gradient(90deg, #7a1a05, #c84010, #e87030, #ff9955, #ffc070, #ffaa40, #e06020, #c84010, #7a1a05);
+  background-size: 700% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: gradient-shift 30s ease-in-out infinite;
+  animation: gradient-shift 55s ease-in-out infinite;
 }
 
-/* Each word at a different phase — staggered so adjacent words show neighboring colors */
-.mc-connection    { animation-delay:    0s; }
-.mc-craft         { animation-delay:   -4s; }
-.mc-chaos         { animation-delay:   -8s; }
-.mc-culture       { animation-delay:  -11s; }
-.mc-care          { animation-delay:  -14s; }
-.mc-and           { animation-delay:  -17s; }
-.mc-collaboration { animation-delay:  -20s; }
-.mc-conversation  { animation-delay:  -25s; }
+/* Very small stagger — words stay in the same sunset tone but with subtle shade variation */
+.mc-connection    { animation-delay:   0s; }
+.mc-craft         { animation-delay:  -2s; }
+.mc-chaos         { animation-delay:  -4s; }
+.mc-culture       { animation-delay:  -6s; }
+.mc-care          { animation-delay:  -8s; }
+.mc-and           { animation-delay: -10s; }
+.mc-collaboration { animation-delay: -12s; }
+.mc-conversation  { animation-delay: -14s; }
 
 /* ── PLINK BUCKETS ───────────────────────────────────────────── */
 .plink-bucket-track {
