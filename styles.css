@@ -393,7 +393,7 @@ a {
 /* Ensure hero text stays visible over the dark shader */
 .marquee-block,
 .intro-section { position: relative; z-index: 1; }
-[data-theme="dark"] .marquee-item { text-shadow: 0 1px 8px rgba(0,0,0,0.6); }
+[data-theme="dark"] .marquee-item { text-shadow: none; }
 [data-theme="dark"] .intro-tagline { text-shadow: 0 1px 6px rgba(0,0,0,0.5); }
 
 .intro-tagline {
@@ -449,6 +449,7 @@ a {
   white-space: nowrap;
   padding-right: 2.5vw;
   user-select: none;
+  display: inline-block;
   background: linear-gradient(90deg, #555, #111, #444, #1a1a1a, #666, #222, #555);
   background-size: 400% auto;
   -webkit-background-clip: text;
@@ -460,6 +461,9 @@ a {
 [data-theme="dark"] .marquee-item {
   background: linear-gradient(90deg, #ffffff, #b8b8b8, #eeeeee, #808080, #f4f4f4, #c0c0c0, #ffffff);
   background-size: 400% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   animation: marquee-shimmer 24s linear infinite;
 }
 
@@ -467,12 +471,18 @@ a {
 .marquee-item:nth-child(6n+1) {
   background: linear-gradient(90deg, #c87828, #e8843a, #a05010, #d4991a, #c87828, #e8843a, #c87828);
   background-size: 400% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   animation: marquee-shimmer 16s linear infinite;
 }
 
 [data-theme="dark"] .marquee-item:nth-child(6n+1) {
   background: linear-gradient(90deg, #ffcc50, #ff9940, #ffe080, #f07818, #ffcc50, #ffaa55, #ffcc50);
   background-size: 400% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   animation: marquee-shimmer 16s linear infinite;
 }
 
