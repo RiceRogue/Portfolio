@@ -239,7 +239,13 @@ a {
 .smiley-wrapper {
   position: absolute;
   pointer-events: none;
+  transform-origin: center center;
 }
+
+/* Gentle visual scale-down when the window is narrower than full desktop */
+@media (min-width: 601px) and (max-width: 800px)  { .smiley-wrapper { transform: scale(0.65); } }
+@media (min-width: 801px) and (max-width: 1000px) { .smiley-wrapper { transform: scale(0.78); } }
+@media (min-width: 1001px) and (max-width: 1200px) { .smiley-wrapper { transform: scale(0.88); } }
 
 .smiley-circle {
   width: 100%;
@@ -467,76 +473,71 @@ a {
   animation: marquee-shimmer 24s linear infinite;
 }
 
-/* Connection — muted blue */
-.marquee-item:nth-child(6n+1) {
-  background: linear-gradient(90deg, #3a7ab8, #5599cc, #2a6699, #6688bb, #3a7ab8);
+/* ── Per-word spectrum gradients (named classes, reliable across clones) ── */
+.mc-connection {
+  background: linear-gradient(90deg, #2266bb, #44aadd, #1144aa, #55aacc, #2266bb);
   background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  animation: marquee-shimmer 22s linear infinite;
+  animation: marquee-shimmer 20s linear infinite;
 }
-[data-theme="dark"] .marquee-item:nth-child(6n+1) {
-  background: linear-gradient(90deg, #77bbff, #55aaee, #99ccff, #66aaee, #77bbff);
+[data-theme="dark"] .mc-connection {
+  background: linear-gradient(90deg, #88ccff, #55bbee, #aaddff, #66bbff, #88ccff);
   background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  animation: marquee-shimmer 22s linear infinite;
-}
-
-/* Craft — soft purple */
-.marquee-item:nth-child(6n+2) {
-  background: linear-gradient(90deg, #8055aa, #9966cc, #6644aa, #aa77cc, #8055aa);
-  background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  animation: marquee-shimmer 22s linear infinite;
-}
-[data-theme="dark"] .marquee-item:nth-child(6n+2) {
-  background: linear-gradient(90deg, #cc99ff, #aa77ee, #ddbbff, #bb88ff, #cc99ff);
-  background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  animation: marquee-shimmer 22s linear infinite;
+  animation: marquee-shimmer 20s linear infinite;
 }
 
-/* Chaos — rose/pink */
-.marquee-item:nth-child(6n+3) {
-  background: linear-gradient(90deg, #c04466, #dd6688, #aa3355, #cc5577, #c04466);
+.mc-craft {
+  background: linear-gradient(90deg, #8833cc, #aa55ee, #6611bb, #cc77ff, #8833cc);
   background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  animation: marquee-shimmer 22s linear infinite;
+  animation: marquee-shimmer 20s linear infinite;
 }
-[data-theme="dark"] .marquee-item:nth-child(6n+3) {
-  background: linear-gradient(90deg, #ff99bb, #ff77aa, #ffaacc, #ee8899, #ff99bb);
+[data-theme="dark"] .mc-craft {
+  background: linear-gradient(90deg, #cc88ff, #aa55ee, #eebfff, #bb66ff, #cc88ff);
   background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  animation: marquee-shimmer 22s linear infinite;
-}
-
-/* Culture — warm gold */
-.marquee-item:nth-child(6n+4) {
-  background: linear-gradient(90deg, #aa8800, #cc9922, #997700, #bb9911, #aa8800);
-  background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  animation: marquee-shimmer 22s linear infinite;
-}
-[data-theme="dark"] .marquee-item:nth-child(6n+4) {
-  background: linear-gradient(90deg, #ffdd66, #ffcc33, #ffeeaa, #ffd844, #ffdd66);
-  background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  animation: marquee-shimmer 22s linear infinite;
+  animation: marquee-shimmer 20s linear infinite;
 }
 
-/* Care — sage green */
-.marquee-item:nth-child(6n+5) {
-  background: linear-gradient(90deg, #3d8858, #55aa70, #2e7045, #66bb80, #3d8858);
+.mc-chaos {
+  background: linear-gradient(90deg, #aa1122, #dd2244, #880011, #cc3355, #aa1122);
   background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  animation: marquee-shimmer 22s linear infinite;
+  animation: marquee-shimmer 20s linear infinite;
 }
-[data-theme="dark"] .marquee-item:nth-child(6n+5) {
-  background: linear-gradient(90deg, #88ddaa, #66cc88, #aaeebb, #77cc99, #88ddaa);
+[data-theme="dark"] .mc-chaos {
+  background: linear-gradient(90deg, #ff6677, #ff3355, #ff99aa, #ff4466, #ff6677);
   background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  animation: marquee-shimmer 22s linear infinite;
+  animation: marquee-shimmer 20s linear infinite;
 }
 
-/* Conversation — vibrant orange, most emphasis */
-.marquee-item:nth-child(6n+6) {
+.mc-culture {
+  background: linear-gradient(90deg, #cc9900, #eebb00, #aa7700, #ffdd11, #cc9900);
+  background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: marquee-shimmer 20s linear infinite;
+}
+[data-theme="dark"] .mc-culture {
+  background: linear-gradient(90deg, #ffee55, #ffcc11, #fff399, #ffdd22, #ffee55);
+  background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: marquee-shimmer 20s linear infinite;
+}
+
+.mc-care {
+  background: linear-gradient(90deg, #1a7744, #33aa66, #0f5533, #44cc77, #1a7744);
+  background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: marquee-shimmer 20s linear infinite;
+}
+[data-theme="dark"] .mc-care {
+  background: linear-gradient(90deg, #55ee99, #33dd77, #88ffbb, #44ee88, #55ee99);
+  background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: marquee-shimmer 20s linear infinite;
+}
+
+.mc-conversation {
   background: linear-gradient(90deg, #c87828, #e8843a, #a05010, #d4991a, #e8843a, #c05818, #c87828);
   background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  animation: marquee-shimmer 14s linear infinite;
+  animation: marquee-shimmer 13s linear infinite;
 }
-[data-theme="dark"] .marquee-item:nth-child(6n+6) {
+[data-theme="dark"] .mc-conversation {
   background: linear-gradient(90deg, #ffcc50, #ff9940, #ffe080, #f07818, #ffdd44, #ffaa30, #ffcc50);
   background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  animation: marquee-shimmer 14s linear infinite;
+  animation: marquee-shimmer 13s linear infinite;
 }
 
 /* ── PLINK BUCKETS ───────────────────────────────────────────── */
@@ -647,19 +648,6 @@ a {
   animation: none;
 }
 
-/* Permanent focus message after goal completion */
-.plink-bkt.focus-revealed .plink-tip {
-  opacity: 1 !important;
-  transform: translateX(-50%) translateY(0) !important;
-  pointer-events: auto;
-  max-width: 270px;
-  font-size: 0.79rem;
-  line-height: 1.52;
-  padding: 0.7rem 1rem;
-  border-color: var(--accent);
-  background: var(--bg);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-}
 
 /* ── Confetti particles ──────────────────────────────────────── */
 .confetti-piece {

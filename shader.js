@@ -181,20 +181,20 @@ const _popAudio = (function () {
       'Care':         'Every interaction matters, I always show up fully',
     };
     const BUCKET_FOCUS_MESSAGES = {
-      'Conversation': "Today's focus: Lead with a question. Every partnership I've built — from PAX West to brand activations — started with genuine curiosity about what the other person is solving. One real conversation is worth a hundred cold emails.",
-      'Connection':   "Today's focus: Reach out intentionally. The 1,000+ relationships I've built weren't luck — they were built one message at a time. Send the follow-up you've been putting off. That's the one that turns into something.",
-      'Craft':        "Today's focus: Build with intention. Game design taught me that every system, every mechanic, needs a reason to exist. Whether it's a level, an event layout, or a pitch — ask why before you ask how.",
-      'Chaos':        "Today's focus: Trust the pivot. The best events I've run had moments that went sideways — and became the highlight. Fast, confident decisions under pressure separate operators from coordinators. Lean in.",
-      'Culture':      "Today's focus: Go deeper than trends. At TwitchCon and The Game Awards, the people who stood out weren't the ones who knew the data — they were the ones who actually lived the fandom. Authentic passion is visible from across the room.",
-      'Care':         "Today's focus: Follow up. It's the detail most people skip. A check-in after an event, a thank-you after a meeting — it signals you're there for people, not just outcomes. That's what builds lasting trust.",
+      'Conversation': "Nice. Start with a question today — curiosity is kind of your whole thing.",
+      'Connection':   "A good day for a follow-up. Even just a quick check-in goes a long way.",
+      'Craft':        "Take the extra minute to get it right. It always shows.",
+      'Chaos':        "Things going sideways? You tend to do well in those moments.",
+      'Culture':      "Go deep on something you're actually excited about today.",
+      'Care':         "Check in on someone you haven't talked to in a while.",
     };
     const _bw = ['Conversation','Connection','Craft','Chaos','Culture','Care'];
     for (let i = _bw.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [_bw[i],_bw[j]]=[_bw[j],_bw[i]]; }
     const BUCKET_WORDS = _bw;
     const NUM_BUCKETS  = BUCKET_WORDS.length;
 
-    /* Daily focus — refreshes on every page load */
-    const NUM_FOCUS    = isMobile ? 1 : 3;
+    /* Daily focus — one glowing bucket only */
+    const NUM_FOCUS    = 1;
     const focusIndices = [];
     { const used = new Set(); while (focusIndices.length < NUM_FOCUS) { const r = Math.floor(Math.random()*NUM_BUCKETS); if (!used.has(r)) { used.add(r); focusIndices.push(r); } } }
     const goalBucketIdx = focusIndices[Math.floor(Math.random() * focusIndices.length)];
@@ -353,7 +353,6 @@ const _popAudio = (function () {
         if (tip && BUCKET_FOCUS_MESSAGES[word]) {
           tip.textContent = BUCKET_FOCUS_MESSAGES[word];
         }
-        el.classList.add('focus-revealed');
         el.classList.remove('goal-bucket'); /* stop gold pulse once done */
       }, 3000);
     }
