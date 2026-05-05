@@ -201,7 +201,7 @@ const _popAudio = (function () {
     let   bucketTrackEl  = null;
     let nextRespawnTs    = 0;
     const bucketCounts    = new Array(NUM_BUCKETS).fill(0);
-    const bucketGoals     = Array.from({length: NUM_BUCKETS}, () => 5 + Math.floor(Math.random() * 16));
+    const bucketGoals     = Array.from({length: NUM_BUCKETS}, () => 1 + Math.floor(Math.random() * 100));
     const bucketCompleted = new Array(NUM_BUCKETS).fill(false);
     const bucketColors    = Array.from({length: NUM_BUCKETS}, () => {
       const h = Math.floor(Math.random() * 12) * 30;

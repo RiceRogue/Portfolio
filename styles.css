@@ -456,23 +456,24 @@ a {
   padding-right: 2.5vw;
   user-select: none;
   display: inline-block;
-  /* Exact same gradient + keyframe as .gradient-title on the About page, just slower */
-  background: linear-gradient(90deg, #c2601a, #c87828, #8c1c1c, #4a3888, #388030, #c84818, #c2601a);
-  background-size: 400% auto;
+  /* Large background-size so each word shows a narrow slice → one solid color at a time */
+  background: linear-gradient(90deg, #c2601a, #a04030, #8c1c1c, #4a3888, #2a6060, #388030, #6a7818, #c84818, #c2601a);
+  background-size: 900% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: gradient-shift 22s linear infinite;
+  animation: gradient-shift 30s ease-in-out infinite;
 }
 
-/* Each word starts at a different phase of the same gradient cycle */
-.mc-connection   { animation-delay:    0s; }
-.mc-craft        { animation-delay:   -4s; }
-.mc-chaos        { animation-delay:   -8s; }
-.mc-culture      { animation-delay:  -11s; }
-.mc-care         { animation-delay:  -15s; }
-.mc-and          { animation-delay:  -17s; font-size: clamp(1.8rem, 4vw, 3.5rem); opacity: 0.55; padding-right: 1.8vw; text-transform: lowercase; }
-.mc-conversation { animation-delay:  -19s; }
+/* Each word at a different phase — staggered so adjacent words show neighboring colors */
+.mc-connection    { animation-delay:    0s; }
+.mc-craft         { animation-delay:   -4s; }
+.mc-chaos         { animation-delay:   -8s; }
+.mc-culture       { animation-delay:  -11s; }
+.mc-care          { animation-delay:  -14s; }
+.mc-and           { animation-delay:  -17s; }
+.mc-collaboration { animation-delay:  -20s; }
+.mc-conversation  { animation-delay:  -25s; }
 
 /* ── PLINK BUCKETS ───────────────────────────────────────────── */
 .plink-bucket-track {
