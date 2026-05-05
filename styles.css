@@ -467,23 +467,76 @@ a {
   animation: marquee-shimmer 24s linear infinite;
 }
 
-/* Conversation — warm accent emphasis */
+/* Connection — muted blue */
 .marquee-item:nth-child(6n+1) {
-  background: linear-gradient(90deg, #c87828, #e8843a, #a05010, #d4991a, #c87828, #e8843a, #c87828);
-  background-size: 400% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: marquee-shimmer 16s linear infinite;
+  background: linear-gradient(90deg, #3a7ab8, #5599cc, #2a6699, #6688bb, #3a7ab8);
+  background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: marquee-shimmer 22s linear infinite;
+}
+[data-theme="dark"] .marquee-item:nth-child(6n+1) {
+  background: linear-gradient(90deg, #77bbff, #55aaee, #99ccff, #66aaee, #77bbff);
+  background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: marquee-shimmer 22s linear infinite;
 }
 
-[data-theme="dark"] .marquee-item:nth-child(6n+1) {
-  background: linear-gradient(90deg, #ffcc50, #ff9940, #ffe080, #f07818, #ffcc50, #ffaa55, #ffcc50);
-  background-size: 400% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: marquee-shimmer 16s linear infinite;
+/* Craft — soft purple */
+.marquee-item:nth-child(6n+2) {
+  background: linear-gradient(90deg, #8055aa, #9966cc, #6644aa, #aa77cc, #8055aa);
+  background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: marquee-shimmer 22s linear infinite;
+}
+[data-theme="dark"] .marquee-item:nth-child(6n+2) {
+  background: linear-gradient(90deg, #cc99ff, #aa77ee, #ddbbff, #bb88ff, #cc99ff);
+  background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: marquee-shimmer 22s linear infinite;
+}
+
+/* Chaos — rose/pink */
+.marquee-item:nth-child(6n+3) {
+  background: linear-gradient(90deg, #c04466, #dd6688, #aa3355, #cc5577, #c04466);
+  background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: marquee-shimmer 22s linear infinite;
+}
+[data-theme="dark"] .marquee-item:nth-child(6n+3) {
+  background: linear-gradient(90deg, #ff99bb, #ff77aa, #ffaacc, #ee8899, #ff99bb);
+  background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: marquee-shimmer 22s linear infinite;
+}
+
+/* Culture — warm gold */
+.marquee-item:nth-child(6n+4) {
+  background: linear-gradient(90deg, #aa8800, #cc9922, #997700, #bb9911, #aa8800);
+  background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: marquee-shimmer 22s linear infinite;
+}
+[data-theme="dark"] .marquee-item:nth-child(6n+4) {
+  background: linear-gradient(90deg, #ffdd66, #ffcc33, #ffeeaa, #ffd844, #ffdd66);
+  background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: marquee-shimmer 22s linear infinite;
+}
+
+/* Care — sage green */
+.marquee-item:nth-child(6n+5) {
+  background: linear-gradient(90deg, #3d8858, #55aa70, #2e7045, #66bb80, #3d8858);
+  background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: marquee-shimmer 22s linear infinite;
+}
+[data-theme="dark"] .marquee-item:nth-child(6n+5) {
+  background: linear-gradient(90deg, #88ddaa, #66cc88, #aaeebb, #77cc99, #88ddaa);
+  background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: marquee-shimmer 22s linear infinite;
+}
+
+/* Conversation — vibrant orange, most emphasis */
+.marquee-item:nth-child(6n+6) {
+  background: linear-gradient(90deg, #c87828, #e8843a, #a05010, #d4991a, #e8843a, #c05818, #c87828);
+  background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: marquee-shimmer 14s linear infinite;
+}
+[data-theme="dark"] .marquee-item:nth-child(6n+6) {
+  background: linear-gradient(90deg, #ffcc50, #ff9940, #ffe080, #f07818, #ffdd44, #ffaa30, #ffcc50);
+  background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: marquee-shimmer 14s linear infinite;
 }
 
 /* ── PLINK BUCKETS ───────────────────────────────────────────── */
