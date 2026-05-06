@@ -193,7 +193,7 @@ const _popAudio = (function () {
     const BUCKET_WORDS = _bw;
     const NUM_BUCKETS  = BUCKET_WORDS.length;
 
-    const BUCKET_H     = 100;
+    const BUCKET_H     = 120;
     let   bucketDividers = [];
     let   bucketEls      = [];
     let   bucketWidth    = 0;
@@ -509,7 +509,7 @@ const _popAudio = (function () {
         b.isMargin = b.x < contentLeft || b.x > contentRight;
 
         /* ── Bucket entry count ── */
-        if (!b.countedBucket && b.y + b.radius > floorY - BUCKET_H && bucketWidth > 0) {
+        if (!b.countedBucket && b.y + b.radius > floorY - BUCKET_H * 0.55 && bucketWidth > 0) {
           const bi = isMobile
             ? mobilePage * 3 + Math.min(2, Math.floor(b.x / bucketWidth))
             : Math.min(NUM_BUCKETS - 1, Math.floor(b.x / bucketWidth));
