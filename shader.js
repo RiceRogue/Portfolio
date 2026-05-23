@@ -457,10 +457,21 @@ const _popAudio = (function () {
     window.addEventListener('scroll', updateLayout, { passive: true });
     if (isMobile) setInterval(cycleMobileBuckets, 10000);
 
-    /* ── Gravity planet ── */
+    /* ── Gravity planet — lives inside smiley-bg so it scrolls with the page ── */
     const planetEl = document.createElement('div');
     planetEl.id = 'gravity-planet';
-    document.body.appendChild(planetEl);
+    container.appendChild(planetEl);
+
+    function positionPlanet() {
+      const proj = document.querySelector('.projects-section');
+      if (!proj) return;
+      const top  = proj.offsetTop + proj.offsetHeight * 0.18;
+      const left = (window.innerWidth || document.body.clientWidth) * 0.72;
+      planetEl.style.top  = top  + 'px';
+      planetEl.style.left = left + 'px';
+    }
+    positionPlanet();
+    window.addEventListener('resize', positionPlanet);
 
     /* ── Star field ── */
     const STAR_COUNT = isMobile ? 28 : 55;
