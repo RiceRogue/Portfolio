@@ -116,7 +116,7 @@ const _popAudio = (function () {
   const PALETTES = Array.from({ length: 12 }, (_, i) => {
     const h = i * 30, h2 = (h + 25) % 360;
     return {
-      bg:    `radial-gradient(circle at 35% 30%, hsl(${h},95%,72%), hsl(${h2},100%,40%))`,
+      bg:    `radial-gradient(circle at 32% 25%, rgba(255,255,255,0.44) 0%, transparent 52%), radial-gradient(circle at 32% 28%, hsl(${h},95%,82%) 0%, hsl(${h2},100%,50%) 54%, hsl(${h2},100%,26%) 100%)`,
       color: `hsl(${h},80%,15%)`,
       glow:  `hsla(${h},100%,62%,0.6)`,
     };
@@ -724,7 +724,7 @@ const _popAudio = (function () {
     c.classList.add('hovered');
     c.style.background = p.bg;
     c.style.color      = p.color;
-    c.style.boxShadow  = `0 0 32px ${p.glow}, 0 0 10px ${p.glow}`;
+    c.style.boxShadow  = `inset -2px -3px 8px rgba(0,0,0,0.20), inset 1px 1px 4px rgba(255,255,255,0.22), 0 0 32px ${p.glow}, 0 0 10px ${p.glow}`;
   }
 
   function unhover(c) {
