@@ -171,6 +171,8 @@ const _popAudio = (function () {
     const MOUSE_R      = 6;   /* px — cursor tip only; ball must be physically touched */
     const MOUSE_PUSH_R = 14;  /* px — tiny soft field just outside cursor */
     const CLICK_R      = 160;
+    const PLANET_G     = 0.009;   /* gravitational pull per frame at planet edge */
+    const PLANET_R     = 210;     /* influence radius in px */
 
     const BUCKET_TIPS = {
       'Conversation': 'Never short of a good exchange, I lead every room with curiosity',
@@ -455,6 +457,23 @@ const _popAudio = (function () {
     window.addEventListener('scroll', updateLayout, { passive: true });
     if (isMobile) setInterval(cycleMobileBuckets, 10000);
 
+    /* ── Gravity planet ── */
+    const planetEl = document.createElement('div');
+    planetEl.id = 'gravity-planet';
+    document.body.appendChild(planetEl);
+
+    /* ── Star field ── */
+    const STAR_COUNT = isMobile ? 28 : 55;
+    for (let i = 0; i < STAR_COUNT; i++) {
+      const s  = document.createElement('div');
+      s.className = 'space-star';
+      const sz  = (1 + Math.random() * 2.2).toFixed(1);
+      const del = (Math.random() * 5).toFixed(2);
+      const dur = (2.5 + Math.random() * 3.5).toFixed(2);
+      s.style.cssText = `left:${(Math.random()*100).toFixed(1)}%;top:${(Math.random()*100).toFixed(1)}%;width:${sz}px;height:${sz}px;animation-delay:${del}s;animation-duration:${dur}s;`;
+      document.body.appendChild(s);
+    }
+
     let firstFrameTs = null;
     function loop(ts) {
       /* On the very first frame, offset all activateAt times so rain
@@ -464,6 +483,10 @@ const _popAudio = (function () {
         for (const b of balls) b.activateAt = firstFrameTs + b.activateAt;
       }
       const cW = container.clientWidth || window.innerWidth;
+      /* planet position in document coords (recalc each frame — CSS animates it) */
+      const _pr  = planetEl.getBoundingClientRect();
+      const _pX  = _pr.left + _pr.width  * 0.5;
+      const _pY  = _pr.top  + _pr.height * 0.5 + window.pageYOffset;
 
       for (const b of balls) {
         /* ── Activation gate — hold ball above viewport until its turn ── */
@@ -474,6 +497,17 @@ const _popAudio = (function () {
 
         /* ── Physics ── */
         b.vy += GRAVITY + (b.boosted ? 0.005 : 0); /* extra pull after first mouse contact */
+        /* ── Planet gravity ── */
+        if (b.displayOpacity > 0.05) {
+          const pdx = _pX - b.x, pdy = _pY - b.y;
+          const pd  = Math.sqrt(pdx * pdx + pdy * pdy);
+          if (pd > 20 && pd < PLANET_R) {
+            const t = 1 - pd / PLANET_R;
+            const f = PLANET_G * t * t;
+            b.vx += (pdx / pd) * f;
+            b.vy += (pdy / pd) * f;
+          }
+        }
         b.vx *= DAMPING;
         b.vy *= DAMPING;
         b.x  += b.vx;
@@ -592,6 +626,9 @@ const _popAudio = (function () {
         b.wrapper.style.opacity = b.displayOpacity.toFixed(3);
         b.wrapper.style.left    = (b.x - b.radius) + 'px';
         b.wrapper.style.top     = (b.y - b.radius) + 'px';
+        /* speed blur — comet smear when moving fast */
+        const _spd = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
+        b.wrapper.style.filter  = _spd > 2.2 ? `blur(${Math.min((_spd - 2.2) * 0.32, 1.8).toFixed(1)}px)` : '';
       }
 
       /* ── Mouse collision + push ── */

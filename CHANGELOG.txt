@@ -1,0 +1,15 @@
+CHANGELOG — GithubPortfolio
+Format: [DATE] [TYPE] description
+Types: FEAT, FIX, STYLE, PHYSICS, CONTENT
+
+[2026-05-23] PHYSICS  Raise bucket wall height 20% (BUCKET_H 100→120); count threshold deepened to 55% of bucket height
+[2026-05-23] STYLE    Fake 3D sphere effect on balls: specular gradient overlay, inset rim shadow, floor drop shadow ellipse
+[2026-05-23] FEAT     Gravity planet: floating planet (fixed position, CSS ring orbits, drift animation) attracts balls within 210px radius; star field (28–55 twinkling stars); speed blur comet smear on fast-moving balls
+[2026-05-23] STYLE    gradient-title and gradient-text updated to sunset orange palette
+[2026-05-23] STYLE    Sun cursor: removed persistent glow, click burst only (48px, 2× scale, 0.5s)
+[2026-05-23] FEAT     Bucket system: color-matched confetti, randomized goals 1–100, formal advice tooltips, border color highlights on completion; removed golden glow
+[2026-05-23] STYLE    Responsive ball scale-down at 601–1200px viewport widths
+[2026-05-23] STYLE    Marquee: sunset orange palette, one-color-at-a-time gradient (background-size 700%, 55s), mc-* named classes; added "and Collaboration"
+[2026-05-23] CONTENT  Intro tagline updated to experience/character/care/collaboration copy
+[2026-05-23] STYLE    About page: body before sidebar on mobile; gradient limited to "I'm always happy to chat / — Eric"
+[2026-05-23] FEAT     Resume: Newegg entry, html2canvas download button, plain h1, download button below Skills

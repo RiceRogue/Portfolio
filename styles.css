@@ -340,6 +340,73 @@ a {
 .smiley-circle.hovered .face-default { opacity: 0; }
 .smiley-circle.hovered .face-hover   { opacity: 1; }
 
+/* ── Gravity planet ──────────────────────────────────────────── */
+#gravity-planet {
+  position: fixed;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 25%, rgba(255,255,255,0.52) 0%, transparent 48%),
+    radial-gradient(circle at 55% 45%, rgba(90,150,255,0.20) 0%, transparent 38%),
+    radial-gradient(ellipse at 60% 58%, rgba(30,50,140,0.38) 0%, transparent 42%),
+    radial-gradient(circle at 32% 28%, #c0d4f8 0%, #3060c0 54%, #0c1840 100%);
+  box-shadow:
+    inset -3px -4px 14px rgba(0,0,0,0.38),
+    inset 1px 2px 6px rgba(255,255,255,0.30),
+    0 0 55px rgba(70,130,255,0.32),
+    0 0 110px rgba(70,130,255,0.12);
+  top: 12%;
+  right: 7%;
+  pointer-events: none;
+  z-index: 0;
+  animation: planet-drift 30s ease-in-out infinite alternate;
+  transform-style: preserve-3d;
+}
+#gravity-planet::before {
+  content: '';
+  position: absolute;
+  top: -28%;
+  left: -28%;
+  width: 156%;
+  height: 156%;
+  border: 1.5px solid rgba(120,180,255,0.22);
+  border-radius: 50%;
+  transform: rotateX(70deg) rotateZ(12deg);
+}
+#gravity-planet::after {
+  content: '';
+  position: absolute;
+  top: -42%;
+  left: -42%;
+  width: 184%;
+  height: 184%;
+  border: 1px solid rgba(120,180,255,0.12);
+  border-radius: 50%;
+  transform: rotateX(65deg) rotateZ(-18deg);
+}
+@keyframes planet-drift {
+  0%   { transform: translate(0px, 0px); }
+  20%  { transform: translate(-28px, 18px); }
+  45%  { transform: translate(-14px, -22px); }
+  70%  { transform: translate(18px, 12px); }
+  100% { transform: translate(8px, -16px); }
+}
+
+/* ── Star field ──────────────────────────────────────────────── */
+.space-star {
+  position: fixed;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.72);
+  pointer-events: none;
+  z-index: 0;
+  animation: star-twinkle linear infinite alternate;
+}
+@keyframes star-twinkle {
+  0%   { opacity: 0.15; transform: scale(0.65); }
+  100% { opacity: 0.85; transform: scale(1.35); }
+}
+
 /* ── Sun cursor ─────────────────────────────────────────────── */
 #sun-cursor {
   position: fixed;
