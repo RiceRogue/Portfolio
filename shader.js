@@ -457,16 +457,44 @@ const _popAudio = (function () {
     window.addEventListener('scroll', updateLayout, { passive: true });
     if (isMobile) setInterval(cycleMobileBuckets, 10000);
 
-    /* ── Gravity planet — lives inside smiley-bg so it scrolls with the page ── */
+    /* ── Gravity planet — wireframe sphere + WebGL lightning ── */
     const planetEl = document.createElement('div');
     planetEl.id = 'gravity-planet';
+
+    /* Sphere body */
+    const planetBody = document.createElement('div');
+    planetBody.className = 'planet-body';
+
+    /* Wireframe rings */
+    const wireContainer = document.createElement('div');
+    wireContainer.className = 'planet-wire-container';
+    const wireSpin = document.createElement('div');
+    wireSpin.className = 'planet-wire-spin';
+    const RING_COUNT = 12;
+    for (let ri = 0; ri < RING_COUNT; ri++) {
+      const ring = document.createElement('div');
+      ring.className = 'wire-ring';
+      const angle = ri * (90 / (RING_COUNT / 2));
+      ring.style.transform = ri % 2 === 0 ? `rotateY(${angle}deg)` : `rotateX(${angle}deg)`;
+      wireSpin.appendChild(ring);
+    }
+    wireContainer.appendChild(wireSpin);
+    planetBody.appendChild(wireContainer);
+    planetEl.appendChild(planetBody);
+
+    /* WebGL lightning canvas */
+    const lightningCvs = document.createElement('canvas');
+    lightningCvs.className = 'planet-lightning';
+    planetEl.appendChild(lightningCvs);
+    buildPlanetLightning(lightningCvs);
+
     container.appendChild(planetEl);
 
     function positionPlanet() {
       const proj = document.querySelector('.projects-section');
       if (!proj) return;
-      const top  = proj.offsetTop + proj.offsetHeight * 0.18;
-      const left = (window.innerWidth || document.body.clientWidth) * 0.72;
+      const top  = proj.offsetTop + proj.offsetHeight * 0.15;
+      const left = (window.innerWidth || document.body.clientWidth) * 0.70;
       planetEl.style.top  = top  + 'px';
       planetEl.style.left = left + 'px';
     }
@@ -765,6 +793,70 @@ const _popAudio = (function () {
     Promise.all([_domReady, document.fonts ? document.fonts.ready : Promise.resolve()])
       .then(() => { updateLayout(); requestAnimationFrame(loop); });
   })();
+
+  /* ── Planet WebGL lightning ── */
+  function buildPlanetLightning(canvas) {
+    const gl = canvas.getContext('webgl', { alpha: false });
+    if (!gl) return;
+
+    const vert = `attribute vec2 aPos; void main(){gl_Position=vec4(aPos,0,1);}`;
+    const frag = `
+      precision mediump float;
+      uniform vec2  iRes;
+      uniform float iTime;
+      #define OCT 8
+      float h12(vec2 p){vec3 q=fract(vec3(p.xyx)*.1031);q+=dot(q,q.yzx+33.33);return fract((q.x+q.y)*q.z);}
+      float h11(float p){p=fract(p*.1031);p*=p+33.33;p*=p+p;return fract(p);}
+      mat2  rot(float a){float c=cos(a),s=sin(a);return mat2(c,-s,s,c);}
+      float noise(vec2 p){
+        vec2 i=floor(p),f=fract(p);
+        float a=h12(i),b=h12(i+vec2(1,0)),c2=h12(i+vec2(0,1)),d=h12(i+vec2(1));
+        vec2 t=smoothstep(0.,1.,f);
+        return mix(mix(a,b,t.x),mix(c2,d,t.x),t.y);
+      }
+      float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<OCT;++i){v+=a*noise(p);p*=rot(.45);p*=2.;a*=.5;}return v;}
+      vec3 hsv(vec3 c){vec3 r=clamp(abs(mod(c.x*6.+vec3(0,4,2),6.)-3.)-1.,0.,1.);return c.z*mix(vec3(1),r,c.y);}
+      void main(){
+        vec2 uv=gl_FragCoord.xy/iRes;
+        uv=2.*uv-1.;
+        uv.x*=iRes.x/iRes.y;
+        uv+=2.*fbm(uv*2.+.8*iTime*.65)-1.;
+        float d=abs(uv.x);
+        vec3 col=hsv(vec3(.61,.78,.92))*pow(mix(0.,.07,h11(iTime*.65))/d,1.)*.9;
+        gl_FragColor=vec4(col,1);
+      }`;
+
+    function mkShader(src, type) {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src); gl.compileShader(s);
+      return gl.getShaderParameter(s, gl.COMPILE_STATUS) ? s : null;
+    }
+    const vs = mkShader(vert, gl.VERTEX_SHADER);
+    const fs = mkShader(frag, gl.FRAGMENT_SHADER);
+    if (!vs || !fs) return;
+    const prog = gl.createProgram();
+    gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return;
+    gl.useProgram(prog);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]), gl.STATIC_DRAW);
+    const aPos = gl.getAttribLocation(prog, 'aPos');
+    gl.enableVertexAttribArray(aPos);
+    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+    const iResL = gl.getUniformLocation(prog, 'iRes');
+    const iTL   = gl.getUniformLocation(prog, 'iTime');
+    const t0 = performance.now();
+    (function render() {
+      const w = canvas.clientWidth || 168, h = canvas.clientHeight || 510;
+      if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+      gl.viewport(0, 0, w, h);
+      gl.uniform2f(iResL, w, h);
+      gl.uniform1f(iTL, (performance.now() - t0) / 1000);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      requestAnimationFrame(render);
+    })();
+  }
 
   /* ── Hover helpers ── */
   function applyHover(c) {
