@@ -456,13 +456,27 @@ const _popAudio = (function () {
     window.addEventListener('scroll', updateLayout, { passive: true });
     if (isMobile) setInterval(cycleMobileBuckets, 10000);
 
-    /* ── Gravity planet — wireframe sphere + WebGL lightning ── */
+    /* ── Gravity planet ── */
     const planetEl = document.createElement('div');
     planetEl.id = 'gravity-planet';
 
-    /* Sphere body */
     const planetBody = document.createElement('div');
     planetBody.className = 'planet-body';
+
+    /* Cloud bands */
+    const planetClouds = document.createElement('div');
+    planetClouds.className = 'planet-clouds';
+    for (let ci = 0; ci < 3; ci++) {
+      const band = document.createElement('div');
+      band.className = 'planet-cloud-band';
+      planetClouds.appendChild(band);
+    }
+    planetBody.appendChild(planetClouds);
+
+    /* Storm eye */
+    const stormEl = document.createElement('div');
+    stormEl.className = 'planet-storm';
+    planetBody.appendChild(stormEl);
 
     /* Wireframe rings */
     const wireContainer = document.createElement('div');
@@ -482,6 +496,27 @@ const _popAudio = (function () {
     planetEl.appendChild(planetBody);
 
     container.appendChild(planetEl);
+
+    /* ── Weather state cycle (4 states × 30 min each) ── */
+    const WEATHER = [
+      { hi:'#90d0ff', mid:'#2a7ae8', deep:'#0c3080', edge:'#000e2a' }, // clear
+      { hi:'#3a4870', mid:'#141d42', deep:'#070c1c', edge:'#010204' }, // storm
+      { hi:'#30e0c8', mid:'#0a8060', deep:'#032518', edge:'#000805' }, // tropical
+      { hi:'#d8ecff', mid:'#7ab8e0', deep:'#2a5890', edge:'#081830' }, // arctic
+    ];
+    let weatherIdx = 0;
+    function applyWeather(idx) {
+      const s = WEATHER[idx];
+      planetBody.style.setProperty('--pw-hi',   s.hi);
+      planetBody.style.setProperty('--pw-mid',  s.mid);
+      planetBody.style.setProperty('--pw-deep', s.deep);
+      planetBody.style.setProperty('--pw-edge', s.edge);
+    }
+    applyWeather(0);
+    setInterval(() => {
+      weatherIdx = (weatherIdx + 1) % WEATHER.length;
+      applyWeather(weatherIdx);
+    }, 30 * 60 * 1000);
 
     function positionPlanet() {
       const grid = document.querySelector('.projects-grid');
