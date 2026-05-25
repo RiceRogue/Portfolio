@@ -241,18 +241,6 @@ a {
   pointer-events: none;
   transform-origin: center center;
 }
-.smiley-wrapper::before {
-  content: '';
-  position: absolute;
-  bottom: -11%;
-  left: 14%;
-  width: 72%;
-  height: 22%;
-  background: radial-gradient(ellipse at center, rgba(0,0,0,0.22) 0%, transparent 70%);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
 /* Gentle visual scale-down when the window is narrower than full desktop */
 @media (min-width: 601px) and (max-width: 800px)  { .smiley-wrapper { transform: scale(0.65); } }
 @media (min-width: 801px) and (max-width: 1000px) { .smiley-wrapper { transform: scale(0.78); } }
@@ -265,7 +253,6 @@ a {
   background:
     radial-gradient(circle at 32% 25%, rgba(255,255,255,0.44) 0%, transparent 52%),
     radial-gradient(circle at 32% 28%, #f2e4e6 0%, #c4a6aa 54%, #8a6e72 100%);
-  box-shadow: inset -2px -3px 8px rgba(0,0,0,0.20), inset 1px 1px 4px rgba(255,255,255,0.22);
   color: #2a2a4a;
   display: flex;
   align-items: center;
@@ -343,8 +330,7 @@ a {
 /* ── Gravity planet ──────────────────────────────────────────── */
 #gravity-planet {
   position: absolute;
-  width: 300px;
-  height: 300px;
+  /* width/height set dynamically by JS to cover the full projects section */
   pointer-events: none;
   z-index: 0;
   overflow: visible;
@@ -384,16 +370,6 @@ a {
   border: 1px solid rgba(150,200,255,0.48);
   box-shadow: 0 0 7px rgba(120,180,255,0.38);
 }
-.planet-lightning {
-  position: absolute;
-  top: -35%;
-  left: 22%;
-  width: 56%;
-  height: 170%;
-  mix-blend-mode: screen;
-  opacity: 0.88;
-  pointer-events: none;
-}
 @keyframes planet-spin {
   from { transform: rotateY(0deg) rotateX(12deg); }
   to   { transform: rotateY(360deg) rotateX(372deg); }
@@ -406,19 +382,6 @@ a {
   100% { transform: translate(8px, -16px); }
 }
 
-/* ── Star field ──────────────────────────────────────────────── */
-.space-star {
-  position: fixed;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.72);
-  pointer-events: none;
-  z-index: 0;
-  animation: star-twinkle linear infinite alternate;
-}
-@keyframes star-twinkle {
-  0%   { opacity: 0.15; transform: scale(0.65); }
-  100% { opacity: 0.85; transform: scale(1.35); }
-}
 
 /* ── Sun cursor ─────────────────────────────────────────────── */
 #sun-cursor {
