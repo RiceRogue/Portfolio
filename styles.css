@@ -358,7 +358,7 @@ a {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 1px solid rgba(120,180,255,0.10);
+  border: 1.5px solid rgba(120,180,255,0.50);
 }
 @keyframes planet-spin {
   from { transform: rotateY(0deg) rotateX(12deg); }
