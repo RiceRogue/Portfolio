@@ -484,17 +484,17 @@ const _popAudio = (function () {
     container.appendChild(planetEl);
 
     function positionPlanet() {
-      const proj = document.querySelector('.projects-section');
-      if (!proj) return;
-      const rect = proj.getBoundingClientRect();
+      const grid = document.querySelector('.projects-grid');
+      if (!grid) return;
+      const rect = grid.getBoundingClientRect();
       const w    = rect.width;
       const h    = rect.height;
-      /* diagonal = minimum circle that contains all four corners of the section */
-      const size = Math.round(Math.sqrt(w * w + h * h) * 0.92);
+      /* diagonal of the grid = minimum circle containing all 9 cards */
+      const size = Math.round(Math.sqrt(w * w + h * h) * 0.94);
       planetEl.style.width  = size + 'px';
       planetEl.style.height = size + 'px';
       const cx = rect.left + window.pageXOffset + w / 2;
-      const cy = proj.offsetTop + h / 2;
+      const cy = rect.top  + window.pageYOffset + h / 2;
       planetEl.style.left = Math.round(cx - size / 2) + 'px';
       planetEl.style.top  = Math.round(cy - size / 2) + 'px';
     }
