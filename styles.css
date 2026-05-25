@@ -340,16 +340,7 @@ a {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 32% 25%, rgba(255,255,255,0.52) 0%, transparent 48%),
-    radial-gradient(circle at 55% 45%, rgba(90,150,255,0.22) 0%, transparent 38%),
-    radial-gradient(ellipse at 60% 58%, rgba(30,50,140,0.40) 0%, transparent 42%),
-    radial-gradient(circle at 32% 28%, #c0d4f8 0%, #3060c0 54%, #0c1840 100%);
-  box-shadow:
-    inset -3px -4px 14px rgba(0,0,0,0.38),
-    inset 1px 2px 6px rgba(255,255,255,0.30),
-    0 0 65px rgba(70,130,255,0.38),
-    0 0 130px rgba(70,130,255,0.15);
+  background: transparent;
   overflow: hidden;
 }
 .planet-wire-container {
@@ -367,8 +358,7 @@ a {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 1px solid rgba(150,200,255,0.48);
-  box-shadow: 0 0 7px rgba(120,180,255,0.38);
+  border: 1px solid rgba(120,180,255,0.10);
 }
 @keyframes planet-spin {
   from { transform: rotateY(0deg) rotateX(12deg); }

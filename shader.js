@@ -536,18 +536,18 @@ const _popAudio = (function () {
             b.vx += (pdx / pd) * f;
             b.vy += (pdy / pd) * f;
           }
-          /* Surface sticking — heavy damping when touching planet */
-          const surfaceD = _planetR + b.radius + 8;
-          if (pd < surfaceD) {
-            b.vx *= 0.72;
-            b.vy *= 0.72;
-            /* Push ball outside planet body if it clips through */
-            if (pd < _planetR - b.radius && pd > 0.5) {
-              const nx = pdx / pd, ny = pdy / pd;
-              b.x = _pX - nx * (_planetR + b.radius + 2);
-              b.y = _pY - ny * (_planetR + b.radius + 2);
-              b.vx *= -0.2; b.vy *= -0.2;
+          /* Elastic bounce off planet surface */
+          if (pd < _planetR + b.radius && pd > 0.5) {
+            const onx = -pdx / pd, ony = -pdy / pd; /* outward normal: planet→ball */
+            b.x = _pX + onx * (_planetR + b.radius + 1);
+            b.y = _pY + ony * (_planetR + b.radius + 1);
+            const vDotN = b.vx * onx + b.vy * ony;
+            if (vDotN < 0) { /* moving toward planet — reflect */
+              b.vx -= 2 * vDotN * onx;
+              b.vy -= 2 * vDotN * ony;
+              b.vx *= 0.92; b.vy *= 0.92; /* bouncy */
             }
+            b.settledAt = null;
           }
         }
         b.vx *= DAMPING;
@@ -701,6 +701,18 @@ const _popAudio = (function () {
           b.vx += nx * (1 - d / MOUSE_PUSH_R) * 0.1;
           b.vy += ny * (1 - d / MOUSE_PUSH_R) * 0.1;
           b.settledAt = null;
+        }
+        /* ── Prevent mouse from pushing balls through planet ── */
+        if (b.displayOpacity > 0.05) {
+          const mpdx = _pX - b.x, mpdy = _pY - b.y;
+          const mpd  = Math.sqrt(mpdx * mpdx + mpdy * mpdy);
+          if (mpd < _planetR + b.radius && mpd > 0.5) {
+            const onx = -mpdx / mpd, ony = -mpdy / mpd;
+            b.x = _pX + onx * (_planetR + b.radius + 1);
+            b.y = _pY + ony * (_planetR + b.radius + 1);
+            const vDotN = b.vx * onx + b.vy * ony;
+            if (vDotN < 0) { b.vx -= 2*vDotN*onx; b.vy -= 2*vDotN*ony; }
+          }
         }
       }
 
