@@ -463,20 +463,27 @@ const _popAudio = (function () {
     const planetBody = document.createElement('div');
     planetBody.className = 'planet-body';
 
-    /* Cloud bands */
-    const planetClouds = document.createElement('div');
-    planetClouds.className = 'planet-clouds';
-    for (let ci = 0; ci < 3; ci++) {
-      const band = document.createElement('div');
-      band.className = 'planet-cloud-band';
-      planetClouds.appendChild(band);
-    }
-    planetBody.appendChild(planetClouds);
+    /* Atmospheric banding texture */
+    const planetAtmo = document.createElement('div');
+    planetAtmo.className = 'planet-atmo';
+    planetBody.appendChild(planetAtmo);
 
-    /* Storm eye */
-    const stormEl = document.createElement('div');
-    stormEl.className = 'planet-storm';
-    planetBody.appendChild(stormEl);
+    /* Storm spots — 5 colored blobs, screen-blended onto dark base */
+    const stormLayer = document.createElement('div');
+    stormLayer.className = 'planet-storm-layer';
+    const stormEls = [];
+    for (let si = 1; si <= 5; si++) {
+      const s = document.createElement('div');
+      s.className = `ps ps-${si}`;
+      stormLayer.appendChild(s);
+      stormEls.push(s);
+    }
+    planetBody.appendChild(stormLayer);
+
+    /* Edge rim shadow for depth */
+    const rimEl = document.createElement('div');
+    rimEl.className = 'planet-rim';
+    planetBody.appendChild(rimEl);
 
     /* Wireframe rings */
     const wireContainer = document.createElement('div');
@@ -497,20 +504,18 @@ const _popAudio = (function () {
 
     container.appendChild(planetEl);
 
-    /* ── Weather state cycle (4 states × 30 min each) ── */
+    /* ── Weather state cycle (4 states × 30 min, 90s blend) ──
+       Each state is [storm1…storm5] colors.
+       screen blend-mode makes colors glow on the black base. */
     const WEATHER = [
-      { hi:'#90d0ff', mid:'#2a7ae8', deep:'#0c3080', edge:'#000e2a' }, // clear
-      { hi:'#3a4870', mid:'#141d42', deep:'#070c1c', edge:'#010204' }, // storm
-      { hi:'#30e0c8', mid:'#0a8060', deep:'#032518', edge:'#000805' }, // tropical
-      { hi:'#d8ecff', mid:'#7ab8e0', deep:'#2a5890', edge:'#081830' }, // arctic
+      ['#ff6020','#ff8800','#c03010','#ffaa30','#802010'], // Inferno  — orange/red/amber
+      ['#80ff20','#40e060','#b0e000','#60ff80','#20a030'], // Acid     — yellow/green/lime
+      ['#8020ff','#c040e0','#ff20b0','#6010d0','#4000b0'], // Void     — purple/violet/magenta
+      ['#40e0ff','#80ffff','#20d0f0','#a0f0ff','#40c8e0'], // Blizzard — cyan/ice/white
     ];
     let weatherIdx = 0;
     function applyWeather(idx) {
-      const s = WEATHER[idx];
-      planetBody.style.setProperty('--pw-hi',   s.hi);
-      planetBody.style.setProperty('--pw-mid',  s.mid);
-      planetBody.style.setProperty('--pw-deep', s.deep);
-      planetBody.style.setProperty('--pw-edge', s.edge);
+      WEATHER[idx].forEach((c, i) => stormEls[i].style.setProperty('--storm-c', c));
     }
     applyWeather(0);
     setInterval(() => {

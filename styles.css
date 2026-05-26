@@ -329,11 +329,9 @@ a {
 
 /* ── Gravity planet ──────────────────────────────────────────── */
 
-/* Registered custom properties so CSS can interpolate gradient colors */
-@property --pw-hi   { syntax: '<color>'; inherits: false; initial-value: #90d0ff; }
-@property --pw-mid  { syntax: '<color>'; inherits: false; initial-value: #2a7ae8; }
-@property --pw-deep { syntax: '<color>'; inherits: false; initial-value: #0c3080; }
-@property --pw-edge { syntax: '<color>'; inherits: false; initial-value: #000e2a; }
+/* Per-storm color — each .ps element owns its own value (inherits:false),
+   so @property enables smooth gradient interpolation between weather states */
+@property --storm-c { syntax: '<color>'; inherits: false; initial-value: #ff5010; }
 
 #gravity-planet {
   position: absolute;
@@ -342,69 +340,94 @@ a {
   overflow: visible;
   animation: planet-drift 30s ease-in-out infinite alternate;
 }
+
+/* Near-black sphere base with faint specular */
 .planet-body {
   position: absolute;
   inset: 0;
   border-radius: 50%;
   overflow: hidden;
-  /* layered sphere: specular → rim shadow → weather-state gradient */
   background:
-    radial-gradient(circle at 30% 22%, rgba(255,255,255,0.60) 0%, transparent 30%),
-    radial-gradient(circle at 68% 74%, rgba(0,0,0,0.22) 0%, transparent 36%),
-    radial-gradient(circle at 50% 50%,
-      var(--pw-hi)   0%,
-      var(--pw-mid)  35%,
-      var(--pw-deep) 65%,
-      var(--pw-edge) 100%);
-  /* 90-second smooth blend between weather states */
-  transition: --pw-hi 90s ease, --pw-mid 90s ease, --pw-deep 90s ease, --pw-edge 90s ease;
+    radial-gradient(circle at 28% 20%, rgba(255,255,255,0.14) 0%, transparent 26%),
+    radial-gradient(circle at 50% 50%, #160a06 0%, #080402 55%, #000000 100%);
 }
 
-/* Cloud bands */
-.planet-clouds {
+/* Atmospheric banding — slowly-scrolling repeating gradient creates
+   horizontal noise bands that look like weather-system striations */
+.planet-atmo {
   position: absolute;
   inset: 0;
   border-radius: 50%;
   overflow: hidden;
-  pointer-events: none;
+  background: repeating-linear-gradient(
+    168deg,
+    transparent          0%,
+    rgba(255,140,40,0.07) 1.5%,
+    rgba(180, 70,15,0.05) 3%,
+    transparent          5%,
+    rgba(220, 90,30,0.06) 7.5%,
+    rgba(140, 50,10,0.03) 9.5%,
+    transparent          11%
+  );
+  background-size: 100% 260px;
+  animation: atmo-scroll 240s linear infinite;
 }
-.planet-cloud-band {
-  position: absolute;
-  left: -20%;
-  width: 140%;
-  border-radius: 40%;
-  background: rgba(255,255,255,0.18);
-  filter: blur(7px);
+@keyframes atmo-scroll {
+  from { background-position: 0 0; }
+  to   { background-position: 0 260px; }
 }
-.planet-cloud-band:nth-child(1) { height: 15%; top: 20%; opacity: 0.55; animation: cloud-drift-a 80s  linear infinite; }
-.planet-cloud-band:nth-child(2) { height: 10%; top: 44%; opacity: 0.30; animation: cloud-drift-b 115s linear infinite; }
-.planet-cloud-band:nth-child(3) { height: 13%; top: 63%; opacity: 0.42; animation: cloud-drift-a 97s  linear infinite reverse; }
 
-/* Rotating storm eye */
-.planet-storm {
+/* Storm container — clips storms at sphere boundary */
+.planet-storm-layer {
   position: absolute;
-  width: 23%;
-  height: 14%;
+  inset: 0;
   border-radius: 50%;
-  background: rgba(255,255,255,0.26);
-  filter: blur(6px);
-  top: 50%;
-  left: 56%;
-  animation: storm-swirl 55s linear infinite;
+  overflow: hidden;
 }
 
-@keyframes cloud-drift-a {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-14%); }
+/* Individual storm spots — screen blend makes colors add on the dark base */
+.ps {
+  position: absolute;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  background: radial-gradient(ellipse, var(--storm-c) 0%, transparent 65%);
+  transition: --storm-c 90s ease;
 }
-@keyframes cloud-drift-b {
-  from { transform: translateX(0); }
-  to   { transform: translateX(10%); }
+/* sizes, positions, blur, opacity — each storm drifts on its own path */
+.ps-1 { width:56%; height:28%; top:15%; left: 3%; filter:blur(15px); opacity:0.82; animation: ps1 72s  ease-in-out infinite alternate; }
+.ps-2 { width:42%; height:22%; top:42%; left:53%; filter:blur(11px); opacity:0.70; animation: ps2 97s  ease-in-out infinite alternate; }
+.ps-3 { width:33%; height:18%; top:64%; left:11%; filter:blur(10px); opacity:0.66; animation: ps3 57s  ease-in-out infinite alternate; }
+.ps-4 { width:64%; height:35%; top:30%; left:17%; filter:blur(22px); opacity:0.44; animation: ps4 118s ease-in-out infinite alternate; }
+.ps-5 { width:28%; height:16%; top: 5%; left:61%; filter:blur( 9px); opacity:0.76; animation: ps5 46s  ease-in-out infinite alternate; }
+
+@keyframes ps1 {
+  from { transform: translate(  0%,  0%) scale(1.00); }
+  to   { transform: translate(  8%,  5%) scale(1.12); }
 }
-@keyframes storm-swirl {
-  from { transform: translate(0, 0) rotate(0deg) scale(1); }
-  50%  { transform: translate(-3%, 2%) rotate(180deg) scale(1.18); }
-  to   { transform: translate(0, 0) rotate(360deg) scale(1); }
+@keyframes ps2 {
+  from { transform: translate(  0%,  0%) rotate( 0deg); }
+  to   { transform: translate( -7%,  4%) rotate(14deg); }
+}
+@keyframes ps3 {
+  from { transform: translate(  0%,  0%); }
+  to   { transform: translate( 11%, -5%); }
+}
+@keyframes ps4 {
+  from { transform: translate(  0%,  0%) scale(1.00) rotate(-4deg); }
+  to   { transform: translate( -5%,  5%) scale(0.88) rotate( 9deg); }
+}
+@keyframes ps5 {
+  from { transform: translate(  0%,  0%); }
+  to   { transform: translate( -9%,  7%); }
+}
+
+/* Deep rim shadow — pushes the edges into darkness for sphere depth */
+.planet-rim {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 80px 32px rgba(0,0,0,0.88);
+  pointer-events: none;
 }
 
 .planet-wire-container {
