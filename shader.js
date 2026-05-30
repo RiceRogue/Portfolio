@@ -468,11 +468,11 @@ const _popAudio = (function () {
     planetAtmo.className = 'planet-atmo';
     planetBody.appendChild(planetAtmo);
 
-    /* Storm spots — 5 colored blobs, screen-blended onto dark base */
+    /* Storm spots — 8 shaped blobs, screen-blended onto dark base */
     const stormLayer = document.createElement('div');
     stormLayer.className = 'planet-storm-layer';
     const stormEls = [];
-    for (let si = 1; si <= 5; si++) {
+    for (let si = 1; si <= 8; si++) {
       const s = document.createElement('div');
       s.className = `ps ps-${si}`;
       stormLayer.appendChild(s);
@@ -505,13 +505,13 @@ const _popAudio = (function () {
     container.appendChild(planetEl);
 
     /* ── Weather state cycle (4 states × 30 min, 90s blend) ──
-       Each state is [storm1…storm5] colors.
-       screen blend-mode makes colors glow on the black base. */
+       Each array has 8 storm colors matching ps-1…ps-8.
+       screen blend-mode makes them glow on the dark ocean base. */
     const WEATHER = [
-      ['#ff6020','#ff8800','#c03010','#ffaa30','#802010'], // Inferno  — orange/red/amber
-      ['#80ff20','#40e060','#b0e000','#60ff80','#20a030'], // Acid     — yellow/green/lime
-      ['#8020ff','#c040e0','#ff20b0','#6010d0','#4000b0'], // Void     — purple/violet/magenta
-      ['#40e0ff','#80ffff','#20d0f0','#a0f0ff','#40c8e0'], // Blizzard — cyan/ice/white
+      ['#ff6020','#ff9400','#e03800','#ff7800','#cc2800','#ff8c00','#ff4400','#dd6010'], // Inferno  — orange/red/amber
+      ['#70ff18','#38e055','#a8e000','#58ff78','#18a828','#90e820','#50e870','#28c040'], // Acid     — yellow/green/lime
+      ['#7818ff','#c038e0','#ff18b0','#5808d0','#3800b0','#a020e8','#e040c0','#6018d8'], // Void     — purple/violet/magenta
+      ['#38d8ff','#78f8ff','#18c8e8','#98e8ff','#38c0e0','#60e8f8','#20d8f0','#80f0ff'], // Blizzard — cyan/ice/white
     ];
     let weatherIdx = 0;
     function applyWeather(idx) {
