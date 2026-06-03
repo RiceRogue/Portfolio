@@ -489,8 +489,6 @@ const _popAudio = (function () {
         /* First activation — assign an edge spawn position */
         if (!b.spawned) { spawnFromEdge(b, cW); b.spawned = true; }
 
-        /* Track planet-touch state for this frame */
-        const _wasOnPlanet = b.onPlanet;
         b.onPlanet = false;
 
         /* ── Physics — gentle downward bias, planet dominates ── */
@@ -516,6 +514,12 @@ const _popAudio = (function () {
               b.vx -= 2 * vDotN * onx;
               b.vy -= 2 * vDotN * ony;
               b.vx *= 0.94; b.vy *= 0.94;
+              /* Color flash on actual impact — rate-limited to 400ms */
+              if (b.displayOpacity > 0.2 && (!b.flashedAt || ts - b.flashedAt > 400)) {
+                b.flashedAt = ts;
+                applyHover(b.circle);
+                setTimeout(() => unhover(b.circle), 1400);
+              }
             }
             b.onPlanet = true;
             if (!b.planetTouched) b.planetTouched = ts;
@@ -538,14 +542,6 @@ const _popAudio = (function () {
         }
         if (b.x - b.radius < 0)  { b.x = b.radius;      b.vx *= -RESTITUTION * 0.7; }
         if (b.x + b.radius > cW) { b.x = cW - b.radius; b.vx *= -RESTITUTION * 0.7; }
-
-        /* ── Color change on planet contact ── */
-        if (b.onPlanet && !_wasOnPlanet) {
-          applyHover(b.circle);
-          b.flashedAt = ts;
-        } else if (!b.onPlanet && _wasOnPlanet) {
-          setTimeout(() => unhover(b.circle), 600);
-        }
 
         b.isMargin = b.x < contentLeft || b.x > contentRight;
 
