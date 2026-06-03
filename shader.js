@@ -163,7 +163,9 @@ const _popAudio = (function () {
     const isTablet     = window.innerWidth < 900;
     const COUNT        = isMobile ? 50 : isTablet ? 80 : 130;
     const BALL_SIZES   = isMobile ? [20, 24, 28, 32] : SIZES;
-    const GRAVITY      = 0.0015;
+    const GRAVITY      = 0.0003;  /* near-zero — planet is the dominant attractor */
+    const BALL_LIFETIME  = 14000; /* ms before forced respawn */
+    const TOUCH_FADEOUT  = 4000;  /* ms after first planet touch → start fading */
     const RESTITUTION  = 0.85;
     const FRICTION     = 0.993;
     const DAMPING      = 0.9998; /* keep velocity longer for floatier drift */
@@ -173,41 +175,7 @@ const _popAudio = (function () {
     const CLICK_R      = 160;
     const PLANET_G     = 0.007;   /* gravitational pull per frame */
 
-    const BUCKET_TIPS = {
-      'Conversation': 'Never short of a good exchange, I lead every room with curiosity',
-      'Connection':   'Building genuine relationships wherever I go',
-      'Craft':        'Intentional design across games, events and experiences',
-      'Chaos':        'Thriving in fast-paced, dynamic environments',
-      'Culture':      'Deep roots in gaming, esports and fandom communities',
-      'Care':         'Every interaction matters, I always show up fully',
-    };
-    const BUCKET_FOCUS_MESSAGES = {
-      'Conversation': "The strongest partnerships start with genuine curiosity about the other person. Ask before you pitch.",
-      'Connection':   "A brief, warm follow-up after a meeting or event does more for a relationship than the initial conversation.",
-      'Craft':        "The details you care about are the ones people eventually notice, even if they can't articulate why.",
-      'Chaos':        "Clear, confident decisions made quickly under pressure are a skill — and one you've demonstrated before.",
-      'Culture':      "Authentic enthusiasm for a subject is more credible than any credential. Let it show.",
-      'Care':         "People remember how you made them feel long after the specifics fade. Consistency here compounds.",
-    };
-    const _bw = ['Conversation','Connection','Craft','Chaos','Culture','Care'];
-    for (let i = _bw.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [_bw[i],_bw[j]]=[_bw[j],_bw[i]]; }
-    const BUCKET_WORDS = _bw;
-    const NUM_BUCKETS  = BUCKET_WORDS.length;
-
-    const BUCKET_H     = 120;
-    let   bucketDividers = [];
-    let   bucketEls      = [];
-    let   bucketWidth    = 0;
-    let   mobilePage     = 0;
-    let   bucketTrackEl  = null;
-    let nextRespawnTs    = 0;
-    const bucketCounts    = new Array(NUM_BUCKETS).fill(0);
-    const bucketGoals     = Array.from({length: NUM_BUCKETS}, () => 1 + Math.floor(Math.random() * 100));
-    const bucketCompleted = new Array(NUM_BUCKETS).fill(false);
-    const bucketColors    = Array.from({length: NUM_BUCKETS}, () => {
-      const h = Math.floor(Math.random() * 12) * 30;
-      return `hsl(${h},80%,55%)`;
-    });
+    let nextRespawnTs = 0;
 
     /* Layout zones — updated on resize */
     let introTop = 0, introBottom = 0;
@@ -215,165 +183,12 @@ const _popAudio = (function () {
     let contentLeft = 0, contentRight = 0;
     let floorY = 0;
 
-    function buildBuckets() {
-      container.querySelectorAll('.plink-bkt,.plink-cnt,.plink-bucket-track').forEach(el => el.remove());
-      bucketDividers = [];
-      bucketEls      = [];
-      const W = window.innerWidth;
-
-      function makeBucket(word, i, bW, parent, isTrack) {
-        const el = document.createElement('div');
-        el.className = 'plink-bkt';
-        const topPos = isTrack ? 0 : floorY - BUCKET_H;
-        el.style.cssText = `left:${i*bW}px;width:${bW}px;top:${topPos}px;height:${BUCKET_H}px;${i===0?'border-left-width:1.5px;':''}`;
-        if (bucketCompleted[i]) {
-          el.classList.add('completed');
-          el.style.background  = `${bucketColors[i]}22`;
-          el.style.color       = bucketColors[i];
-          el.style.borderColor = bucketColors[i];
-        }
-        const label = document.createElement('span');
-        label.className = 'plink-bkt-label';
-        label.textContent = word;
-        el.appendChild(label);
-        if (BUCKET_TIPS[word]) {
-          const tip = document.createElement('div');
-          tip.className = 'plink-tip';
-          tip.textContent = bucketCompleted[i]
-            ? (BUCKET_FOCUS_MESSAGES[word] || BUCKET_TIPS[word])
-            : BUCKET_TIPS[word];
-          el.appendChild(tip);
-        }
-        el.addEventListener('touchstart', ev => {
-          ev.stopPropagation();
-          const wasOpen = el.classList.contains('tip-open');
-          parent.querySelectorAll('.plink-bkt.tip-open').forEach(b => b.classList.remove('tip-open'));
-          if (!wasOpen) el.classList.add('tip-open');
-        }, { passive: true });
-        bucketEls.push(el);
-        return el;
-      }
-
-      if (isMobile) {
-        const bW = W / 3;
-        bucketWidth    = bW;
-        bucketDividers = [bW, bW * 2];
-
-        const track = document.createElement('div');
-        track.className = 'plink-bucket-track';
-        track.style.cssText = `position:absolute;left:0;top:${floorY - BUCKET_H}px;width:${W * 2}px;height:${BUCKET_H + 40}px;overflow:visible;pointer-events:auto;transition:transform 0.7s cubic-bezier(0.4,0,0.2,1);transform:translateX(${-mobilePage * W}px);`;
-        bucketTrackEl = track;
-
-        BUCKET_WORDS.forEach((word, i) => {
-          track.appendChild(makeBucket(word, i, bW, track, true));
-          const cnt = document.createElement('div');
-          cnt.className = 'plink-cnt';
-          cnt.id = `plink-cnt-${i}`;
-          cnt.style.cssText = `position:absolute;left:${i*bW}px;width:${bW}px;top:-36px;`;
-          cnt.textContent = bucketCompleted[i]
-            ? `${bucketCounts[i]}`
-            : `${bucketCounts[i]} / ${bucketGoals[i]}`;
-          if (bucketCompleted[i]) cnt.style.color = bucketColors[i];
-          track.appendChild(cnt);
-        });
-
-        container.insertBefore(track, container.firstChild);
-      } else {
-        const bW = W / NUM_BUCKETS;
-        bucketWidth = bW;
-
-        BUCKET_WORDS.forEach((word, i) => {
-          container.insertBefore(makeBucket(word, i, bW, container, false), container.firstChild);
-          const cnt = document.createElement('div');
-          cnt.className = 'plink-cnt';
-          cnt.id = `plink-cnt-${i}`;
-          cnt.style.left  = `${i * bW}px`;
-          cnt.style.width = `${bW}px`;
-          cnt.style.top   = `${floorY - BUCKET_H - 32}px`;
-          cnt.textContent = bucketCompleted[i]
-            ? `${bucketCounts[i]}`
-            : `${bucketCounts[i]} / ${bucketGoals[i]}`;
-          if (bucketCompleted[i]) cnt.style.color = bucketColors[i];
-          container.insertBefore(cnt, container.firstChild);
-          if (i > 0) bucketDividers.push(i * bW);
-        });
-      }
-    }
-
-    function cycleMobileBuckets() {
-      mobilePage = (mobilePage + 1) % 2;
-      for (const b of balls) {
-        if (b.y + b.radius > floorY - BUCKET_H - 20) {
-          b.vy = -(0.8 + Math.random() * 0.5);
-          b.y  = floorY - BUCKET_H - b.radius - 25;
-          b.countedBucket = false;
-          b.settledAt     = null;
-        }
-      }
-      if (bucketTrackEl) {
-        bucketTrackEl.style.transform = `translateX(${-mobilePage * window.innerWidth}px)`;
-      }
-    }
-
-    function spawnConfetti(bucketEl, color) {
-      /* Build palette from bucket hue */
-      const COLS = [];
-      const m = color && color.match(/hsl\((\d+),(\d+)%,(\d+)%\)/);
-      if (m) {
-        const h = m[1], s = m[2];
-        [30, 45, 60, 72, 82, 90].forEach(l => COLS.push(`hsl(${h},${s}%,${l}%)`));
-        COLS.push('#ffffff', `hsl(${h},40%,88%)`);
-      } else {
-        COLS.push('#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#c77dff','#ff9f43');
-      }
-      const rect = bucketEl.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top  + rect.height / 2;
-      for (let i = 0; i < 65; i++) {
-        const p = document.createElement('div');
-        p.className = 'confetti-piece';
-        const ang = Math.random() * Math.PI * 2;
-        const spd = 70 + Math.random() * 130;
-        const tx  = Math.cos(ang) * spd;
-        const ty  = Math.sin(ang) * spd - (100 + Math.random() * 80);
-        p.style.cssText = `left:${cx}px;top:${cy}px;width:${4+Math.random()*6}px;height:${5+Math.random()*9}px;background:${COLS[i%COLS.length]};--tx:${tx}px;--ty:${ty}px;animation-delay:${Math.random()*0.35}s;`;
-        document.documentElement.appendChild(p);
-        setTimeout(() => p.remove(), 3200);
-      }
-    }
-
-    function triggerFocusFanfare(bi) {
-      const el = bucketEls[bi];
-      if (!el) return;
-      spawnConfetti(el, bucketColors[bi]);
-      const tip  = el.querySelector('.plink-tip');
-      const word = BUCKET_WORDS[bi];
-      if (tip && BUCKET_FOCUS_MESSAGES[word]) {
-        tip.textContent = BUCKET_FOCUS_MESSAGES[word];
-        tip.style.borderColor = bucketColors[bi];
-      }
-    }
-
-    function triggerFanfare(bi) {
-      const el  = bucketEls[bi];
-      const cnt = document.getElementById(`plink-cnt-${bi}`);
-      if (el) {
-        el.classList.add('completed', 'fanfare');
-        el.style.background  = `${bucketColors[bi]}22`;
-        el.style.color       = bucketColors[bi];
-        el.style.borderColor = bucketColors[bi];
-        setTimeout(() => el && el.classList.remove('fanfare'), 800);
-      }
-      if (cnt) cnt.style.color = bucketColors[bi];
-    }
-
     function updateLayout() {
       const footer   = document.querySelector('.site-footer');
       const intro    = document.querySelector('.intro-section');
       const projects = document.querySelector('.projects-section');
       const pageYOff = window.pageYOffset;
 
-      /* offsetTop is document-relative and scroll-independent */
       floorY = footer ? footer.offsetTop : document.body.scrollHeight - 10;
 
       if (intro) {
@@ -385,14 +200,11 @@ const _popAudio = (function () {
         projBottom = projects.getBoundingClientRect().bottom + pageYOff + 30;
       }
 
-      /* Margin zone: outermost strip of the page (~5% each side min) */
-      const gutter     = Math.max(window.innerWidth * 0.04, 20);
-      const maxW       = 1500;
-      const sidePad    = Math.max(gutter, (window.innerWidth - maxW) / 2);
+      const gutter  = Math.max(window.innerWidth * 0.04, 20);
+      const maxW    = 1500;
+      const sidePad = Math.max(gutter, (window.innerWidth - maxW) / 2);
       contentLeft  = sidePad + 40;
       contentRight = window.innerWidth - sidePad - 40;
-
-      buildBuckets();
     }
 
     /* ── Shape profiles (weighted) ── */
@@ -429,12 +241,11 @@ const _popAudio = (function () {
       container.appendChild(wrapper);
       allCircles.push(circle);
 
-      const xPct = 3 + Math.random() * 94;
       const ball = {
-        x:              xPct / 100 * (window.innerWidth || 1200),
-        y:             -radius - 20,
-        vx:             (Math.random() - 0.5) * 0.6,
-        vy:             0.55 + Math.random() * 0.35,
+        x:              window.innerWidth / 2,  /* spawnFromEdge sets real position */
+        y:              -radius - 20,
+        vx:             0,
+        vy:             0,
         radius,
         wrapper,
         circle,
@@ -442,19 +253,22 @@ const _popAudio = (function () {
         displayOpacity: 0,
         isMargin:       false,
         flashedAt:      null,
-        countedBucket:  false,
+        spawned:        false,  /* spawnFromEdge called on first activation */
+        inViewport:     false,
+        birthAt:        null,
+        planetTouched:  0,      /* timestamp of first planet contact, 0 = never */
+        onPlanet:       false,  /* currently touching planet surface */
         enteredAt:      null,
-        boosted:        false,   /* true after first mouse touch — extra gravity */
-        activateAt:     i * 200, /* ms — one ball released every 200ms */
+        boosted:        false,
+        activateAt:     i * 200,
       };
       circle._ball = ball;
       balls.push(ball);
     }
 
-    updateLayout(); /* initial render — buckets visible immediately */
+    updateLayout();
     window.addEventListener('resize', updateLayout);
     window.addEventListener('scroll', updateLayout, { passive: true });
-    if (isMobile) setInterval(cycleMobileBuckets, 10000);
 
     /* ── Gravity planet — D3 orthographic canvas globe ── */
     const planetEl = document.createElement('div');
@@ -465,19 +279,9 @@ const _popAudio = (function () {
     const _hasGrid = !!document.querySelector('.projects-grid');
     const _useGlobe = _hasGrid && typeof d3 !== 'undefined';
 
-    /* Weather land-fill colors — 4 states × 30 min, 90s blend */
-    const GLOBE_WEATHER = [
-      [255,  90,  20],  /* Inferno  — orange/amber  */
-      [ 80, 210,  30],  /* Acid     — lime/green    */
-      [140,  30, 255],  /* Void     — purple/violet */
-      [ 40, 200, 255],  /* Blizzard — cyan/ice      */
-    ];
-    let _gwIdx = 0;
-    let _gwR = GLOBE_WEATHER[0][0], _gwG = GLOBE_WEATHER[0][1], _gwB = GLOBE_WEATHER[0][2];
-    let _gwSR = _gwR, _gwSG = _gwG, _gwSB = _gwB; /* start values for blend */
-    let _gwER = _gwR, _gwEG = _gwG, _gwEB = _gwB; /* end (target) values    */
-    let _gwTs = -1;                                /* blend start timestamp  */
-    const GLOBE_BLEND_MS = 90000;                  /* 90-second color blend  */
+    /* Continuous hue rotation — full color wheel cycle every ~5 minutes */
+    let _gwHue = 0; /* 0–360, increments each globe frame */
+    let _gwR = 255, _gwG = 90, _gwB = 20; /* current land RGB, updated from hue */
 
     if (_useGlobe) {
       const _gc   = document.createElement('canvas');
@@ -511,10 +315,11 @@ const _popAudio = (function () {
 
         ctx.clearRect(0, 0, sz, sz);
 
-        /* Ocean fill */
+        /* Ocean — complementary hue, very dark */
+        const _oRgb = _hslToRgb((_gwHue + 180) % 360, 60, 7);
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.fillStyle = '#040c18';
+        ctx.fillStyle = `rgb(${_oRgb[0]},${_oRgb[1]},${_oRgb[2]})`;
         ctx.fill();
 
         if (_gLand) {
@@ -562,6 +367,21 @@ const _popAudio = (function () {
         ctx.fill();
       }
 
+      /* HSL→RGB helper (used for hue rotation) */
+      function _hslToRgb(h, s, l) {
+        h /= 360; s /= 100; l /= 100;
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        const hue2 = (t) => {
+          if (t < 0) t += 1; if (t > 1) t -= 1;
+          if (t < 1/6) return p + (q - p) * 6 * t;
+          if (t < 1/2) return q;
+          if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+          return p;
+        };
+        return [Math.round(hue2(h+1/3)*255), Math.round(hue2(h)*255), Math.round(hue2(h-1/3)*255)];
+      }
+
       /* Globe loop — capped at 30fps to save GPU */
       let _glastTs = 0;
       (function _globeLoop(ts) {
@@ -571,15 +391,12 @@ const _popAudio = (function () {
 
         /* Slow auto-spin — full rotation every ~3 minutes */
         _gRot = (_gRot + 0.04) % 360;
-        _gProj.rotate([_gRot, -20, 0]); /* -20° tilt for a nice view angle */
+        _gProj.rotate([_gRot, -20, 0]);
 
-        /* Linear blend toward target weather color */
-        if (_gwTs >= 0) {
-          const t = Math.min(1, (ts - _gwTs) / GLOBE_BLEND_MS);
-          _gwR = _gwSR + (_gwER - _gwSR) * t;
-          _gwG = _gwSG + (_gwEG - _gwSG) * t;
-          _gwB = _gwSB + (_gwEB - _gwSB) * t;
-        }
+        /* Continuous hue rotation — full cycle every ~5 minutes at 30fps */
+        _gwHue = (_gwHue + 0.033) % 360;
+        const rgb  = _hslToRgb(_gwHue, 85, 58);
+        _gwR = rgb[0]; _gwG = rgb[1]; _gwB = rgb[2];
 
         _gcRender();
       })(0);
@@ -589,14 +406,6 @@ const _popAudio = (function () {
         .then(r => r.json())
         .then(data => { _gLand = data; })
         .catch(() => {});
-
-      /* Weather cycle — starts a new 90s color blend every 30 min */
-      setInterval(() => {
-        _gwIdx = (_gwIdx + 1) % GLOBE_WEATHER.length;
-        _gwSR = _gwR; _gwSG = _gwG; _gwSB = _gwB;
-        [_gwER, _gwEG, _gwEB] = GLOBE_WEATHER[_gwIdx];
-        _gwTs = performance.now();
-      }, 30 * 60 * 1000);
 
       /* Expose resize so positionPlanet can sync canvas size */
       planetEl._gcResize = _gcResize;
@@ -623,6 +432,39 @@ const _popAudio = (function () {
     positionPlanet();
     window.addEventListener('resize', positionPlanet);
 
+    /* Spawn a ball from a random page edge, velocity aimed at planet */
+    function spawnFromEdge(b, cW) {
+      const side  = Math.floor(Math.random() * 4); /* 0=top 1=right 2=bottom 3=left */
+      const pageH = Math.max(document.body.scrollHeight || 3000, window.innerHeight * 3);
+      let sx, sy;
+      switch (side) {
+        case 0: sx = Math.random() * cW;     sy = -b.radius - 15;      break;
+        case 1: sx = cW + b.radius + 15;     sy = Math.random() * pageH; break;
+        case 2: sx = Math.random() * cW;     sy = pageH + b.radius + 15; break;
+        case 3: sx = -b.radius - 15;         sy = Math.random() * pageH; break;
+      }
+      b.x = sx; b.y = sy;
+
+      /* Aim toward planet center (or viewport center as fallback) */
+      const pr   = planetEl.getBoundingClientRect();
+      const pCX  = pr.width > 0 ? pr.left + pr.width  * 0.5       : cW * 0.5;
+      const pCY  = pr.width > 0 ? pr.top  + pr.height * 0.5 + window.pageYOffset : pageH * 0.35;
+      const ddx  = pCX - sx, ddy = pCY - sy;
+      const dist = Math.sqrt(ddx*ddx + ddy*ddy) || 1;
+      const spd  = 1.3 + Math.random() * 1.8;
+      b.vx = (ddx / dist) * spd + (Math.random() - 0.5) * 0.6;
+      b.vy = (ddy / dist) * spd + (Math.random() - 0.5) * 0.6;
+
+      b.inViewport    = false;
+      b.birthAt       = null;
+      b.planetTouched = 0;
+      b.onPlanet      = false;
+      b.settledAt     = null;
+      b.enteredAt     = null;
+      b.boosted       = false;
+      b.displayOpacity = 0;
+    }
+
     let firstFrameTs = null;
     function loop(ts) {
       /* On the very first frame, offset all activateAt times so rain
@@ -639,138 +481,113 @@ const _popAudio = (function () {
       const _planetR = _pr.width * 0.5;
 
       for (const b of balls) {
-        /* ── Activation gate — hold ball above viewport until its turn ── */
+        /* ── Activation gate ── */
         if (b.activateAt && ts < b.activateAt) {
           b.wrapper.style.opacity = '0';
           continue;
         }
+        /* First activation — assign an edge spawn position */
+        if (!b.spawned) { spawnFromEdge(b, cW); b.spawned = true; }
 
-        /* ── Physics ── */
-        b.vy += GRAVITY + (b.boosted ? 0.005 : 0); /* extra pull after first mouse contact */
-        /* ── Planet gravity + surface sticking ── */
-        if (b.displayOpacity > 0.05) {
+        /* Track planet-touch state for this frame */
+        const _wasOnPlanet = b.onPlanet;
+        b.onPlanet = false;
+
+        /* ── Physics — gentle downward bias, planet dominates ── */
+        b.vy += GRAVITY;
+
+        /* ── Planet gravity + elastic bounce ── */
+        if (b.displayOpacity > 0.05 || b.spawned) {
           const pdx = _pX - b.x, pdy = _pY - b.y;
           const pd  = Math.sqrt(pdx * pdx + pdy * pdy);
-          const influenceR = _planetR * 1.28;
+          const influenceR = _planetR * 1.8; /* wider influence zone */
           if (pd > 4 && pd < influenceR) {
             const t = 1 - pd / influenceR;
             const f = PLANET_G * t * t;
             b.vx += (pdx / pd) * f;
             b.vy += (pdy / pd) * f;
           }
-          /* Elastic bounce off planet surface */
           if (pd < _planetR + b.radius && pd > 0.5) {
-            const onx = -pdx / pd, ony = -pdy / pd; /* outward normal: planet→ball */
+            const onx = -pdx / pd, ony = -pdy / pd;
             b.x = _pX + onx * (_planetR + b.radius + 1);
             b.y = _pY + ony * (_planetR + b.radius + 1);
             const vDotN = b.vx * onx + b.vy * ony;
-            if (vDotN < 0) { /* moving toward planet — reflect */
+            if (vDotN < 0) {
               b.vx -= 2 * vDotN * onx;
               b.vy -= 2 * vDotN * ony;
-              b.vx *= 0.92; b.vy *= 0.92; /* bouncy */
+              b.vx *= 0.94; b.vy *= 0.94;
             }
+            b.onPlanet = true;
+            if (!b.planetTouched) b.planetTouched = ts;
             b.settledAt = null;
           }
         }
+
         b.vx *= DAMPING;
         b.vy *= DAMPING;
         b.x  += b.vx;
         b.y  += b.vy;
 
-        const floor = floorY - b.radius - 1; /* ~30% tighter gap above footer */
-
+        /* Soft floor + wall bounds */
+        const floor = floorY - b.radius - 1;
         if (b.y >= floor) {
           b.y   = floor;
-          b.vy *= -(b.boosted ? RESTITUTION * 0.28 : RESTITUTION); /* boosted = nearly no bounce */
-          b.vx *= b.boosted ? FRICTION * 0.7 : FRICTION;
-          if (Math.abs(b.vy) < 0.12) b.vy = 0;
-          if (Math.abs(b.vx) < 0.06) b.vx = 0;
+          b.vy *= -RESTITUTION * 0.7;
+          b.vx *= FRICTION;
+          if (Math.abs(b.vy) < 0.1) b.vy = 0;
+        }
+        if (b.x - b.radius < 0)  { b.x = b.radius;      b.vx *= -RESTITUTION * 0.7; }
+        if (b.x + b.radius > cW) { b.x = cW - b.radius; b.vx *= -RESTITUTION * 0.7; }
+
+        /* ── Color change on planet contact ── */
+        if (b.onPlanet && !_wasOnPlanet) {
+          applyHover(b.circle);
+          b.flashedAt = ts;
+        } else if (!b.onPlanet && _wasOnPlanet) {
+          setTimeout(() => unhover(b.circle), 600);
         }
 
-        if (b.x - b.radius < 0)  { b.x = b.radius;       b.vx *= -0.5; }
-        if (b.x + b.radius > cW) { b.x = cW - b.radius;  b.vx *= -0.5; }
-
-        /* ── Bucket wall collisions ── */
-        if (b.y + b.radius > floorY - BUCKET_H) {
-          for (const wx of bucketDividers) {
-            const dx = b.x - wx;
-            const r  = b.radius + 1;
-            if (Math.abs(dx) < r) {
-              b.x  = wx + (dx >= 0 ? r : -r);
-              b.vx *= -RESTITUTION * 0.55;
-              b.settledAt = null;
-            }
-          }
-        }
-
-        /* ── Margin classification ── */
         b.isMargin = b.x < contentLeft || b.x > contentRight;
 
-        /* ── Bucket entry count ── */
-        if (!b.countedBucket && b.y + b.radius > floorY - BUCKET_H * 0.55 && bucketWidth > 0) {
-          const bi = isMobile
-            ? mobilePage * 3 + Math.min(2, Math.floor(b.x / bucketWidth))
-            : Math.min(NUM_BUCKETS - 1, Math.floor(b.x / bucketWidth));
-          bucketCounts[bi]++;
-          b.countedBucket = true;
-          const cnt = document.getElementById(`plink-cnt-${bi}`);
-          if (!bucketCompleted[bi]) {
-            if (bucketCounts[bi] >= bucketGoals[bi]) {
-              bucketCompleted[bi] = true;
-              if (cnt) { cnt.textContent = `${bucketCounts[bi]}`; cnt.style.color = bucketColors[bi]; }
-              triggerFanfare(bi);
-              triggerFocusFanfare(bi);
-            } else {
-              if (cnt) cnt.textContent = `${bucketCounts[bi]} / ${bucketGoals[bi]}`;
-            }
-          } else {
-            if (cnt) cnt.textContent = `${bucketCounts[bi]}`;
-          }
-        }
-
-        /* ── Settle detection ── */
-        const atFloor   = b.y >= floor - 0.5;
-        const isSettled = atFloor && Math.abs(b.vy) < 0.01 && Math.abs(b.vx) < 0.03;
-        if (isSettled) {
-          if (!b.settledAt) b.settledAt = ts;
-        } else if (b.settledAt && (Math.abs(b.vy) > 0.04 || Math.abs(b.vx) > 0.06)) {
-          b.settledAt = null;
-        }
-
-        /* ── Target opacity ── */
+        /* ── Target opacity + lifetime ── */
         let targetOpacity = 1;
 
-        if (b.y < 0) {
-          targetOpacity = 0;
-        } else {
-          if (!b.enteredAt) b.enteredAt = ts; /* first frame in viewport */
+        /* Mark when ball enters visible area */
+        if (!b.inViewport) {
+          const sy = window.pageYOffset, vh = window.innerHeight;
+          if (b.y > sy - 200 && b.y < sy + vh + 200 && b.x > -200 && b.x < cW + 200) {
+            b.inViewport = true;
+            b.birthAt    = ts;
+          }
         }
 
-        if (b.enteredAt && ts - b.enteredAt < 1800) {
-          targetOpacity = Math.min(1, (ts - b.enteredAt) / 1800); /* linear fade-in */
-        } else if (b.settledAt) {
-          const elapsed = ts - b.settledAt;
-          if (elapsed > 5000) {
-            targetOpacity = Math.max(0, 1 - (elapsed - 5000) / 2500);
-            if (targetOpacity <= 0) {
-              /* Respawn just above viewport with initial velocity */
-              b.x              = b.radius * 2 + Math.random() * (cW - b.radius * 4);
-              b.y              = -b.radius - 20;
-              b.vx             = (Math.random() - 0.5) * 0.6;
-              b.vy             = 0.55 + Math.random() * 0.35;
-              b.settledAt      = null;
-              nextRespawnTs    = Math.max(ts, nextRespawnTs) + 350;
-              b.activateAt     = nextRespawnTs;
-              b.boosted        = false;
-              b.countedBucket  = false;
-              b.enteredAt      = null;
-              b.displayOpacity = 0;
-              targetOpacity    = 0;
+        if (!b.inViewport) {
+          targetOpacity = 0;
+        } else {
+          if (!b.enteredAt) b.enteredAt = ts;
+
+          /* Fade in over 1s */
+          if (ts - b.enteredAt < 1000) {
+            targetOpacity = Math.min(1, (ts - b.enteredAt) / 1000);
+          }
+
+          /* Lifetime: fade 4s after first planet touch, or after 14s max */
+          if (b.birthAt) {
+            const alive     = ts - b.birthAt;
+            const fadeAfter = b.planetTouched ? (b.planetTouched - b.birthAt + TOUCH_FADEOUT) : BALL_LIFETIME;
+            if (alive > fadeAfter) {
+              targetOpacity = Math.max(0, 1 - (alive - fadeAfter) / 2000);
+              if (alive > fadeAfter + 2000) {
+                nextRespawnTs = Math.max(ts, nextRespawnTs) + 300;
+                b.activateAt  = nextRespawnTs;
+                spawnFromEdge(b, cW);
+                targetOpacity = 0;
+              }
             }
           }
-        } else if (!b.isMargin) {
-          /* Content ball — transparent in title and gallery zones */
-          if (introTop && b.y > introTop && b.y < introBottom) {
+
+          /* Invisible in intro zone */
+          if (!b.isMargin && introTop && b.y > introTop && b.y < introBottom) {
             targetOpacity = 0;
           }
         }

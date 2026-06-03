@@ -498,124 +498,6 @@ a {
 .mc-collaboration { animation-delay: -12s; }
 .mc-conversation  { animation-delay: -14s; }
 
-/* ── PLINK BUCKETS ───────────────────────────────────────────── */
-.plink-bucket-track {
-  position: absolute;
-  pointer-events: auto;
-  overflow: visible;
-}
-.plink-bkt {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  padding-bottom: 10px;
-  box-sizing: border-box;
-  pointer-events: auto;
-  font-family: var(--font);
-  font-size: clamp(0.55rem, 1.2vw, 1.125rem);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  border-right: 1.5px solid rgba(120,80,80,0.22);
-  border-bottom: 2px solid rgba(120,80,80,0.28);
-  border-left-width: 0;
-  color: rgba(100,60,60,0.3);
-  overflow: visible;
-}
-.plink-bkt-label {
-  pointer-events: none;
-}
-
-/* Tooltip — appears above the score counter */
-.plink-tip {
-  position: absolute;
-  bottom: calc(100% + 52px); /* clears the score counter above bucket */
-  left: 50%;
-  transform: translateX(-50%) translateY(4px);
-  background: var(--bg);
-  color: var(--fg-muted);
-  border: 1px solid var(--border);
-  font-size: 0.78rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  text-transform: none;
-  padding: 0.45rem 0.85rem;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.18s ease, transform 0.18s ease;
-  z-index: 9999;
-  max-width: 210px;
-  white-space: normal;
-  text-align: center;
-  line-height: 1.4;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-}
-.plink-bkt::before {
-  content: '';
-  position: absolute;
-  top: -52px;
-  left: 0;
-  right: 0;
-  height: 52px;
-}
-.plink-bkt:hover .plink-tip,
-.plink-bkt.tip-open .plink-tip {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-[data-theme="dark"] .plink-bkt {
-  border-right-color: rgba(255,200,190,0.18);
-  border-bottom-color: rgba(255,200,190,0.24);
-  color: rgba(255,200,190,0.22);
-}
-.plink-bkt.completed {
-  border-bottom-width: 2.5px;
-  transition: background 0.4s ease, color 0.4s ease, border-color 0.4s ease;
-}
-@keyframes bucket-fanfare {
-  0%   { transform: scaleX(1) translateY(0); }
-  18%  { transform: scaleX(1.04) translateY(-6px); }
-  36%  { transform: scaleX(0.97) translateY(0px); }
-  54%  { transform: scaleX(1.02) translateY(-3px); }
-  72%  { transform: scaleX(0.99) translateY(0px); }
-  100% { transform: scaleX(1)   translateY(0); }
-}
-.plink-bkt.fanfare {
-  animation: bucket-fanfare 0.75s cubic-bezier(0.34,1.56,0.64,1);
-}
-
-
-
-/* ── Confetti particles ──────────────────────────────────────── */
-.confetti-piece {
-  position: fixed;
-  z-index: 99999;
-  pointer-events: none;
-  border-radius: 2px;
-  transform-origin: center;
-  animation: confetti-fly 2.6s ease-out forwards;
-}
-@keyframes confetti-fly {
-  0%   { transform: translate(0, 0) rotate(0deg);   opacity: 1; }
-  75%  { opacity: 0.85; }
-  100% { transform: translate(var(--tx), calc(var(--ty) + 160px)) rotate(680deg); opacity: 0; }
-}
-
-.plink-cnt {
-  position: absolute;
-  text-align: center;
-  pointer-events: none;
-  font-family: var(--font);
-  font-size: clamp(0.9rem, 1.5vw, 1.2rem);
-  font-weight: 700;
-  color: rgba(100,60,60,0.45);
-  letter-spacing: 0.04em;
-}
-[data-theme="dark"] .plink-cnt {
-  color: rgba(255,200,190,0.35);
-}
 
 @media (max-width: 700px) {
   .hero-body {
@@ -1158,16 +1040,11 @@ ul.bullet-list li::before {
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
   .footer-inner { flex-direction: column; }
 
-  /* Compact buckets on mobile — 3 per row via smaller font */
-  .plink-bkt { font-size: clamp(0.42rem, 2.2vw, 0.65rem); letter-spacing: 0.04em; }
-  .plink-cnt { font-size: clamp(0.6rem, 2.8vw, 0.85rem); }
-  .plink-tip { font-size: 0.62rem; max-width: 140px; }
 }
 
 /* Large screen: cap gutter so content doesn't over-stretch */
 @media (min-width: 1600px) {
   :root { --gutter: max(3vw, 48px); }
-  .plink-bkt { font-size: clamp(1rem, 1.1vw, 1.3rem); }
 }
 
 /* ── SCROLL REVEAL ANIMATION ───────────────────────────────── */
