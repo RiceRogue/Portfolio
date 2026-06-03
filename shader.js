@@ -168,12 +168,13 @@ const _popAudio = (function () {
     const TOUCH_FADEOUT  = 4000;  /* ms after first planet touch → start fading */
     const RESTITUTION  = 0.85;
     const FRICTION     = 0.993;
-    const DAMPING      = 0.9998; /* keep velocity longer for floatier drift */
+    const DAMPING      = 0.989;   /* air resistance — shapes decelerate over ~3s */
+    const MAX_SPD      = 5.5;     /* px/frame velocity cap — prevents runaway bouncing */
     const LERP         = 0.10;
-    const MOUSE_R      = 6;   /* px — cursor tip only; ball must be physically touched */
-    const MOUSE_PUSH_R = 14;  /* px — tiny soft field just outside cursor */
+    const MOUSE_R      = 6;
+    const MOUSE_PUSH_R = 14;
     const CLICK_R      = 160;
-    const PLANET_G     = 0.007;   /* gravitational pull per frame */
+    const PLANET_G     = 0.010;   /* gravitational pull per frame (slightly stronger) */
 
     let nextRespawnTs = 0;
 
@@ -451,7 +452,7 @@ const _popAudio = (function () {
       const pCY  = pr.width > 0 ? pr.top  + pr.height * 0.5 + window.pageYOffset : pageH * 0.35;
       const ddx  = pCX - sx, ddy = pCY - sy;
       const dist = Math.sqrt(ddx*ddx + ddy*ddy) || 1;
-      const spd  = 1.3 + Math.random() * 1.8;
+      const spd  = 0.9 + Math.random() * 1.1;
       b.vx = (ddx / dist) * spd + (Math.random() - 0.5) * 0.6;
       b.vy = (ddy / dist) * spd + (Math.random() - 0.5) * 0.6;
 
@@ -513,7 +514,7 @@ const _popAudio = (function () {
             if (vDotN < 0) {
               b.vx -= 2 * vDotN * onx;
               b.vy -= 2 * vDotN * ony;
-              b.vx *= 0.94; b.vy *= 0.94;
+              b.vx *= 0.58; b.vy *= 0.58; /* absorb 42% of speed each bounce */
               /* Color flash on actual impact — rate-limited to 400ms */
               if (b.displayOpacity > 0.2 && (!b.flashedAt || ts - b.flashedAt > 400)) {
                 b.flashedAt = ts;
@@ -529,6 +530,9 @@ const _popAudio = (function () {
 
         b.vx *= DAMPING;
         b.vy *= DAMPING;
+        /* Hard speed cap — prevents runaway velocity from repeated gravity pulls */
+        const _spd = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
+        if (_spd > MAX_SPD) { const _s = MAX_SPD / _spd; b.vx *= _s; b.vy *= _s; }
         b.x  += b.vx;
         b.y  += b.vy;
 
