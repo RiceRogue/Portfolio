@@ -456,72 +456,153 @@ const _popAudio = (function () {
     window.addEventListener('scroll', updateLayout, { passive: true });
     if (isMobile) setInterval(cycleMobileBuckets, 10000);
 
-    /* ── Gravity planet ── */
+    /* ── Gravity planet — D3 orthographic canvas globe ── */
     const planetEl = document.createElement('div');
     planetEl.id = 'gravity-planet';
 
-    const planetBody = document.createElement('div');
-    planetBody.className = 'planet-body';
+    /* Only activate the D3 globe on the main page (has .projects-grid)
+       and only when d3 was loaded. Other pages keep a plain invisible div. */
+    const _hasGrid = !!document.querySelector('.projects-grid');
+    const _useGlobe = _hasGrid && typeof d3 !== 'undefined';
 
-    /* Atmospheric banding texture */
-    const planetAtmo = document.createElement('div');
-    planetAtmo.className = 'planet-atmo';
-    planetBody.appendChild(planetAtmo);
+    /* Weather land-fill colors — 4 states × 30 min, 90s blend */
+    const GLOBE_WEATHER = [
+      [255,  90,  20],  /* Inferno  — orange/amber  */
+      [ 80, 210,  30],  /* Acid     — lime/green    */
+      [140,  30, 255],  /* Void     — purple/violet */
+      [ 40, 200, 255],  /* Blizzard — cyan/ice      */
+    ];
+    let _gwIdx = 0;
+    let _gwR = GLOBE_WEATHER[0][0], _gwG = GLOBE_WEATHER[0][1], _gwB = GLOBE_WEATHER[0][2];
+    let _gwSR = _gwR, _gwSG = _gwG, _gwSB = _gwB; /* start values for blend */
+    let _gwER = _gwR, _gwEG = _gwG, _gwEB = _gwB; /* end (target) values    */
+    let _gwTs = -1;                                /* blend start timestamp  */
+    const GLOBE_BLEND_MS = 90000;                  /* 90-second color blend  */
 
-    /* Storm spots — 8 shaped blobs, screen-blended onto dark base */
-    const stormLayer = document.createElement('div');
-    stormLayer.className = 'planet-storm-layer';
-    const stormEls = [];
-    for (let si = 1; si <= 8; si++) {
-      const s = document.createElement('div');
-      s.className = `ps ps-${si}`;
-      stormLayer.appendChild(s);
-      stormEls.push(s);
+    if (_useGlobe) {
+      const _gc   = document.createElement('canvas');
+      _gc.id = 'globe-canvas';
+      planetEl.appendChild(_gc);
+
+      const _gCtx  = _gc.getContext('2d');
+      const _gProj = d3.geoOrthographic().clipAngle(90);
+      const _gPath = d3.geoPath(_gProj, _gCtx);   /* reused every frame */
+      const _gGrat = d3.geoGraticule()();           /* precomputed lat/lon grid */
+      let   _gLand = null;
+      let   _gSz   = 0;
+      let   _gRot  = 0;
+
+      /* Resize canvas + reconfigure projection */
+      function _gcResize(size) {
+        _gSz = size;
+        const dpr = window.devicePixelRatio || 1;
+        _gc.width  = size * dpr;
+        _gc.height = size * dpr;
+        _gc.style.width  = size + 'px';
+        _gc.style.height = size + 'px';
+        _gCtx.setTransform(dpr, 0, 0, dpr, 0, 0); /* crisp on HiDPI */
+        _gProj.scale(size * 0.494).translate([size / 2, size / 2]);
+      }
+
+      /* Draw one frame */
+      function _gcRender() {
+        if (!_gSz) return;
+        const ctx = _gCtx, sz = _gSz, cx = sz / 2, cy = sz / 2, r = sz * 0.494;
+
+        ctx.clearRect(0, 0, sz, sz);
+
+        /* Ocean fill */
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = '#040c18';
+        ctx.fill();
+
+        if (_gLand) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.clip(); /* clip land + graticule to sphere boundary */
+
+          /* Graticule — very faint, tinted with current weather color */
+          ctx.beginPath();
+          _gPath(_gGrat);
+          ctx.strokeStyle = `rgba(${_gwR|0},${_gwG|0},${_gwB|0},0.14)`;
+          ctx.lineWidth = 0.55;
+          ctx.stroke();
+
+          /* Land masses — gradient-tinted fill */
+          ctx.beginPath();
+          _gLand.features.forEach(f => _gPath(f));
+          ctx.fillStyle = `rgba(${_gwR|0},${_gwG|0},${_gwB|0},0.70)`;
+          ctx.fill();
+
+          ctx.restore();
+        }
+
+        /* Specular highlight — top-left bright spot for sphere depth */
+        const spec = ctx.createRadialGradient(
+          cx - r * 0.36, cy - r * 0.33, 0,
+          cx - r * 0.36, cy - r * 0.33, r * 0.54
+        );
+        spec.addColorStop(0, 'rgba(255,255,255,0.22)');
+        spec.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = spec;
+        ctx.fill();
+
+        /* Limb darkening — edges go black */
+        const limb = ctx.createRadialGradient(cx, cy, r * 0.50, cx, cy, r);
+        limb.addColorStop(0,   'rgba(0,0,0,0)');
+        limb.addColorStop(0.6, 'rgba(0,0,0,0.18)');
+        limb.addColorStop(1,   'rgba(0,0,0,0.88)');
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = limb;
+        ctx.fill();
+      }
+
+      /* Globe loop — capped at 30fps to save GPU */
+      let _glastTs = 0;
+      (function _globeLoop(ts) {
+        requestAnimationFrame(_globeLoop);
+        if (ts - _glastTs < 33) return;
+        _glastTs = ts;
+
+        /* Slow auto-spin — full rotation every ~3 minutes */
+        _gRot = (_gRot + 0.04) % 360;
+        _gProj.rotate([_gRot, -20, 0]); /* -20° tilt for a nice view angle */
+
+        /* Linear blend toward target weather color */
+        if (_gwTs >= 0) {
+          const t = Math.min(1, (ts - _gwTs) / GLOBE_BLEND_MS);
+          _gwR = _gwSR + (_gwER - _gwSR) * t;
+          _gwG = _gwSG + (_gwEG - _gwSG) * t;
+          _gwB = _gwSB + (_gwEB - _gwSB) * t;
+        }
+
+        _gcRender();
+      })(0);
+
+      /* Lazy-load GeoJSON land shapes (110m = low-res, fast) */
+      fetch('https://raw.githubusercontent.com/martynafford/natural-earth-geojson/refs/heads/master/110m/physical/ne_110m_land.json')
+        .then(r => r.json())
+        .then(data => { _gLand = data; })
+        .catch(() => {});
+
+      /* Weather cycle — starts a new 90s color blend every 30 min */
+      setInterval(() => {
+        _gwIdx = (_gwIdx + 1) % GLOBE_WEATHER.length;
+        _gwSR = _gwR; _gwSG = _gwG; _gwSB = _gwB;
+        [_gwER, _gwEG, _gwEB] = GLOBE_WEATHER[_gwIdx];
+        _gwTs = performance.now();
+      }, 30 * 60 * 1000);
+
+      /* Expose resize so positionPlanet can sync canvas size */
+      planetEl._gcResize = _gcResize;
     }
-    planetBody.appendChild(stormLayer);
-
-    /* Edge rim shadow for depth */
-    const rimEl = document.createElement('div');
-    rimEl.className = 'planet-rim';
-    planetBody.appendChild(rimEl);
-
-    /* Wireframe rings */
-    const wireContainer = document.createElement('div');
-    wireContainer.className = 'planet-wire-container';
-    const wireSpin = document.createElement('div');
-    wireSpin.className = 'planet-wire-spin';
-    const RING_COUNT = 12;
-    for (let ri = 0; ri < RING_COUNT; ri++) {
-      const ring = document.createElement('div');
-      ring.className = 'wire-ring';
-      const angle = ri * (90 / (RING_COUNT / 2));
-      ring.style.transform = ri % 2 === 0 ? `rotateY(${angle}deg)` : `rotateX(${angle}deg)`;
-      wireSpin.appendChild(ring);
-    }
-    wireContainer.appendChild(wireSpin);
-    planetBody.appendChild(wireContainer);
-    planetEl.appendChild(planetBody);
 
     container.appendChild(planetEl);
-
-    /* ── Weather state cycle (4 states × 30 min, 90s blend) ──
-       Each array has 8 storm colors matching ps-1…ps-8.
-       screen blend-mode makes them glow on the dark ocean base. */
-    const WEATHER = [
-      ['#ff6020','#ff9400','#e03800','#ff7800','#cc2800','#ff8c00','#ff4400','#dd6010'], // Inferno  — orange/red/amber
-      ['#70ff18','#38e055','#a8e000','#58ff78','#18a828','#90e820','#50e870','#28c040'], // Acid     — yellow/green/lime
-      ['#7818ff','#c038e0','#ff18b0','#5808d0','#3800b0','#a020e8','#e040c0','#6018d8'], // Void     — purple/violet/magenta
-      ['#38d8ff','#78f8ff','#18c8e8','#98e8ff','#38c0e0','#60e8f8','#20d8f0','#80f0ff'], // Blizzard — cyan/ice/white
-    ];
-    let weatherIdx = 0;
-    function applyWeather(idx) {
-      WEATHER[idx].forEach((c, i) => stormEls[i].style.setProperty('--storm-c', c));
-    }
-    applyWeather(0);
-    setInterval(() => {
-      weatherIdx = (weatherIdx + 1) % WEATHER.length;
-      applyWeather(weatherIdx);
-    }, 30 * 60 * 1000);
 
     function positionPlanet() {
       const grid = document.querySelector('.projects-grid');
@@ -537,6 +618,7 @@ const _popAudio = (function () {
       const cy = rect.top  + window.pageYOffset + h / 2;
       planetEl.style.left = Math.round(cx - size / 2) + 'px';
       planetEl.style.top  = Math.round(cy - size / 2) + 'px';
+      if (planetEl._gcResize) planetEl._gcResize(size);
     }
     positionPlanet();
     window.addEventListener('resize', positionPlanet);

@@ -328,9 +328,6 @@ a {
 .smiley-circle.hovered .face-hover   { opacity: 1; }
 
 /* ── Gravity planet ──────────────────────────────────────────── */
-
-@property --storm-c { syntax: '<color>'; inherits: false; initial-value: #ff5010; }
-
 #gravity-planet {
   position: absolute;
   pointer-events: none;
@@ -339,188 +336,13 @@ a {
   animation: planet-drift 70s ease-in-out infinite alternate;
 }
 
-/* Dark ocean-blue sphere base */
-.planet-body {
+#globe-canvas {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 28% 20%, rgba(255,255,255,0.09) 0%, transparent 24%),
-    radial-gradient(circle at 50% 50%, #050d1c 0%, #020810 55%, #000000 100%);
+  display: block;
 }
 
-/* Two cloud-band layers scrolling in opposite directions — parallax creates
-   organic striation noise that looks like high-altitude cloud wisps */
-.planet-atmo {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  overflow: hidden;
-  background:
-    repeating-linear-gradient(
-      171deg,
-      transparent            0%,
-      rgba(210,230,255,0.07) 1.8%,
-      rgba(170,200,240,0.05) 3.8%,
-      transparent            6%,
-      rgba(195,218,252,0.06) 9.5%,
-      transparent            12%
-    ),
-    repeating-linear-gradient(
-      184deg,
-      transparent            0%,
-      rgba(200,220,250,0.05) 4.5%,
-      transparent            9%,
-      rgba(185,208,245,0.04) 14%,
-      transparent            19%
-    );
-  background-size: 100% 210px, 100% 310px;
-  animation: atmo-scroll 280s linear infinite;
-}
-@keyframes atmo-scroll {
-  /* two layers scroll in opposite directions for organic parallax */
-  from { background-position: 0 0, 0 0; }
-  to   { background-position: 0 210px, 0 -310px; }
-}
-
-/* Storm container — clips all storms at sphere edge */
-.planet-storm-layer {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  overflow: hidden;
-}
-
-/* Storm spots — screen blend glows on the dark base.
-   Organic border-radius values mimic real cloud-mass outlines. */
-.ps {
-  position: absolute;
-  mix-blend-mode: screen;
-  background: radial-gradient(ellipse, var(--storm-c) 0%, transparent 68%);
-  transition: --storm-c 90s ease;
-}
-
-/* typhoon spiral — large, slow rotation simulates cyclone spin */
-.ps-1 {
-  width: 58%; height: 36%;
-  top: 14%; left: 4%;
-  border-radius: 62% 38% 55% 45% / 48% 56% 40% 60%;
-  filter: blur(16px); opacity: 0.78;
-  animation: ps1 190s ease-in-out infinite alternate;
-}
-.ps-1::after {
-  content: ''; position: absolute; inset: 25% 30%;
-  border-radius: 50%; background: rgba(0,0,0,0.35); filter: blur(8px);
-}
-
-/* cold frontal band — wide and thin, drifts laterally */
-.ps-2 {
-  width: 74%; height: 11%;
-  top: 34%; left: -5%;
-  border-radius: 42% 58% 38% 62% / 65% 35% 68% 32%;
-  filter: blur(8px); opacity: 0.58;
-  animation: ps2 260s ease-in-out infinite alternate;
-}
-
-/* thunderstorm cluster — compact irregular cell */
-.ps-3 {
-  width: 30%; height: 26%;
-  top: 61%; left: 10%;
-  border-radius: 55% 45% 62% 38% / 50% 60% 40% 68%;
-  filter: blur(7px); opacity: 0.80;
-  animation: ps3 95s ease-in-out infinite alternate;
-}
-
-/* vast overcast layer — huge diffuse system */
-.ps-4 {
-  width: 70%; height: 44%;
-  top: 28%; left: 16%;
-  border-radius: 47% 53% 44% 56% / 58% 42% 60% 38%;
-  filter: blur(28px); opacity: 0.38;
-  animation: ps4 320s ease-in-out infinite alternate;
-}
-
-/* squall line — very elongated streak */
-.ps-5 {
-  width: 56%; height: 8%;
-  top: 55%; left: 30%;
-  border-radius: 35% 65% 28% 72% / 72% 28% 68% 32%;
-  filter: blur(6px); opacity: 0.55;
-  animation: ps5 145s ease-in-out infinite alternate;
-}
-
-/* swirling curl — medium, slow rotation */
-.ps-6 {
-  width: 40%; height: 30%;
-  top: 12%; left: 54%;
-  border-radius: 70% 30% 42% 58% / 38% 62% 52% 48%;
-  filter: blur(13px); opacity: 0.68;
-  animation: ps6 165s ease-in-out infinite alternate;
-}
-
-/* hurricane eye wall — tight, bright, slow rotation */
-.ps-7 {
-  width: 22%; height: 20%;
-  top: 44%; left: 62%;
-  border-radius: 54% 46% 60% 40% / 44% 58% 44% 56%;
-  filter: blur(5px); opacity: 0.88;
-  animation: ps7 80s ease-in-out infinite alternate;
-}
-.ps-7::after {
-  content: ''; position: absolute; inset: 22% 22%;
-  border-radius: 50%; background: rgba(0,0,0,0.42); filter: blur(5px);
-}
-
-/* trailing cloud band — mid lower */
-.ps-8 {
-  width: 50%; height: 20%;
-  top: 72%; left: 22%;
-  border-radius: 46% 54% 38% 62% / 60% 40% 58% 42%;
-  filter: blur(11px); opacity: 0.60;
-  animation: ps8 210s ease-in-out infinite alternate;
-}
-
-/* storm keyframes — translate + scale, some rotate for cyclone motion */
-@keyframes ps1 { from { transform: translate(0%,0%) scale(1.00) rotate(0deg);   } to { transform: translate( 6%, 4%) scale(1.10) rotate(160deg); } }
-@keyframes ps2 { from { transform: translate(0%,0%);                             } to { transform: translate( 9%, 3%); } }
-@keyframes ps3 { from { transform: translate(0%,0%) scale(1.00);                 } to { transform: translate(10%,-5%) scale(1.14); } }
-@keyframes ps4 { from { transform: translate(0%,0%) scale(1.00) rotate(-3deg);   } to { transform: translate(-5%, 5%) scale(0.90) rotate(7deg); } }
-@keyframes ps5 { from { transform: translate(0%,0%);                             } to { transform: translate(-8%, 2%); } }
-@keyframes ps6 { from { transform: translate(0%,0%) rotate(0deg);               } to { transform: translate(-6%, 5%) rotate(-140deg); } }
-@keyframes ps7 { from { transform: translate(0%,0%) scale(1.00) rotate(0deg);   } to { transform: translate( 4%,-5%) scale(1.18) rotate(360deg); } }
-@keyframes ps8 { from { transform: translate(0%,0%);                             } to { transform: translate( 7%, 3%); } }
-
-/* Deep rim shadow for sphere depth */
-.planet-rim {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  box-shadow: inset 0 0 80px 32px rgba(0,0,0,0.88);
-  pointer-events: none;
-}
-
-.planet-wire-container {
-  position: absolute;
-  inset: 0;
-  perspective: 600px;
-}
-.planet-wire-spin {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-  animation: planet-spin 90s linear infinite;
-}
-.wire-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 1.5px solid rgba(120,180,255,0.50);
-}
-@keyframes planet-spin {
-  from { transform: rotateY(0deg) rotateX(12deg); }
-  to   { transform: rotateY(360deg) rotateX(372deg); }
-}
 @keyframes planet-drift {
   0%   { transform: translate(0px, 0px); }
   20%  { transform: translate(-28px, 18px); }
