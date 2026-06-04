@@ -174,20 +174,19 @@ const _popAudio = (function () {
     const MOUSE_R      = 6;
     const MOUSE_PUSH_R = 14;
     const CLICK_R      = 160;
-    const PLANET_G     = 0.010;   /* gravitational pull per frame (slightly stronger) */
+    const PLANET_G     = 0.022;   /* gravitational pull per frame */
 
     let nextRespawnTs = 0;
 
     /* Layout zones — updated on resize */
     let introTop = 0, introBottom = 0;
-    let projTop  = 0, projBottom  = 0;
+
     let contentLeft = 0, contentRight = 0;
     let floorY = 0;
 
     function updateLayout() {
       const footer   = document.querySelector('.site-footer');
       const intro    = document.querySelector('.intro-section');
-      const projects = document.querySelector('.projects-section');
       const pageYOff = window.pageYOffset;
 
       floorY = footer ? footer.offsetTop : document.body.scrollHeight - 10;
@@ -196,10 +195,7 @@ const _popAudio = (function () {
         introTop    = intro.getBoundingClientRect().top    + pageYOff - 20;
         introBottom = intro.getBoundingClientRect().bottom + pageYOff + 30;
       }
-      if (projects) {
-        projTop    = projects.getBoundingClientRect().top    + pageYOff - 20;
-        projBottom = projects.getBoundingClientRect().bottom + pageYOff + 30;
-      }
+
 
       const gutter  = Math.max(window.innerWidth * 0.04, 20);
       const maxW    = 1500;
@@ -316,8 +312,8 @@ const _popAudio = (function () {
 
         ctx.clearRect(0, 0, sz, sz);
 
-        /* Ocean — complementary hue, very dark */
-        const _oRgb = _hslToRgb((_gwHue + 180) % 360, 60, 7);
+        /* Ocean — complementary hue, visible dark tone */
+        const _oRgb = _hslToRgb((_gwHue + 180) % 360, 80, 28);
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, Math.PI * 2);
         ctx.fillStyle = `rgb(${_oRgb[0]},${_oRgb[1]},${_oRgb[2]})`;
@@ -499,10 +495,10 @@ const _popAudio = (function () {
         if (b.displayOpacity > 0.05 || b.spawned) {
           const pdx = _pX - b.x, pdy = _pY - b.y;
           const pd  = Math.sqrt(pdx * pdx + pdy * pdy);
-          const influenceR = _planetR * 1.8; /* wider influence zone */
+          const influenceR = _planetR * 3.0; /* pull from far across the page */
           if (pd > 4 && pd < influenceR) {
-            const t = 1 - pd / influenceR;
-            const f = PLANET_G * t * t;
+            const t = 1 - pd / influenceR;  /* linear falloff — stronger at distance */
+            const f = PLANET_G * t;
             b.vx += (pdx / pd) * f;
             b.vy += (pdy / pd) * f;
           }
