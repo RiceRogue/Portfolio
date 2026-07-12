@@ -276,10 +276,6 @@ const _popAudio = (function () {
     const _hasGrid = !!document.querySelector('.projects-grid');
     const _useGlobe = _hasGrid && typeof d3 !== 'undefined';
 
-    /* Continuous hue rotation — full color wheel cycle every ~5 minutes */
-    let _gwHue = 0; /* 0–360, increments each globe frame */
-    let _gwR = 255, _gwG = 90, _gwB = 20; /* current land RGB, updated from hue */
-
     if (_useGlobe) {
       const _gc   = document.createElement('canvas');
       _gc.id = 'globe-canvas';
@@ -305,41 +301,120 @@ const _popAudio = (function () {
         _gProj.scale(size * 0.494).translate([size / 2, size / 2]);
       }
 
+      /* Mouse ripples on the ocean — spawned by cursor over the globe */
+      const _ripples = [];
+      let _lastRippleTs = 0;
+      window.addEventListener('mousemove', (e) => {
+        const now = performance.now();
+        if (now - _lastRippleTs < 130) return;
+        const rect = _gc.getBoundingClientRect();
+        if (!rect.width) return;
+        const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+        const rcx = rect.width / 2, rcy = rect.height / 2, rr = rect.width * 0.494;
+        const dx = mx - rcx, dy = my - rcy;
+        if (dx * dx + dy * dy < rr * rr) {
+          _ripples.push({ x: mx, y: my, born: now });
+          if (_ripples.length > 20) _ripples.shift();
+          _lastRippleTs = now;
+        }
+      }, { passive: true });
+
       /* Draw one frame */
-      function _gcRender() {
+      function _gcRender(ts) {
         if (!_gSz) return;
         const ctx = _gCtx, sz = _gSz, cx = sz / 2, cy = sz / 2, r = sz * 0.494;
 
         ctx.clearRect(0, 0, sz, sz);
 
-        /* Ocean — complementary hue, visible dark tone */
-        const _oRgb = _hslToRgb((_gwHue + 180) % 360, 80, 28);
+        /* Ocean — charcoal-to-black radial base */
+        const oc = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+        oc.addColorStop(0, '#262626');
+        oc.addColorStop(1, '#040404');
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgb(${_oRgb[0]},${_oRgb[1]},${_oRgb[2]})`;
+        ctx.fillStyle = oc;
         ctx.fill();
 
-        if (_gLand) {
-          ctx.save();
-          ctx.beginPath();
-          ctx.arc(cx, cy, r, 0, Math.PI * 2);
-          ctx.clip(); /* clip land + graticule to sphere boundary */
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.clip(); /* everything below clips to sphere boundary */
 
-          /* Graticule — very faint, tinted with current weather color */
+        /* Pulsing ocean waves — infinite expanding rings, dark trough + pale crest */
+        const WAVES = 5, PERIOD = 7000;
+        for (let i = 0; i < WAVES; i++) {
+          const ph = ((ts / PERIOD) + i / WAVES) % 1;
+          const wr = ph * r * 1.06;
+          const a  = Math.sin(ph * Math.PI); /* fade in, fade out */
+          /* black trough */
+          ctx.beginPath();
+          ctx.arc(cx, cy, Math.max(0, wr - 10), 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(0,0,0,${(0.38 * a).toFixed(3)})`;
+          ctx.lineWidth = 14 + 18 * ph;
+          ctx.stroke();
+          /* pale crest just outside the trough */
+          ctx.beginPath();
+          ctx.arc(cx, cy, wr, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(255,255,255,${(0.10 * a).toFixed(3)})`;
+          ctx.lineWidth = 8 + 20 * ph;
+          ctx.stroke();
+        }
+
+        /* Mouse ripples — expanding rings that fade over 1.4s */
+        for (let i = _ripples.length - 1; i >= 0; i--) {
+          const rp  = _ripples[i];
+          const age = ts - rp.born;
+          const LIFE = 1400;
+          if (age > LIFE || age < 0) { _ripples.splice(i, 1); continue; }
+          const t  = age / LIFE;
+          const rr = 6 + t * r * 0.35;
+          ctx.beginPath();
+          ctx.arc(rp.x, rp.y, rr, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(255,255,255,${(0.45 * (1 - t) * (1 - t)).toFixed(3)})`;
+          ctx.lineWidth = 2.5 * (1 - t) + 0.6;
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(rp.x, rp.y, rr * 0.72, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(0,0,0,${(0.40 * (1 - t)).toFixed(3)})`;
+          ctx.lineWidth = 3 * (1 - t) + 0.5;
+          ctx.stroke();
+        }
+
+        if (_gLand) {
+          /* Graticule — faint white */
           ctx.beginPath();
           _gPath(_gGrat);
-          ctx.strokeStyle = `rgba(${_gwR|0},${_gwG|0},${_gwB|0},0.14)`;
+          ctx.strokeStyle = 'rgba(255,255,255,0.09)';
           ctx.lineWidth = 0.55;
           ctx.stroke();
 
-          /* Land masses — gradient-tinted fill */
+          /* Land masses — white, breathing gradient like wind over grass */
           ctx.beginPath();
           _gLand.features.forEach(f => _gPath(f));
-          ctx.fillStyle = `rgba(${_gwR|0},${_gwG|0},${_gwB|0},0.70)`;
+          const lg = ctx.createLinearGradient(0, cy - r, 0, cy + r);
+          lg.addColorStop(0, '#ffffff');
+          lg.addColorStop(Math.min(0.9, Math.max(0.1, 0.5 + 0.22 * Math.sin(ts / 1100))), '#dedede');
+          lg.addColorStop(1, '#b4b4b4');
+          ctx.fillStyle = lg;
           ctx.fill();
 
+          /* Wind waves across the grass — scrolling wobbling dark bands, clipped to land */
+          ctx.save();
+          ctx.clip(); /* current path = land masses */
+          ctx.strokeStyle = 'rgba(0,0,0,0.10)';
+          ctx.lineWidth = 10;
+          const off = (ts / 32) % 46;
+          ctx.beginPath();
+          for (let d = -sz; d < sz * 2; d += 46) {
+            const wob = Math.sin(ts / 750 + d * 0.045) * 7;
+            ctx.moveTo(d + off + wob, 0);
+            ctx.lineTo(d + off + wob - sz * 0.55, sz);
+          }
+          ctx.stroke();
           ctx.restore();
         }
+
+        ctx.restore(); /* sphere clip */
 
         /* Specular highlight — top-left bright spot for sphere depth */
         const spec = ctx.createRadialGradient(
@@ -364,21 +439,6 @@ const _popAudio = (function () {
         ctx.fill();
       }
 
-      /* HSL→RGB helper (used for hue rotation) */
-      function _hslToRgb(h, s, l) {
-        h /= 360; s /= 100; l /= 100;
-        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-        const p = 2 * l - q;
-        const hue2 = (t) => {
-          if (t < 0) t += 1; if (t > 1) t -= 1;
-          if (t < 1/6) return p + (q - p) * 6 * t;
-          if (t < 1/2) return q;
-          if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-          return p;
-        };
-        return [Math.round(hue2(h+1/3)*255), Math.round(hue2(h)*255), Math.round(hue2(h-1/3)*255)];
-      }
-
       /* Globe loop — capped at 30fps to save GPU */
       let _glastTs = 0;
       (function _globeLoop(ts) {
@@ -390,12 +450,7 @@ const _popAudio = (function () {
         _gRot = (_gRot + 0.04) % 360;
         _gProj.rotate([_gRot, -20, 0]);
 
-        /* Continuous hue rotation — full cycle every ~5 minutes at 30fps */
-        _gwHue = (_gwHue + 0.033) % 360;
-        const rgb  = _hslToRgb(_gwHue, 85, 58);
-        _gwR = rgb[0]; _gwG = rgb[1]; _gwB = rgb[2];
-
-        _gcRender();
+        _gcRender(ts);
       })(0);
 
       /* Lazy-load GeoJSON land shapes (110m = low-res, fast) */
